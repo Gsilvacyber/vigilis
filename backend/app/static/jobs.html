@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vigilis - Background Jobs</title>
+<link rel="stylesheet" href="/static/vigilis.css?v=8">
+<style>
+.container{max-width:1280px;margin:1.5rem auto;padding:0 2rem}
+table{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.status-badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.status-pending{background:rgba(148,163,184,.12);color:var(--dim)}
+.status-running{background:rgba(96,165,250,.12);color:var(--blue)}
+.status-completed{background:rgba(52,211,153,.12);color:var(--green)}
+.status-failed{background:rgba(248,113,113,.12);color:var(--red)}
+.progress-bar{width:100%;max-width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle}
+.progress-fill{height:100%;border-radius:3px;transition:width .3s}
+.refresh-indicator{font-size:.7rem;color:var(--dim);margin-left:.75rem}
+</style>
+</head>
+<body>
+<script src="/static/vigilis.js?v=10"></script>
+<script>document.write(renderNav('jobs'));</script>
+<div class="container">
+<h1>Background Jobs <span class="refresh-indicator" id="refreshStatus"></span></h1>
+<div id="content"></div>
+</div>
+<script>
+let refreshTimer=null;
+
+async function loadJobs(){
+ try{
+  const r=await fetch('/api/v1/jobs',AH);
+  if(!r.ok){document.getElementById('content').innerHTML='<div class="spinner" style="color:var(--red)">Failed to load jobs</div>';return}
+  const jobs=await r.json();
+  renderJobs(jobs);
+  // Auto-refresh if any job is pending or running
+  const hasActive=jobs.some(j=>j.status==='pending'||j.status==='running');
+  clearInterval(refreshTimer);
+  if(hasActive){
+   refreshTimer=setInterval(loadJobs,3000);
+   document.getElementById('refreshStatus').textContent='Auto-refreshing...';
+  }else{
+   document.getElementById('refreshStatus').textContent='';
+  }
+ }catch(e){
+  document.getElementById('content').innerHTML='<div class="spinner" style="color:var(--red)">Error: '+escapeHtml(e.message)+'</div>';
+ }
+}
+
+function renderJobs(jobs){
+ if(!jobs.length){
+  document.getElementById('content').innerHTML='<div class="spinner">No background jobs yet. Jobs are created when you upload alerts or run batch operations.</div>';
+  return;
+ }
+ let html=`<table><tr>
+  <th>Job ID</th>
+  <th>Status</th>
+  <th>Progress</th>
+  <th>Message</th>
+  <th>Created</th>
+  <th>Completed</th>
+ </tr>`;
+ for(const j of jobs){
+  const shortId=escapeHtml((j.id||j.jobId||'').slice(0,12))+'...';
+  const fullId=escapeHtml(j.id||j.jobId||'');
+  const status=j.status||'unknown';
+  const pct=j.progress!=null?Math.round(j.progress*100):0;
+  const msg=escapeHtml(j.message||j.error||'-');
+  const created=fmtTime(j.createdAt||j.created_at);
+  const completed=fmtTime(j.completedAt||j.completed_at);
+  const pctLabel=j.progress!=null?pct+'%':'-';
+  const fillColor=status==='failed'?'var(--red)':status==='completed'?'var(--green)':'var(--blue)';
+
+  let resultLink='';
+  if(status==='completed'&&(j.result||j.resultUrl)){
+   resultLink=' <a href="/demo/ui/cases" style="color:var(--blue);font-size:.72rem;text-decoration:none">View Cases &rarr;</a>';
+  }
+
+  html+=`<tr>
+   <td style="font-family:var(--mono);font-size:.75rem" title="${fullId}">${shortId}</td>
+   <td><span class="status-badge status-${status}">${status}</span></td>
+   <td>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+    <span style="font-size:.72rem;margin-left:.4rem;color:var(--dim)">${pctLabel}</span>
+   </td>
+   <td style="font-size:.78rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${msg}">${msg}${resultLink}</td>
+   <td style="font-size:.72rem;color:var(--dim);white-space:nowrap">${created}</td>
+   <td style="font-size:.72rem;color:var(--dim);white-space:nowrap">${completed}</td>
+  </tr>`;
+ }
+ html+='</table>';
+ document.getElementById('content').innerHTML=html;
+}
+
+loadJobs();
+</script>
+</body>
+</html>

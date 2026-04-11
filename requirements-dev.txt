@@ -1,0 +1,5 @@
+# ── Development / testing dependencies ───────────────
+-r requirements.txt
+pytest==9.0.2
+pytest-asyncio==1.3.0
+requests==2.33.0

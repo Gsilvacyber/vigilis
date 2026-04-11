@@ -1,0 +1,121 @@
+[
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-01T08:30:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "k.johnson@meridian-capital.com"
+      },
+      "ip": "10.10.1.50"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "action": "success",
+      "description": "Standard morning login",
+      "geo": "US"
+    },
+    "target": {
+      "hostname": "WS-CORP-10"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-01T09:30:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "l.davis@meridian-capital.com"
+      },
+      "ip": "10.10.1.51"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "action": "success",
+      "description": "Standard morning login",
+      "geo": "US"
+    },
+    "target": {
+      "hostname": "WS-CORP-11"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-01T10:30:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "p.garcia@meridian-capital.com"
+      },
+      "ip": "10.10.1.52"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "action": "success",
+      "description": "Standard morning login",
+      "geo": "US"
+    },
+    "target": {
+      "hostname": "WS-CORP-12"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-01T06:00:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-nagios@meridian-capital.com"
+      },
+      "ip": "10.10.0.2"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "action": "success",
+      "description": "Automated monitoring"
+    },
+    "target": {
+      "hostname": "MON-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-01T23:16:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "j.parker@meridian-capital.com"
+      },
+      "ip": "10.50.12.88"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "US",
+      "action": "success",
+      "description": "After-hours login night 1"
+    },
+    "target": {
+      "hostname": "TRADER-WS-04"
+    }
+  }
+]

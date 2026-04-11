@@ -1,0 +1,75 @@
+# SOCAI docker-compose
+#
+# Local dev (default):
+#   docker compose up -d
+#   - Exposes backend on :8000, postgres on :5432 for ease of dev
+#
+# Production (with Caddy TLS reverse proxy):
+#   1. Copy .env.example -> .env and set POSTGRES_PASSWORD, DEMO_API_KEY, domain
+#   2. Edit Caddyfile: set your domain + admin email
+#   3. Run: docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile prod up -d
+#      (prod override removes backend's public port mapping so only Caddy reaches it)
+
+services:
+  postgres:
+    # postgres:16 -- pinned for reproducibility; update quarterly
+    image: postgres:16@sha256:2586e2a95d1c9b31cb2967feb562948f7d364854453d703039b6efa45fe48417
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-socai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-socai}
+      POSTGRES_DB: ${POSTGRES_DB:-socai}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-socai}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-prod}
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-socai}:${POSTGRES_PASSWORD:-socai}@postgres:5432/${POSTGRES_DB:-socai}
+      WEBHOOK_DEFAULT_URL: ${WEBHOOK_DEFAULT_URL:-http://localhost:8000/debug/webhook-echo}
+      APP_CREATE_TABLES: "true"
+      DEMO_API_KEY: ${DEMO_API_KEY:-socai-demo-key-do-not-use-in-production}
+      GROUPING_WINDOW_MINUTES: ${GROUPING_WINDOW_MINUTES:-60}
+      CORRELATION_WINDOW_HOURS: ${CORRELATION_WINDOW_HOURS:-72}
+      OTX_API_KEY: ${OTX_API_KEY:-}
+      ABUSEIPDB_API_KEY: ${ABUSEIPDB_API_KEY:-}
+      VIRUSTOTAL_API_KEY: ${VIRUSTOTAL_API_KEY:-}
+      GREYNOISE_API_KEY: ${GREYNOISE_API_KEY:-}
+      REDIS_URL: ${REDIS_URL:-}
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  caddy:
+    # caddy:2-alpine -- TLS reverse proxy, only started with --profile prod
+    image: caddy:2-alpine
+    profiles: ["prod"]
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:

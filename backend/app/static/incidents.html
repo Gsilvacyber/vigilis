@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vigilis - Incidents</title>
+<link rel="stylesheet" href="/static/vigilis.css?v=8">
+<style>
+.container{max-width:1280px;margin:1.5rem auto;padding:0 2rem}
+h1{margin-bottom:.25rem}
+.btn.primary{border-color:var(--accent);color:#ffffff;background:var(--accent);font-weight:700}
+.btn.primary:hover{opacity:.9}
+
+/* Incident card */
+.incident-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1rem;overflow:hidden;cursor:pointer;transition:border-color .2s}
+.incident-card:hover{border-color:var(--accent)}
+.incident-chevron{color:var(--dim);font-size:.8rem;transition:transform .2s;flex-shrink:0;margin-left:.5rem}
+.incident-card.open .incident-chevron{transform:rotate(180deg);color:var(--accent)}
+.incident-card.open .incident-detail{display:block}
+.incident-header{padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem}
+.incident-header .sev{width:4px;height:48px;border-radius:2px;flex-shrink:0}
+.sev-critical{background:var(--red)}.sev-high{background:var(--yellow)}.sev-medium{background:var(--blue)}.sev-low{background:var(--dim)}
+.incident-meta{flex:1;min-width:0}
+.incident-title{font-weight:600;font-size:.95rem;color:var(--text);line-height:1.3}
+.incident-sub{font-size:.78rem;color:var(--text-secondary);margin-top:2px}
+.incident-badges{display:flex;gap:.4rem;flex-shrink:0;align-items:center;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:.72rem;font-weight:600;white-space:nowrap}
+.badge-sev{text-transform:uppercase}
+.badge-critical{background:#f8514922;color:var(--red)}.badge-high{background:#d2992222;color:var(--yellow)}
+.badge-medium{background:#58a6ff18;color:var(--blue)}.badge-low{background:#484f5822;color:var(--dim)}
+.badge-count{background:#22d3ee18;color:var(--cyan)}.badge-stages{background:#a78bfa18;color:var(--purple)}
+.badge-conf{border:1px solid var(--border);color:var(--text);position:relative;cursor:default}
+.badge-conf.c-critical{border-color:var(--red);color:var(--red)}
+.badge-conf.c-high{border-color:var(--yellow);color:var(--yellow)}
+.badge-conf.c-medium{border-color:var(--blue);color:var(--blue)}
+
+/* Confidence hover tooltip */
+.conf-tip{display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:50;background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius);padding:.65rem .85rem;min-width:310px;box-shadow:0 8px 24px rgba(0,0,0,.1);pointer-events:none}
+.badge-conf:hover .conf-tip{display:block}
+.conf-tip::before{content:'';position:absolute;top:-6px;right:14px;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid var(--border)}
+.conf-tip-row{display:flex;align-items:center;gap:.4rem;padding:2px 0;font-size:.72rem;font-weight:400;white-space:nowrap}
+.conf-tip-factor{flex:1;color:var(--dim);min-width:0}
+.conf-tip-pts{font-family:var(--mono);font-weight:700;min-width:36px;text-align:right}
+.conf-tip-pts.tp-pos{color:var(--green)}.conf-tip-pts.tp-zero{color:#484f58}
+.conf-tip-bar{width:48px;height:4px;background:var(--surface-3);border-radius:2px;overflow:hidden;flex-shrink:0}
+.conf-tip-fill{height:100%;border-radius:2px}
+.conf-tip-fill.tp-pos{background:var(--green)}.conf-tip-fill.tp-zero{background:#484f58}
+
+/* Weak-link warning banner */
+.weak-link-warn{display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:#fbbf2412;border:1px solid #fbbf2433;border-radius:var(--radius);margin-bottom:.75rem;font-size:.78rem;color:var(--yellow)}
+.weak-link-warn .warn-icon{font-size:1rem;flex-shrink:0}
+.weak-link-warn .warn-text{flex:1}
+.weak-link-warn .warn-label{font-weight:700;text-transform:uppercase;font-size:.68rem;letter-spacing:.04em}
+
+/* Expanded detail */
+.incident-detail{display:none;border-top:1px solid var(--border)}
+.detail-section{padding:1rem 1.25rem;border-bottom:1px solid var(--border)}
+.detail-section:last-child{border-bottom:none}
+.section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);margin-bottom:.65rem;font-weight:600}
+
+/* Kill chain bar */
+.chain-bar{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:.25rem 0}
+.chain-node{display:flex;flex-direction:column;align-items:center;min-width:110px;padding:.5rem .5rem;position:relative}
+.chain-node .stage-icon{font-size:1.2rem;margin-bottom:.15rem}
+.chain-node .stage-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;color:var(--dim);margin-bottom:.15rem;text-align:center}
+.chain-node .stage-count{font-size:1.1rem;font-weight:800;color:var(--text)}
+.chain-node .stage-sub{font-size:.68rem;color:var(--dim)}
+.chain-node.missing .stage-label{color:var(--orange)}
+.chain-node.missing .stage-icon{opacity:.5}
+.chain-node.missing .stage-count{color:var(--orange);font-size:.7rem;font-weight:600}
+.chain-arrow{display:flex;align-items:center;color:var(--dim);font-size:1rem;padding:0 .1rem;margin-top:.6rem}
+.chain-arrow.gap-arrow{color:var(--orange);font-style:italic;font-size:.9rem}
+
+/* Confidence breakdown */
+.conf-table{width:100%;border-collapse:collapse;font-size:.78rem;margin-top:.5rem}
+.conf-table th{text-align:left;color:var(--dim);font-weight:600;padding:4px 8px;border-bottom:1px solid var(--border);font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}
+.conf-table td{padding:4px 8px;border-bottom:1px solid var(--surface-3)44}
+.conf-table .pts{font-weight:700;text-align:right;min-width:50px;font-family:var(--mono)}
+.conf-table .pts.pos{color:var(--green)}.conf-table .pts.zero{color:var(--dim)}
+.conf-table .max{color:var(--dim);font-size:.7rem;text-align:right;min-width:40px}
+
+/* Link strength */
+.link-box{background:var(--surface-3);border-radius:var(--radius);padding:.65rem .85rem;margin-bottom:.75rem;display:flex;align-items:center;gap:1rem;font-size:.82rem}
+.link-score{font-size:1.3rem;font-weight:800;font-family:var(--mono);min-width:40px;text-align:center}
+.link-score.pass{color:var(--green)}.link-score.fail{color:var(--red)}.link-score.borderline{color:var(--yellow)}
+.link-sep{color:var(--dim);font-size:.8rem}
+.link-thresh{color:var(--dim);font-size:.78rem}
+.link-comps{flex:1;display:flex;flex-wrap:wrap;gap:.35rem .85rem}
+.link-comp{display:inline-flex;align-items:center;gap:4px;font-size:.78rem;padding:2px 8px;border-radius:10px}
+.link-comp.lc-strong{background:#34d39915;color:var(--green)}
+.link-comp.lc-weak{background:#fbbf2412;color:var(--yellow)}
+.link-comp.lc-zero{background:#94a3b808;color:#484f58}
+.link-comp-val{font-family:var(--mono);font-weight:700}
+.lc-strong .link-comp-val{color:var(--green)}.lc-weak .link-comp-val{color:var(--yellow)}.lc-zero .link-comp-val{color:#484f58;text-decoration:line-through}
+
+/* Linkage reasons */
+.linkage-list{list-style:none;padding:0}
+.linkage-item{display:flex;align-items:flex-start;gap:.5rem;padding:.3rem 0;font-size:.82rem}
+.linkage-weight{font-size:.68rem;font-weight:700;padding:2px 6px;border-radius:8px;flex-shrink:0;text-transform:uppercase}
+.w-strong{background:#34d39922;color:var(--green)}.w-moderate{background:#fbbf2422;color:var(--yellow)}.w-supporting{background:#94a3b818;color:var(--dim)}
+
+/* Entities bar */
+.entities-bar{display:flex;gap:1.5rem;font-size:.78rem;color:var(--dim)}
+.entities-bar span{color:var(--text);font-weight:500}
+
+/* Timeline */
+.tl-item{display:flex;gap:.75rem;padding:.4rem 0;border-bottom:1px solid var(--surface-3)22;font-size:.82rem;align-items:flex-start}
+.tl-time{font-family:var(--mono);font-size:.75rem;color:var(--dim);min-width:70px;flex-shrink:0}
+.tl-stage{min-width:130px;flex-shrink:0}
+.tl-stage-pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:600;background:var(--surface-3);color:var(--text)}
+.tl-stage-pill.s-initial_access{background:#f8717122;color:var(--red)}
+.tl-stage-pill.s-credential_access{background:#fbbf2422;color:var(--yellow)}
+.tl-stage-pill.s-privilege_escalation{background:#a78bfa22;color:var(--purple)}
+.tl-stage-pill.s-execution{background:#60a5fa22;color:var(--blue)}
+.tl-stage-pill.s-lateral_movement{background:#22d3ee22;color:var(--cyan)}
+.tl-stage-pill.s-exfiltration{background:#f8717133;color:var(--red)}
+.tl-stage-pill.s-persistence{background:#34d39922;color:var(--green)}
+.tl-stage-pill.s-collection{background:#fb923c22;color:var(--orange)}
+.tl-title{flex:1;min-width:0}
+.tl-sev{font-size:.72rem;font-weight:600;min-width:55px;text-align:right;flex-shrink:0;text-transform:uppercase}
+.tl-sev.critical{color:var(--red)}.tl-sev.high{color:var(--yellow)}.tl-sev.medium{color:var(--blue)}.tl-sev.low{color:var(--dim)}
+
+/* Summary line */
+.incident-summary{font-size:.78rem;color:var(--dim);margin-top:3px;font-family:var(--mono);letter-spacing:.01em;line-height:1.4}
+
+/* Time window */
+.time-window{display:flex;gap:1.5rem;font-size:.78rem;align-items:center;flex-wrap:wrap}
+.time-field{display:flex;flex-direction:column;gap:1px}
+.time-field-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;color:var(--dim);font-weight:600}
+.time-field-value{font-family:var(--mono);font-weight:700;font-size:.88rem;color:var(--text)}
+.time-field-value.duration{color:var(--cyan);font-size:1rem}
+.time-sep{width:1px;height:28px;background:var(--border);flex-shrink:0}
+
+/* Recommended actions */
+.actions-list{list-style:none;padding:0}
+.action-item{display:flex;align-items:flex-start;gap:.5rem;padding:.35rem 0;font-size:.82rem}
+.action-priority{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:8px;flex-shrink:0;text-transform:uppercase;letter-spacing:.04em}
+.priority-immediate{background:#f8717118;color:var(--red);border:1px solid #f8717133}
+.priority-recommended{background:#60a5fa12;color:var(--blue);border:1px solid #60a5fa33}
+.action-text{flex:1;line-height:1.4}
+.action-stage{font-size:.68rem;color:var(--dim);margin-left:.25rem}
+
+/* Visual timeline */
+.vtl{position:relative;padding:.5rem 0 .5rem 2rem}
+.vtl-line{position:absolute;left:14px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--blue),var(--purple),var(--red))}
+.vtl-event{position:relative;display:flex;align-items:flex-start;gap:.75rem;padding:.45rem 0;margin-bottom:.15rem}
+.vtl-dot{position:absolute;left:-22px;top:6px;width:10px;height:10px;border-radius:50%;border:2px solid var(--blue);background:var(--bg);z-index:1;flex-shrink:0}
+.vtl-dot.d-critical{border-color:var(--red)}.vtl-dot.d-high{border-color:var(--yellow)}.vtl-dot.d-medium{border-color:var(--blue)}.vtl-dot.d-low{border-color:var(--dim)}
+.vtl-time{font-family:var(--mono);font-size:.72rem;color:var(--dim);min-width:65px;flex-shrink:0;padding-top:1px}
+.vtl-body{flex:1;min-width:0}
+.vtl-title{font-size:.82rem;color:var(--text);line-height:1.3}
+.vtl-title a{color:var(--text);text-decoration:none}
+.vtl-title a:hover{color:var(--blue)}
+.vtl-meta{display:flex;gap:.5rem;align-items:center;margin-top:2px}
+
+/* Confidence vs Risk dual display */
+.conf-risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.cr-panel{background:var(--surface-3);border-radius:var(--radius);padding:.75rem .85rem}
+.cr-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.cr-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--dim);font-weight:600}
+.cr-value{font-size:1.4rem;font-weight:800;font-family:var(--mono)}
+.cr-label{font-size:.72rem;text-transform:uppercase;font-weight:600;margin-left:.25rem}
+.cr-bar{height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;margin-bottom:.5rem}
+.cr-fill{height:100%;border-radius:3px;transition:width .3s}
+.risk-factor{display:flex;align-items:flex-start;gap:.4rem;padding:2px 0;font-size:.75rem}
+.rf-impact{font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:6px;flex-shrink:0;text-transform:uppercase}
+.rf-critical{background:#f8717118;color:var(--red)}.rf-high{background:#fbbf2412;color:var(--yellow)}.rf-medium{background:#60a5fa12;color:var(--blue)}
+
+/* Workflow prediction */
+.wf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem}
+.wf-card{background:var(--surface-3);border-radius:var(--radius);padding:.65rem .85rem;border-left:3px solid var(--border)}
+.wf-card.wf-yes{border-left-color:var(--red)}.wf-card.wf-no{border-left-color:var(--green)}.wf-card.wf-auto{border-left-color:var(--cyan)}
+.wf-card-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:var(--dim);font-weight:600;margin-bottom:.35rem}
+.wf-answer{font-size:.95rem;font-weight:700;margin-bottom:.2rem}
+.wf-answer.yes{color:var(--red)}.wf-answer.no{color:var(--green)}.wf-answer.auto{color:var(--cyan)}
+.wf-detail{font-size:.72rem;color:var(--dim);line-height:1.4}
+.wf-tags{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.35rem}
+.wf-tag{font-size:.65rem;padding:1px 6px;border-radius:6px;background:var(--surface-3);color:var(--text)}
+
+/* Export */
+.export-bar{display:flex;gap:.5rem;align-items:center;margin-top:.5rem}
+.export-btn{padding:.35rem .7rem;border-radius:var(--radius);border:1px solid var(--border);font-size:.75rem;cursor:pointer;font-family:var(--font);font-weight:600;background:transparent;color:var(--dim);display:inline-flex;align-items:center;gap:4px}
+.export-btn:hover{color:var(--text);background:#1c2128}
+.export-btn.copied{border-color:var(--green);color:var(--green)}
+
+/* Narrative */
+.narrative-box{font-family:var(--mono);font-size:.78rem;line-height:1.7;white-space:pre-wrap;color:var(--dim);background:var(--surface-3);max-height:340px;overflow-y:auto;padding:1rem;border-radius:var(--radius)}
+
+/* Confidence meter (legacy, still used in breakdown section) */
+.conf-meter{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem}
+.conf-bar{flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;max-width:200px}
+.conf-fill{height:100%;border-radius:4px;transition:width .3s}
+.conf-fill.c-critical{background:var(--red)}.conf-fill.c-high{background:var(--yellow)}.conf-fill.c-medium{background:var(--blue)}.conf-fill.c-low{background:var(--dim)}
+.conf-score{font-size:1.1rem;font-weight:800}.conf-label{font-size:.72rem;text-transform:uppercase;font-weight:600}
+
+/* Empty / error state */
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--dim)}
+.empty-state h2{font-size:1.1rem;color:var(--text);margin-bottom:.5rem}
+.empty-state p{font-size:.85rem;max-width:480px;margin:0 auto .75rem}
+.error-state{text-align:center;padding:3rem 2rem;color:var(--red)}
+.error-state h2{font-size:1rem;margin-bottom:.5rem}
+.error-state p{font-size:.82rem;color:var(--dim);max-width:480px;margin:0 auto .75rem}
+.error-state code{display:block;background:var(--surface-3);padding:.5rem;border-radius:var(--radius);font-size:.78rem;margin:.75rem auto;max-width:400px;text-align:left;color:var(--text)}
+</style>
+</head>
+<body>
+<script src="/static/vigilis.js?v=10"></script>
+<script>document.write(renderNav('incidents'));</script>
+<div class="container">
+<h1>Incidents</h1>
+<p class="subtitle">Vigilis correlates cases into multi-step attack narratives across the kill chain.</p>
+<div class="toolbar">
+ <button class="btn primary" id="btnCorr" onclick="correlate()">Run Correlation</button>
+</div>
+<div id="incidents"><div class="spinner">Loading incidents...</div></div>
+</div>
+<script>
+// Override simulate for incidents page (shows case count)
+simulate = async function(){
+ try{
+  const r=await fetch('/api/v1/demo/simulate-pilot',AHP);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json();
+  toast(d.casesLoaded+' cases loaded, '+d.incidentsCorrelated+' incidents found',true);
+  load();
+ }catch(e){toast('Simulation failed: '+e.message,false)}
+};
+// Override resetAll for incidents page (reload instead of full page refresh)
+resetAll = async function(){
+ await fetch('/api/v1/demo/reset',AHP);
+ toast('Reset complete',true);load();
+};
+
+async function correlate(){
+ const btn=document.getElementById('btnCorr');
+ btn.disabled=true;btn.textContent='Correlating...';
+ try{
+  const r=await fetch('/api/v1/incidents/correlate',{method:'POST',headers:{'X-API-Key':AK}});
+  if(!r.ok){
+   const err=await r.json().catch(()=>({detail:'HTTP '+r.status}));
+   throw new Error(err.detail||'HTTP '+r.status);
+  }
+  const d=await r.json();
+  toast(d.incidentsFound+' incident(s) correlated',true);
+  load();
+ }catch(e){toast('Correlation failed: '+e.message,false)}
+ finally{btn.disabled=false;btn.textContent='Run Correlation'}
+}
+
+function fmtSpan(s){if(!s)return'-';if(s<60)return s+'s';if(s<3600)return Math.round(s/60)+'m';return(s/3600).toFixed(1)+'h'}
+
+async function load(){
+ const el=document.getElementById('incidents');
+ try{
+  const r=await fetch('/api/v1/incidents',AH);
+  if(!r.ok){
+   const errBody=await r.text();
+   let detail='';
+   try{detail=JSON.parse(errBody).detail||''}catch(e){}
+   if(r.status===401){
+    el.innerHTML=`<div class="error-state"><h2>Authentication required</h2>
+     <p>The demo API key may not be seeded yet. Click <b>Simulate Pilot</b> to initialize the demo data, or <b>Reset</b> to recreate the database.</p></div>`;
+   }else{
+    el.innerHTML=`<div class="error-state"><h2>API Error (${r.status})</h2>
+     <p>${esc(detail||'Could not reach the incidents API.')}</p>
+     <p>Try clicking <b>Simulate Pilot</b> to ensure the database is initialized.</p></div>`;
+   }
+   return;
+  }
+  const data=await r.json();
+  if(!Array.isArray(data)){
+   el.innerHTML=`<div class="error-state"><h2>Unexpected response</h2><code>${esc(JSON.stringify(data).slice(0,200))}</code></div>`;
+   return;
+  }
+  if(!data.length){
+   el.innerHTML=`<div class="empty-state">
+    <h2>No incidents yet</h2>
+    <p>Click <b>Simulate Pilot</b> to generate cases with realistic attack chains, then <b>Run Correlation</b> to detect multi-step incidents.</p>
+    <p style="font-size:.78rem;margin-top:.5rem">Vigilis clusters cases by shared users and IPs within a 24-hour window, then maps them to the MITRE kill chain.</p></div>`;
+   return;
+  }
+  let html='';
+  for(const inc of data)html+=renderCard(inc);
+  el.innerHTML=html;
+ }catch(e){
+  el.innerHTML=`<div class="error-state"><h2>Connection failed</h2>
+   <p>Could not connect to the Vigilis API.</p>
+   <p style="font-size:.78rem">Make sure the server is running: <code>uvicorn backend.app.main:app --reload</code></p>
+   <p style="font-size:.78rem;color:var(--dim)">${esc(e.message)}</p></div>`;
+ }
+}
+
+function renderCard(inc){
+ const stages=inc.killChainStages||[];
+ const gaps=inc.killChainGaps||[];
+ const confClass='c-'+inc.confidenceLabel;
+
+ // Build chain bar with gaps
+ let chainHtml='';
+ if(gaps.length){
+  gaps.forEach((g,i)=>{
+   if(i>0){
+    const prev=gaps[i-1];
+    const arrowClass=(prev.status==='present'&&g.status==='missing')||(prev.status==='missing'&&g.status==='present')?'chain-arrow gap-arrow':'chain-arrow';
+    chainHtml+=`<div class="${arrowClass}">\u2192</div>`;
+   }
+   if(g.status==='present'){
+    const stageData=stages.find(s=>s.stage===g.stage);
+    const cnt=stageData?stageData.caseCount:'';
+    chainHtml+=`<div class="chain-node"><div class="stage-icon">\u2714</div>
+     <div class="stage-label">${g.label}</div>
+     <div class="stage-count">${cnt}</div>
+     <div class="stage-sub">${cnt===1?'case':'cases'}</div></div>`;
+   }else{
+    chainHtml+=`<div class="chain-node missing"><div class="stage-icon">\u2716</div>
+     <div class="stage-label">${g.label}</div>
+     <div class="stage-count">likely gap</div></div>`;
+   }
+  });
+ }else{
+  stages.forEach((s,i)=>{
+   if(i>0)chainHtml+='<div class="chain-arrow">\u2192</div>';
+   chainHtml+=`<div class="chain-node"><div class="stage-icon">\u2714</div>
+    <div class="stage-label">${s.label}</div><div class="stage-count">${s.caseCount}</div>
+    <div class="stage-sub">${s.caseCount!==1?'cases':'case'}</div></div>`;
+  });
+ }
+
+ const ent=inc.entities||{};
+ const users=(ent.users||[]).join(', ')||'unknown';
+ const ips=(ent.ips||[]).join(', ')||'-';
+ const devices=(ent.devices||[]).join(', ')||'-';
+
+ // Linkage reasons
+ const reasons=inc.linkageReasons||[];
+ let linkageHtml='';
+ if(reasons.length){
+  linkageHtml='<ul class="linkage-list">';
+  for(const r of reasons){
+   const wc=r.weight==='strong'?'w-strong':r.weight==='moderate'?'w-moderate':'w-supporting';
+   linkageHtml+=`<li class="linkage-item"><span class="linkage-weight ${wc}">${r.weight}</span><span>${esc(r.detail)}</span></li>`;
+  }
+  linkageHtml+='</ul>';
+ }
+
+ return `<div class="incident-card" id="inc-${inc.id}" onclick="toggleDetail('${inc.id}')">
+  <div class="incident-header">
+   <div class="sev sev-${inc.severity}"></div>
+   <div class="incident-meta">
+    <div class="incident-title">${esc(inc.title)}</div>
+    <div class="incident-summary">${esc(inc.summary||'')}</div>
+   </div>
+   <div class="incident-badges">
+    <span class="badge badge-conf ${confClass}">${inc.confidenceScore}%${renderConfTip(inc.confidenceBreakdown,inc.confidenceScore)}</span>
+    <span class="badge badge-sev badge-${inc.severity}">${inc.severity}</span>
+    <span class="badge" style="background:${riskColor(inc.riskLevel)}18;color:${riskColor(inc.riskLevel)}">${(inc.riskLevel||'medium').toUpperCase()} RISK</span>
+    <span class="badge badge-stages">${inc.alertTypeCount} stages</span>
+    <span class="badge badge-count">${inc.caseCount} cases</span>
+   </div>
+   <svg class="incident-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4,6 8,10 12,6"/></svg>
+  </div>
+  <div class="incident-detail">
+   <div class="detail-section">
+    <div class="section-title">Time Window</div>
+    ${renderTimeWindow(inc)}
+   </div>
+   <div class="detail-section">
+    <div class="section-title">Confidence vs Risk</div>
+    ${renderConfRisk(inc)}
+   </div>
+   <div class="detail-section">
+    <div class="section-title">What Should I Do?</div>
+    ${renderActions(inc.recommendedActions)}
+   </div>
+   <div class="detail-section">
+    <div class="section-title">Analyst Workflow</div>
+    ${renderWorkflow(inc.workflow)}
+   </div>
+   <div class="detail-section">
+    <div class="section-title">Confidence Breakdown</div>
+    ${renderBreakdown(inc.confidenceBreakdown)}
+   </div>
+   <div class="detail-section">
+    <div class="section-title">Kill Chain Analysis</div>
+    <div class="chain-bar">${chainHtml}</div>
+   </div>
+   <div class="detail-section">
+    <div class="section-title">Why These Cases Were Linked</div>
+    ${renderWeakLinkWarn(inc.linkStrength)}
+    ${renderLinkStrength(inc.linkStrength)}
+    ${linkageHtml||'<div style="color:var(--dim);font-size:.82rem">No linkage data</div>'}
+   </div>
+   <div class="detail-section">
+    <div class="section-title">Entities</div>
+    <div class="entities-bar">
+     <div>Users: <span>${esc(users)}</span></div>
+     <div>IPs: <span>${esc(ips)}</span></div>
+     <div>Devices: <span>${esc(devices)}</span></div>
+    </div>
+   </div>
+   <div class="detail-section" id="tl-${inc.id}"><div class="spinner">Loading timeline...</div></div>
+   <div class="detail-section">
+    <div class="section-title">Narrative</div>
+    <div id="nar-${inc.id}" class="narrative-box"></div>
+    <div class="export-bar" onclick="event.stopPropagation()">
+     <button class="export-btn" onclick="copyExport('${inc.id}','slack')">Copy Slack</button>
+     <button class="export-btn" onclick="copyExport('${inc.id}','json')">&#123;&#125; Copy JSON</button>
+    </div>
+   </div>
+  </div></div>`;
+}
+
+async function toggleDetail(id){
+ const card=document.getElementById('inc-'+id);
+ if(card.classList.contains('open')){card.classList.remove('open');return}
+ card.classList.add('open');
+ // Scroll so the expanded content is visible
+ setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),100);
+ try{
+  const r=await fetch('/api/v1/incidents/'+id,AH);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json();
+  renderTimeline(id,d);
+  document.getElementById('nar-'+id).textContent=d.narrative||'No narrative generated.';
+ }catch(e){
+  document.getElementById('tl-'+id).innerHTML='<div style="color:var(--red);padding:.5rem">'+esc(e.message)+'</div>';
+ }
+}
+
+function renderTimeline(id,d){
+ const tl=d.timeline||[];
+ if(!tl.length){document.getElementById('tl-'+id).innerHTML='<div class="spinner">No timeline data</div>';return}
+ let events='';
+ for(const ev of tl){
+  const t=ev.eventTime?new Date(ev.eventTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'?';
+  events+=`<div class="vtl-event">
+   <div class="vtl-dot d-${ev.severity}"></div>
+   <div class="vtl-time">${t}</div>
+   <div class="vtl-body">
+    <div class="vtl-title"><a href="/demo/ui/cases/${ev.caseId}" onclick="event.stopPropagation()">${esc(ev.title)}</a></div>
+    <div class="vtl-meta">
+     <span class="tl-stage-pill s-${ev.killChainStage}">${esc(ev.killChainLabel)}</span>
+     <span class="tl-sev ${ev.severity}">${ev.severity}</span>
+    </div>
+   </div>
+  </div>`;
+ }
+ document.getElementById('tl-'+id).innerHTML=`<div class="section-title">Attack Timeline</div><div class="vtl"><div class="vtl-line"></div>${events}</div>`;
+}
+
+function renderTimeWindow(inc){
+ const fs=inc.firstSeen?new Date(inc.firstSeen):null;
+ const ls=inc.lastSeen?new Date(inc.lastSeen):null;
+ if(!fs)return'<div style="color:var(--dim);font-size:.82rem">No time data</div>';
+ const fmtTime=d=>d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ const fmtDate=d=>d.toLocaleDateString([],{month:'short',day:'numeric'});
+ let dur='-';
+ if(ls&&inc.timeSpanSeconds>0){
+  const s=inc.timeSpanSeconds;
+  if(s<60)dur=s+'s';
+  else if(s<3600)dur=Math.round(s/60)+'m '+((s%60)>0?(s%60)+'s':'');
+  else{const h=Math.floor(s/3600);const m=Math.round((s%3600)/60);dur=h+'h '+(m>0?m+'m':'');}
+ }else if(ls){dur='< 1m';}
+ return `<div class="time-window">
+  <div class="time-field"><span class="time-field-label">First seen</span><span class="time-field-value">${fmtTime(fs)}</span><span style="font-size:.68rem;color:var(--dim)">${fmtDate(fs)}</span></div>
+  <div class="time-sep"></div>
+  <div class="time-field"><span class="time-field-label">Last seen</span><span class="time-field-value">${ls?fmtTime(ls):'-'}</span>${ls?`<span style="font-size:.68rem;color:var(--dim)">${fmtDate(ls)}</span>`:''}</div>
+  <div class="time-sep"></div>
+  <div class="time-field"><span class="time-field-label">Duration</span><span class="time-field-value duration">${dur}</span></div>
+ </div>`;
+}
+
+function renderActions(actions){
+ if(!actions||!actions.length)return'<div style="color:var(--dim);font-size:.82rem">No recommended actions</div>';
+ let items='';
+ for(const a of actions){
+  const cls=a.priority==='immediate'?'priority-immediate':'priority-recommended';
+  const stageLabel=a.stage?a.stage.replace(/_/g,' '):'';
+  items+=`<li class="action-item"><span class="action-priority ${cls}">${a.priority}</span><span class="action-text">${esc(a.action)}<span class="action-stage">${esc(stageLabel)}</span></span></li>`;
+ }
+ return `<ul class="actions-list">${items}</ul>`;
+}
+
+function riskColor(level){
+ return{critical:'#f87171',high:'#fbbf24',medium:'#60a5fa',low:'#94a3b8'}[level||'medium']||'#60a5fa';
+}
+
+function renderConfRisk(inc){
+ const confClass='c-'+inc.confidenceLabel;
+ const riskLvl=inc.riskLevel||'medium';
+ const riskPct={critical:95,high:70,medium:45,low:20}[riskLvl]||45;
+ const rc=riskColor(riskLvl);
+ let rfHtml='';
+ for(const f of (inc.riskFactors||[])){
+  rfHtml+=`<div class="risk-factor"><span class="rf-impact rf-${f.impact}">${f.impact}</span><span style="color:var(--dim)">${esc(f.detail)}</span></div>`;
+ }
+ return `<div class="conf-risk-grid">
+  <div class="cr-panel">
+   <div class="cr-header"><span class="cr-title">Confidence</span><span style="font-size:.68rem;color:var(--dim)">How sure are we?</span></div>
+   <div style="display:flex;align-items:baseline;gap:.35rem"><span class="cr-value ${confClass}">${inc.confidenceScore}%</span><span class="cr-label ${confClass}">${inc.confidenceLabel}</span></div>
+   <div class="cr-bar"><div class="cr-fill ${confClass}" style="width:${inc.confidenceScore}%"></div></div>
+  </div>
+  <div class="cr-panel">
+   <div class="cr-header"><span class="cr-title">Risk</span><span style="font-size:.68rem;color:var(--dim)">How bad could it be?</span></div>
+   <div style="display:flex;align-items:baseline;gap:.35rem"><span class="cr-value" style="color:${rc}">${riskLvl.toUpperCase()}</span></div>
+   <div class="cr-bar"><div class="cr-fill" style="width:${riskPct}%;background:${rc}"></div></div>
+   ${rfHtml}
+  </div>
+ </div>`;
+}
+
+function renderWorkflow(wf){
+ if(!wf||!wf.disposition)return'<div style="color:var(--dim);font-size:.82rem">No workflow prediction</div>';
+ const escCls=wf.wouldEscalate?'wf-yes':'wf-no';
+ const containCls=wf.wouldAutoContain?'wf-auto':'wf-no';
+ let escReasons='';
+ for(const r of (wf.escalationReasons||[]))escReasons+=`<span class="wf-tag">${esc(r)}</span>`;
+ let containTags='';
+ for(const a of (wf.containmentActions||[]))containTags+=`<span class="wf-tag">${esc(a)}</span>`;
+ return `<div class="wf-grid">
+  <div class="wf-card ${escCls}">
+   <div class="wf-card-title">Would this be escalated?</div>
+   <div class="wf-answer ${wf.wouldEscalate?'yes':'no'}">${wf.wouldEscalate?'Yes — Escalate':'No — Tier 1 Review'}</div>
+   <div class="wf-detail">${esc(wf.escalationTarget)}</div>
+   <div class="wf-tags">${escReasons}</div>
+  </div>
+  <div class="wf-card ${containCls}">
+   <div class="wf-card-title">Auto-containment?</div>
+   <div class="wf-answer ${wf.wouldAutoContain?'auto':'no'}">${wf.wouldAutoContain?'Yes — Auto-contain':'Manual Review'}</div>
+   <div class="wf-detail">${esc(wf.autoContainReason)}</div>
+   <div class="wf-tags">${containTags}</div>
+  </div>
+  <div class="wf-card" style="border-left-color:var(--purple)">
+   <div class="wf-card-title">Estimated Triage</div>
+   <div class="wf-answer" style="color:var(--purple)">${esc(wf.estimatedTriage)}</div>
+   <div class="wf-detail">Disposition: <strong>${esc(wf.disposition)}</strong></div>
+  </div>
+ </div>`;
+}
+
+async function copyExport(id,fmt){
+ try{
+  const r=await fetch('/api/v1/incidents/'+id+'/export?fmt='+fmt,AH);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json();
+  const text=fmt==='slack'?d.text:JSON.stringify(d.incident,null,2);
+  await navigator.clipboard.writeText(text);
+  toast('Copied '+fmt+' payload to clipboard',true);
+ }catch(e){toast('Export failed: '+e.message,false)}
+}
+
+function renderConfTip(bd,total){
+ if(!bd||!bd.length)return'';
+ let rows='';
+ for(const f of bd){
+  const cls=f.points>0?'tp-pos':'tp-zero';
+  const pct=f.maxPoints>0?Math.round(f.points/f.maxPoints*100):0;
+  rows+=`<div class="conf-tip-row"><span class="conf-tip-factor">${esc(f.factor)}</span><span class="conf-tip-pts ${cls}">+${f.points}</span><div class="conf-tip-bar"><div class="conf-tip-fill ${cls}" style="width:${pct}%"></div></div></div>`;
+ }
+ return `<div class="conf-tip">${rows}</div>`;
+}
+
+function renderBreakdown(bd){
+ if(!bd||!bd.length)return'';
+ let rows='';
+ for(const f of bd){
+  const cls=f.points>0?'pos':'zero';
+  rows+=`<tr><td>${esc(f.factor)}</td><td class="pts ${cls}">+${f.points}</td><td class="max">/ ${f.maxPoints}</td><td style="color:var(--dim)">${esc(f.detail)}</td></tr>`;
+ }
+ return `<table class="conf-table"><thead><tr><th>Factor</th><th style="text-align:right">Points</th><th style="text-align:right">Max</th><th>Detail</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderWeakLinkWarn(ls){
+ if(!ls)return'';
+ const margin=ls.totalScore-ls.threshold;
+ if(!ls.passed)return`<div class="weak-link-warn" style="border-color:var(--red);color:var(--red);background:#f8717112"><span class="warn-icon">\u26D4</span><div class="warn-text"><span class="warn-label">Below threshold</span> Link score ${ls.totalScore} is below the required ${ls.threshold}. This correlation should not have been created.</div></div>`;
+ if(margin<=1)return`<div class="weak-link-warn"><span class="warn-icon">\u26A0</span><div class="warn-text"><span class="warn-label">Borderline correlation</span> Link score ${ls.totalScore} barely exceeds the ${ls.threshold} threshold (margin: +${margin}). Manual review suggested to confirm these cases are related.</div></div>`;
+ return'';
+}
+
+function renderLinkStrength(ls){
+ if(!ls||!ls.components)return'';
+ const margin=ls.totalScore-ls.threshold;
+ const cls=!ls.passed?'fail':margin<=1?'borderline':'pass';
+ let comps='';
+ for(const c of ls.components){
+  const tier=c.score>=3?'lc-strong':c.score>=1?'lc-weak':'lc-zero';
+  comps+=`<span class="link-comp ${tier}"><span class="link-comp-val">${c.score>0?'+':''}${c.score}</span> ${esc(c.factor)}: ${esc(c.detail)}</span>`;
+ }
+ return `<div class="link-box"><div class="link-score ${cls}">${ls.totalScore}</div><div class="link-sep">/</div><div class="link-thresh">${ls.threshold} threshold</div><div class="link-comps">${comps}</div></div>`;
+}
+
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+load();
+
+// WebSocket for real-time incident updates
+connectWsFeed((msg) => {
+ if (msg.type === 'new_case' || msg.type === 'disposition_change') {
+  clearTimeout(window._wsReloadTimer);
+  window._wsReloadTimer = setTimeout(load, 1000);
+ }
+});
+</script>
+</body>
+</html>

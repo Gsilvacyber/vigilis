@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vigilis - Upload Your Data</title>
+<link rel="stylesheet" href="/static/vigilis.css?v=8">
+<style>
+/* Page-specific overrides */
+.container{max-width:1100px;margin:1.5rem auto;padding:0 2rem}
+h1{margin-bottom:.25rem}
+.subtitle{font-size:.9rem;margin-bottom:1.5rem}
+.card{padding:1.5rem;margin-bottom:1.25rem}
+.drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:3rem 2rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--blue);background:rgba(88,166,255,.03)}
+.drop-zone p{color:var(--dim);font-size:.95rem;margin-bottom:.5rem}
+.drop-zone .hint{font-size:.8rem;color:var(--dim)}
+.drop-zone .filename{color:var(--green);font-weight:600;font-size:1rem;margin-top:.5rem}
+.form-row{display:flex;gap:1rem;align-items:flex-end;margin-top:1rem;flex-wrap:wrap}
+select{min-width:180px}
+label.field-label{font-size:.8rem;color:var(--dim);display:block;margin-bottom:.25rem}
+.check-lbl{font-size:.85rem;color:var(--dim);display:flex;align-items:center;gap:.4rem;cursor:pointer}
+.check-lbl input{accent-color:var(--blue)}
+.btn-primary{font-size:1rem;padding:.65rem 2rem}
+.btn-green{background:var(--green);color:#fff;border-color:var(--green);font-size:1rem;padding:.65rem 2rem}
+.btn-green:hover{opacity:.9}
+.btn-green:disabled{opacity:.4;cursor:not-allowed}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1rem;margin-bottom:1.25rem}
+.metric-card{background:var(--bg)}
+.metric-val{font-size:1.8rem}
+.bar-chart{display:flex;gap:2px;height:28px;align-items:flex-end;margin:.5rem 0}
+.bar-segment{border-radius:3px 3px 0 0;min-width:20px;transition:height .4s}
+.bar-legend{display:flex;gap:1rem;flex-wrap:wrap;font-size:.78rem;color:var(--dim)}
+.bar-legend span{display:flex;align-items:center;gap:.3rem}
+.bar-legend .dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+th{position:sticky;top:0}
+.results-table-wrap{max-height:500px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius)}
+.progress-wrap{margin:1.5rem 0;text-align:center}
+.progress-bar{background:var(--border);border-radius:4px;height:8px;overflow:hidden;margin:.5rem 0}
+.progress-fill{height:100%;background:var(--blue);transition:width .3s;border-radius:4px}
+.progress-text{font-size:.85rem;color:var(--dim)}
+.format-examples{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.75rem}
+@media(max-width:800px){.format-examples{grid-template-columns:1fr}}
+.format-examples pre{max-height:180px}
+.format-examples h3{font-size:.78rem;color:var(--dim);margin-bottom:.35rem}
+/* Source profile badge */
+.source-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .75rem;border-radius:var(--radius);font-size:.82rem;font-weight:600;border:1px solid var(--border)}
+.source-badge.known{background:#3fb95015;color:var(--green);border-color:var(--green)}
+.source-badge.unknown{background:#d2992215;color:var(--yellow);border-color:var(--yellow)}
+/* Mapping table */
+.mapping-row{display:grid;grid-template-columns:1fr 20px 1fr .5fr;gap:.5rem;align-items:center;padding:.4rem .6rem;border-bottom:1px solid var(--border);font-size:.82rem}
+.mapping-arrow{color:var(--dim);text-align:center}
+.conf-bar{height:6px;border-radius:3px;background:var(--border)}
+.conf-fill{height:100%;border-radius:3px;transition:width .3s}
+.conf-high{background:var(--green)}.conf-med{background:var(--yellow)}.conf-low{background:var(--red)}
+/* Validation pills */
+.val-pill{display:inline-block;padding:1px 6px;border-radius:10px;font-size:.7rem;font-weight:600;margin:1px}
+.val-ok{background:#3fb95022;color:var(--green)}
+.val-warn{background:#d2992222;color:var(--yellow)}
+.val-fail{background:#f8514922;color:var(--red)}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:.72rem;font-weight:700;margin-right:.4rem}
+</style>
+</head>
+<body>
+<script src="/static/vigilis.js?v=10"></script>
+<script>document.write(renderNav('upload'));</script>
+<div class="container">
+<h1>Upload Your Data</h1>
+<p class="subtitle">Drop a SIEM export. Vigilis normalizes, enriches, and groups into cases automatically.</p>
+
+<!-- Data Management -->
+<div id="dataStatus" class="card" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem">
+ <div style="flex:1;min-width:200px">
+  <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);font-weight:600;margin-bottom:.3rem">Current Data</div>
+  <div style="font-size:.9rem"><b id="dsTotal">-</b> cases in database &middot; <span id="dsSamples" style="color:var(--dim)">- sample</span> &middot; <span id="dsReal" style="color:var(--dim)">- real</span></div>
+ </div>
+ <button class="btn" onclick="loadSamples()">Load Sample Data</button>
+ <button class="btn" onclick="clearSamples()" title="Removes demo fixture data only. Keeps any uploaded data.">Clear Sample Data</button>
+ <button class="btn" style="color:var(--red);border-color:var(--red)" onclick="clearEverything()" title="Deletes ALL data including your uploads. Cannot be undone.">Clear Everything</button>
+</div>
+
+<!-- Upload + One-Click Enrich -->
+<div class="card" id="step1Card">
+ <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+  <p>Drag & drop your file here, or click to browse</p>
+  <div class="hint">Accepts .csv, .json, .jsonl, .ndjson — any SIEM format</div>
+  <div class="filename hidden" id="fileName"></div>
+ </div>
+ <input type="file" id="fileInput" accept=".csv,.tsv,.json,.jsonl,.ndjson,.xml,.kv,.log,.leef,.txt" style="display:none" onchange="fileSelected(this)">
+ <div class="form-row" style="margin-top:1.25rem">
+  <button class="btn-primary" id="enrichBtn" onclick="uploadAndEnrich()" disabled style="font-size:1rem;padding:.75rem 2.5rem">Upload & Enrich</button>
+  <label style="font-size:.78rem;color:var(--dim);display:flex;align-items:center;gap:.35rem;cursor:pointer"><input type="checkbox" id="clearCheck" style="accent-color:var(--accent)"> Clear previous data first</label>
+  <span id="fileInfo" style="font-size:.82rem;color:var(--dim)"></span>
+ </div>
+</div>
+
+<!-- STEP 2: Mapping Preview (hidden until analysis) -->
+<div class="card hidden" id="step2Card">
+ <h2><span class="step-num">2</span> Review Detected Mappings</h2>
+
+ <div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem">
+  <div>
+   <span style="font-size:.78rem;color:var(--dim)">Source Detected:</span>
+   <span class="source-badge" id="sourceBadge"></span>
+  </div>
+  <div>
+   <span style="font-size:.78rem;color:var(--dim)">Format:</span>
+   <span id="fileFormat" style="font-size:.85rem;font-weight:600"></span>
+  </div>
+  <div>
+   <span style="font-size:.78rem;color:var(--dim)">Total Rows:</span>
+   <span id="totalRows" style="font-size:.85rem;font-weight:600"></span>
+  </div>
+ </div>
+
+ <!-- Column mapping table -->
+ <div style="font-size:.78rem;color:var(--dim);margin-bottom:.3rem;font-weight:600">Column Mappings (click to override)</div>
+ <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden" id="mappingTable">
+  <div class="mapping-row" style="background:var(--surface-3)">
+   <div style="font-weight:600;color:var(--dim)">Your Column</div>
+   <div></div>
+   <div style="font-weight:600;color:var(--dim)">Mapped To</div>
+   <div style="font-weight:600;color:var(--dim)">Confidence</div>
+  </div>
+  <div id="mappingRows"></div>
+ </div>
+
+ <!-- Sample rows preview -->
+ <div style="margin-top:1rem">
+  <div style="font-size:.78rem;color:var(--dim);margin-bottom:.3rem;font-weight:600">Preview (first 5 rows)</div>
+  <div class="results-table-wrap" id="previewTable"></div>
+ </div>
+
+ <!-- Validation summary -->
+ <div style="margin-top:1rem" id="validationSummary"></div>
+
+ <!-- Process controls -->
+ <div class="form-row" style="margin-top:1.25rem">
+  <div>
+   <label class="field-label">Force alert type (optional)</label>
+   <select id="alertType">
+    <option value="">Auto-detect per row</option>
+    <option value="identity.suspiciousSignIn">identity.suspiciousSignIn</option>
+    <option value="identity.passwordSpray">identity.passwordSpray</option>
+    <option value="identity.mfaFatigue">identity.mfaFatigue</option>
+    <option value="identity.oauthConsentRisk">identity.oauthConsentRisk</option>
+    <option value="identity.privilegeElevation">identity.privilegeElevation</option>
+    <option value="endpoint.malwareDetection">endpoint.malwareDetection</option>
+    <option value="endpoint.suspiciousProcess">endpoint.suspiciousProcess</option>
+    <option value="email.forwardingRule">email.forwardingRule</option>
+    <option value="cloud.secretStoreAccessAnomaly">cloud.secretStoreAccessAnomaly</option>
+    <option value="network.impossibleGeoAccess">network.impossibleGeoAccess</option>
+   </select>
+  </div>
+  <label class="check-lbl"><input type="checkbox" id="persistCheck" checked> Save cases to database</label>
+  <label class="check-lbl"><input type="checkbox" id="groupingCheck" checked> Group into incident cases (SOC mode)</label>
+  <button class="btn-green" id="processBtn" onclick="runProcess()">Confirm & Enrich All Rows</button>
+  <button class="btn" onclick="resetUpload()">Start Over</button>
+ </div>
+</div>
+
+<!-- Progress bar -->
+<div class="hidden" id="progressWrap">
+ <div class="card">
+  <div class="progress-wrap">
+   <div class="progress-text" id="progressText">Processing...</div>
+   <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+ </div>
+</div>
+
+<!-- STEP 3: Results -->
+<div class="hidden" id="resultsSection">
+ <div class="card">
+  <h2><span class="step-num">3</span> Results Summary</h2>
+  <div class="summary-grid" id="summaryGrid"></div>
+  <div id="labelChart"></div>
+  <div id="typeChart" style="margin-top:1rem"></div>
+ </div>
+
+ <!-- Grouped incident cases (only visible in SOC mode) -->
+ <div class="card hidden" id="groupsCard">
+  <h2>Incident Cases</h2>
+  <p style="font-size:.82rem;color:var(--dim);margin-bottom:.75rem">Related alerts grouped into distinct incidents. Each case represents one investigation.</p>
+  <div class="results-table-wrap" id="groupsTable"></div>
+ </div>
+
+ <div class="card">
+  <h2>Row-by-Row Results</h2>
+  <div style="display:flex;gap:.75rem;margin-bottom:.75rem">
+   <button class="btn" onclick="exportResults()">Export Results JSON</button>
+   <button class="btn" onclick="viewInCases()">View in Cases</button>
+   <button class="btn" onclick="resetUpload()">Upload Another File</button>
+  </div>
+  <div class="results-table-wrap" id="resultsTable"></div>
+ </div>
+</div>
+
+<!-- Supported formats reference -->
+<div class="card" style="margin-top:.5rem">
+ <h2>Supported Input Formats</h2>
+ <p style="font-size:.85rem;color:var(--dim);margin-bottom:.5rem">Vigilis auto-maps common field names. Your data does not need to match our schema exactly.</p>
+ <div class="format-examples">
+  <div>
+   <h3>CSV Example</h3>
+<pre>user,src_ip,severity,alert_name,hostname
+jdoe@corp.com,203.0.113.5,high,Suspicious Login,WS-PC01
+admin@corp.com,198.51.100.1,critical,Password Spray,DC-SRV02</pre>
+  </div>
+  <div>
+   <h3>JSON Example</h3>
+<pre>[
+  {
+    "UserPrincipalName": "jdoe@corp.com",
+    "IPAddress": "203.0.113.5",
+    "severity": "high",
+    "alertName": "Suspicious Sign-In"
+  }
+]</pre>
+  </div>
+ </div>
+ <p style="font-size:.78rem;color:var(--dim);margin-top:.75rem"><b>Recognized fields:</b> user / upn / username / email / src_user | src_ip / ip / ipaddress / clientip | dest_ip / dst_ip | hostname / devicename / computer | severity / priority / risk_level | alertname / title / action / category</p>
+</div>
+
+</div>
+<script>
+let uploadedFile=null;
+let fileContent='';
+let previewData=null;
+let lastResults=null;
+let columnOverrides={};
+// tag() provided by vigilis.js
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// ── Data Management (refreshDataStatus, loadSamples, clearSamples, clearEverything are now in vigilis.js) ──
+refreshDataStatus();
+
+// ── Drag & drop ──
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+dz.addEventListener('drop',e=>{
+ e.preventDefault();dz.classList.remove('dragover');
+ if(e.dataTransfer.files.length){handleFile(e.dataTransfer.files[0])}
+});
+
+function fileSelected(input){if(input.files.length)handleFile(input.files[0])}
+
+function handleFile(f){
+ uploadedFile=f;
+ const fn=document.getElementById('fileName');
+ fn.textContent=f.name+' ('+formatSize(f.size)+')';
+ fn.classList.remove('hidden');
+ document.getElementById('enrichBtn').disabled=false;
+ document.getElementById('fileInfo').textContent=f.name+' — '+formatSize(f.size);
+ // Read content for later use
+ const reader=new FileReader();
+ reader.onload=function(e){fileContent=e.target.result};
+ reader.readAsText(f);
+}
+
+async function uploadAndEnrich(){
+ if(!uploadedFile||!fileContent){toast('No file selected','');return}
+ const btn=document.getElementById('enrichBtn');
+ btn.disabled=true;btn.textContent='Enriching...';
+
+ // Show progress
+ document.getElementById('progressWrap').classList.remove('hidden');
+ document.getElementById('progressText').textContent='Normalizing and enriching '+uploadedFile.name+'...';
+ document.getElementById('progressFill').style.width='10%';
+
+ try{
+  // Clear previous data if checkbox is checked
+  if(document.getElementById('clearCheck').checked){
+   document.getElementById('progressText').textContent='Clearing previous data...';
+   await fetch('/api/v1/demo/reset',{method:'POST',headers:{'X-API-Key':AK}});
+   document.getElementById('progressFill').style.width='20%';
+  }
+
+  document.getElementById('progressFill').style.width='40%';
+  document.getElementById('progressText').textContent='Processing alerts...';
+
+  const r=await fetch('/api/v1/demo/upload/process',{
+   method:'POST',
+   headers:{'Content-Type':'application/json','X-API-Key':AK},
+   body:JSON.stringify({
+    fileContent:fileContent,
+    filename:uploadedFile.name,
+    persist:true,
+    grouping:true,
+   }),
+  });
+
+  document.getElementById('progressFill').style.width='70%';
+  document.getElementById('progressText').textContent='Building cases...';
+
+  if(!r.ok){
+   let errMsg='Upload failed';
+   try{const errData=await r.json();errMsg=errData.detail||errMsg}catch(e){errMsg=await r.text()||errMsg}
+   toast(errMsg,'');
+   document.getElementById('progressText').textContent=errMsg;
+   document.getElementById('progressFill').style.width='0%';
+   btn.disabled=false;btn.textContent='Upload & Enrich';
+   return;
+  }
+
+  const data=await r.json();
+  const enriched=data.enriched||0;
+  const cases=data.caseCount||0;
+
+  // Auto-correlate incidents
+  document.getElementById('progressFill').style.width='85%';
+  document.getElementById('progressText').textContent='Correlating incidents...';
+
+  await fetch('/api/v1/incidents/correlate',{
+   method:'POST',headers:{'X-API-Key':AK}
+  });
+
+  document.getElementById('progressFill').style.width='100%';
+  document.getElementById('progressText').textContent=enriched+' alerts enriched into '+cases+' cases. Redirecting...';
+
+  toast(enriched+' alerts enriched, '+cases+' cases created','ok');
+
+  // Store upload summary for cases page banner
+  try {
+    sessionStorage.setItem('uploadSummary', JSON.stringify({
+      processed: data.processed||0,
+      enriched: data.enriched||0,
+      caseCount: data.caseCount||0,
+      failed: data.failed||0,
+      skipped: data.skipped||0,
+      avgScore: data.avgScore||0,
+      labels: data.labelDistribution||{},
+      truncated: data.truncated||false,
+      originalRowCount: data.originalRowCount||0,
+    }));
+  } catch(e){}
+
+  // Redirect to cases after a brief moment
+  setTimeout(()=>{window.location.href='/demo/ui/cases'},1200);
+
+ }catch(e){
+  toast('Failed: '+e.message,'');
+  btn.disabled=false;btn.textContent='Upload & Enrich';
+  document.getElementById('progressWrap').classList.add('hidden');
+ }
+}
+
+function formatSize(b){
+ if(b<1024)return b+' B';
+ if(b<1048576)return (b/1024).toFixed(1)+' KB';
+ return (b/1048576).toFixed(1)+' MB';
+}
+
+// ── Step 1: Analyze / dry-run preview ──
+async function runPreview(){
+ if(!uploadedFile){toast('No file selected','');return}
+ const btn=document.getElementById('analyzeBtn');
+ btn.disabled=true;btn.textContent='Analyzing...';
+
+ const formData=new FormData();
+ formData.append('file',uploadedFile);
+
+ try{
+  const r=await fetch('/api/v1/demo/upload/preview',{method:'POST',headers:{'X-API-Key':AK},body:formData});
+  if(!r.ok){
+   const err=await r.text();
+   toast('Error: '+err,'');
+   btn.disabled=false;btn.textContent='Analyze File';
+   return;
+  }
+  previewData=await r.json();
+  columnOverrides={};
+  renderPreview(previewData);
+  toast('File analyzed: '+previewData.totalRows+' rows detected','ok');
+ }catch(e){toast('Request failed: '+e.message,'')}
+ finally{btn.disabled=false;btn.textContent='Analyze File'}
+}
+
+function renderPreview(data){
+ document.getElementById('step2Card').classList.remove('hidden');
+ document.getElementById('resultsSection').classList.add('hidden');
+
+ // Source profile
+ const sp=data.sourceProfile;
+ const badge=document.getElementById('sourceBadge');
+ badge.textContent=sp.label+(sp.confidence>0?' ('+Math.round(sp.confidence*100)+'% match)':' ');
+ badge.className='source-badge '+(sp.detected!=='unknown'?'known':'unknown');
+
+ document.getElementById('fileFormat').textContent=data.fileFormat.toUpperCase();
+ document.getElementById('totalRows').textContent=data.totalRows;
+
+ // Column mappings
+ const canonicalOptions=['identity','ip','dest_ip','device','severity','alert_name','timestamp','unmapped'];
+ let mhtml='';
+ (data.columnMappings||[]).forEach(m=>{
+  const confPct=Math.round(m.confidence*100);
+  const confClass=confPct>=70?'conf-high':confPct>=40?'conf-med':'conf-low';
+  const selId='map_'+m.sourceColumn.replace(/[^a-zA-Z0-9]/g,'_');
+  let selHtml=`<select id="${selId}" onchange="overrideMapping('${esc(m.sourceColumn)}',this.value)" style="font-size:.78rem;padding:2px 4px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:3px;width:100%">`;
+  canonicalOptions.forEach(opt=>{
+   selHtml+=`<option value="${opt}" ${opt===m.canonicalField?'selected':''}>${opt}</option>`;
+  });
+  selHtml+='</select>';
+
+  mhtml+=`<div class="mapping-row">
+   <div style="font-family:var(--mono);font-size:.8rem">${esc(m.sourceColumn)}</div>
+   <div class="mapping-arrow">&rarr;</div>
+   <div>${selHtml}</div>
+   <div><div class="conf-bar"><div class="conf-fill ${confClass}" style="width:${confPct}%"></div></div><span style="font-size:.7rem;color:var(--dim)">${confPct}%</span></div>
+  </div>`;
+ });
+ document.getElementById('mappingRows').innerHTML=mhtml;
+
+ // Sample rows
+ const rows=data.sampleRows||[];
+ if(rows.length){
+  const keys=data.columns.slice(0,8);
+  let html='<table><tr>'+keys.map(k=>'<th>'+esc(k)+'</th>').join('')+'</tr>';
+  rows.forEach(r=>{
+   html+='<tr>'+keys.map(k=>'<td>'+(r[k]||'-')+'</td>').join('')+'</tr>';
+  });
+  html+='</table>';
+  document.getElementById('previewTable').innerHTML=html;
+ }
+
+ // Validation summary
+ const vals=data.rowValidations||[];
+ const validCount=vals.filter(v=>v.valid).length;
+ const warnCount=vals.filter(v=>!v.valid&&v.reasons.length<=1).length;
+ const failCount=vals.filter(v=>!v.valid&&v.reasons.length>1).length;
+
+ // Collect common reasons
+ const reasonCounts={};
+ vals.forEach(v=>{
+  (v.reasons||[]).forEach(r=>{reasonCounts[r]=(reasonCounts[r]||0)+1});
+ });
+
+ let vsHtml=`<div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:.5rem">
+  <span class="val-pill val-ok">${validCount} valid rows</span>
+  <span class="val-pill val-warn">${warnCount} rows with warnings</span>
+  <span class="val-pill val-fail">${failCount} rows with issues</span>
+ </div>`;
+
+ if(Object.keys(reasonCounts).length>0){
+  vsHtml+='<div style="font-size:.78rem;color:var(--dim);margin-top:.4rem"><b>Common issues:</b></div><ul style="font-size:.78rem;color:var(--dim);margin:.2rem 0 0 1.2rem">';
+  for(const[reason,count] of Object.entries(reasonCounts).sort((a,b)=>b[1]-a[1]).slice(0,5)){
+   vsHtml+=`<li>${esc(reason)} <span style="color:var(--yellow)">(${count} rows)</span></li>`;
+  }
+  vsHtml+='</ul>';
+ }
+
+ document.getElementById('validationSummary').innerHTML=vsHtml;
+
+ // Scroll to step 2
+ document.getElementById('step2Card').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function overrideMapping(sourceCol,canonical){
+ if(canonical==='unmapped'){
+  delete columnOverrides[sourceCol];
+ }else{
+  columnOverrides[sourceCol]=canonical;
+ }
+}
+
+// ── Step 2: Process with confirmed mappings ──
+async function runProcess(){
+ if(!fileContent||!previewData){toast('No file analyzed yet','');return}
+ const btn=document.getElementById('processBtn');
+ btn.disabled=true;btn.textContent='Processing...';
+ document.getElementById('resultsSection').classList.add('hidden');
+ document.getElementById('progressWrap').classList.remove('hidden');
+ document.getElementById('progressFill').style.width='30%';
+ document.getElementById('progressText').textContent='Enriching '+previewData.totalRows+' rows...';
+
+ const alertType=document.getElementById('alertType').value;
+ const persist=document.getElementById('persistCheck').checked;
+ const grouping=document.getElementById('groupingCheck').checked;
+
+ // Collect overrides (only non-default ones)
+ const overrides=Object.keys(columnOverrides).length>0?columnOverrides:null;
+
+ try{
+  document.getElementById('progressFill').style.width='60%';
+  const r=await fetch('/api/v1/demo/upload/process',{
+   method:'POST',
+   headers:{'X-API-Key':AK,'Content-Type':'application/json'},
+   body:JSON.stringify({
+    fileContent:fileContent,
+    filename:uploadedFile.name,
+    alertType:alertType||null,
+    columnOverrides:overrides,
+    persist:persist,
+    grouping:grouping,
+   }),
+  });
+  document.getElementById('progressFill').style.width='90%';
+
+  if(!r.ok){
+   const err=await r.text();
+   toast('Error: '+err,'');
+   btn.disabled=false;btn.textContent='Confirm & Enrich All Rows';
+   document.getElementById('progressWrap').classList.add('hidden');
+   return;
+  }
+
+  const data=await r.json();
+  lastResults=data;
+  document.getElementById('progressFill').style.width='100%';
+  document.getElementById('progressText').textContent='Done! '+data.enriched+' of '+data.processed+' rows enriched.';
+
+  setTimeout(()=>{
+   document.getElementById('progressWrap').classList.add('hidden');
+   renderResults(data);
+   toast(data.enriched+' alerts enriched, '+data.skipped+' skipped','ok');
+  },500);
+
+ }catch(e){toast('Request failed: '+e.message,'')}
+ finally{btn.disabled=false;btn.textContent='Confirm & Enrich All Rows'}
+}
+
+function renderResults(data){
+ document.getElementById('resultsSection').classList.remove('hidden');
+
+ const ready=data.readyForAction||0;
+ const enriched=data.enriched||0;
+ const isGrouped=data.groupingEnabled&&data.groups&&data.groups.length>0;
+ const caseCount=data.caseCount||enriched;
+
+ // Truncation warning
+ if(data.truncated){
+  document.getElementById('resultsSection').insertAdjacentHTML('afterbegin',
+   `<div style="background:#2d1f00;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:16px;color:#fbbf24;font-size:0.875rem">
+     Your file contained <strong>${data.originalRowCount.toLocaleString()}</strong> rows. Only the first <strong>${data.processed.toLocaleString()}</strong> were processed.
+     Split your file into smaller batches for full coverage.
+   </div>`);
+ }
+
+ // Summary grid — add Cases Created when grouping
+ let summaryHtml=`
+  <div class="metric-card"><div class="metric-val">${data.processed}</div><div class="metric-label">Alerts Ingested</div></div>
+  <div class="metric-card"><div class="metric-val green">${data.enriched}</div><div class="metric-label">Enriched</div></div>`;
+ if(isGrouped){
+  summaryHtml+=`<div class="metric-card" style="border-color:var(--blue)"><div class="metric-val" style="color:var(--purple)">${caseCount}</div><div class="metric-label">Cases Created</div></div>`;
+ }
+ summaryHtml+=`
+  <div class="metric-card"><div class="metric-val yellow">${data.skipped}</div><div class="metric-label">Skipped</div></div>
+  <div class="metric-card"><div class="metric-val ${data.failed?'red':''}">${data.failed}</div><div class="metric-label">Failed</div></div>
+  <div class="metric-card"><div class="metric-val green">${data.avgScore}</div><div class="metric-label">Avg Score</div></div>
+  <div class="metric-card"><div class="metric-val">${ready}</div><div class="metric-label">Ready</div></div>
+  ${data.unknownAlertTypes?'<div class="metric-card"><div class="metric-val yellow">'+data.unknownAlertTypes+'</div><div class="metric-label">Unknown Types</div></div>':''}
+  ${data.missingContextCount?'<div class="metric-card"><div class="metric-val yellow">'+data.missingContextCount+'</div><div class="metric-label">Missing Context</div></div>':''}
+ `;
+ document.getElementById('summaryGrid').innerHTML=summaryHtml;
+
+ // Label distribution chart
+ const labels=data.labelDistribution||{};
+ const labelColors={critical:'var(--red)',high:'var(--yellow)',medium:'var(--blue)',low:'var(--dim)'};
+ const maxLabel=Math.max(1,...Object.values(labels));
+ let barHtml='<div style="font-size:.78rem;color:var(--dim);margin-bottom:.3rem">Score Distribution</div><div class="bar-chart">';
+ for(const l of ['low','medium','high','critical']){
+  const v=labels[l]||0;
+  const h=Math.max(4,v/maxLabel*60);
+  barHtml+=`<div class="bar-segment" style="height:${h}px;width:${100/4}%;background:${labelColors[l]}" title="${l}: ${v}"></div>`;
+ }
+ barHtml+='</div><div class="bar-legend">';
+ for(const l of ['low','medium','high','critical']){
+  barHtml+=`<span><span class="dot" style="background:${labelColors[l]}"></span>${l}: ${labels[l]||0}</span>`;
+ }
+ barHtml+='</div>';
+ document.getElementById('labelChart').innerHTML=barHtml;
+
+ // Alert type distribution
+ const types=data.alertTypeDistribution||{};
+ let typeHtml='<div style="font-size:.78rem;color:var(--dim);margin-bottom:.3rem">Alert Type Distribution</div><div class="bar-legend">';
+ for(const[t,c]of Object.entries(types).sort((a,b)=>b[1]-a[1])){
+  typeHtml+=`<span><b>${c}</b> ${t}</span>`;
+ }
+ typeHtml+='</div>';
+ document.getElementById('typeChart').innerHTML=typeHtml;
+
+ // ── Grouped incident cases table ──
+ const groupsCard=document.getElementById('groupsCard');
+ if(isGrouped){
+  groupsCard.classList.remove('hidden');
+  const groups=data.groups;
+  let gTbl='<table><tr><th>Case</th><th>Alert Type</th><th>Alerts</th><th>Severity</th><th>Score</th><th>Entity</th><th>Time Range</th><th>Grouping Reason</th></tr>';
+  groups.forEach((g,i)=>{
+   const sevClass=g.severity==='critical'?'tag-critical':g.severity==='high'?'tag-high':g.severity==='medium'?'tag-medium':'tag-low';
+   const alertBadge=g.alertCount>1?`<span style="background:var(--purple);color:#fff;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700">${g.alertCount} alerts</span>`:`<span style="font-size:.78rem;color:var(--dim)">1 alert</span>`;
+   gTbl+=`<tr>
+    <td style="font-weight:700;color:var(--blue)">#${i+1}</td>
+    <td style="font-size:.78rem">${g.alertType}</td>
+    <td>${alertBadge}</td>
+    <td><span class="tag ${sevClass}">${g.severity}</span></td>
+    <td><b>${g.score}</b></td>
+    <td style="font-family:var(--mono);font-size:.78rem">${esc(g.entity)}</td>
+    <td style="font-size:.75rem;color:var(--dim)">${g.timeRange||'-'}</td>
+    <td style="font-size:.72rem;color:var(--dim);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(g.groupingReason)}">${esc(g.groupingReason)}</td>
+   </tr>`;
+  });
+  gTbl+='</table>';
+  document.getElementById('groupsTable').innerHTML=gTbl;
+ }else{
+  groupsCard.classList.add('hidden');
+ }
+
+ // ── Row-by-row table ──
+ const hasGroups=isGrouped;
+ let tbl='<table><tr><th>#</th>';
+ if(hasGroups) tbl+='<th>Case</th>';
+ tbl+='<th>Status</th><th>Alert Type</th><th>Severity</th><th>Score</th><th>Label</th><th>Signals</th><th>Ready</th><th>Notes</th></tr>';
+
+ const sorted=(data.results||[]).sort((a,b)=>a.index-b.index);
+ sorted.forEach(r=>{
+  if(r.status==='skipped'){
+   tbl+=`<tr style="opacity:.6">
+    <td>${r.index+1}</td>`;
+   if(hasGroups) tbl+='<td>-</td>';
+   tbl+=`<td><span class="badge-skip">SKIPPED</span></td>
+    <td colspan="5" style="color:var(--dim);font-size:.78rem">${(r.reasons||[]).join('; ')}</td>
+    <td></td><td></td>
+   </tr>`;
+  }else if(r.status==='failed'){
+   tbl+=`<tr style="opacity:.6">
+    <td>${r.index+1}</td>`;
+   if(hasGroups) tbl+='<td>-</td>';
+   tbl+=`<td><span class="badge-skip">FAILED</span></td>
+    <td colspan="5" style="color:var(--red);font-size:.78rem">${esc(r.error||'Unknown error')}</td>
+    <td></td><td></td>
+   </tr>`;
+  }else{
+   const readyBadge=r.readyForAction?'<span class="badge-ready">READY</span>':'<span class="badge-review">REVIEW</span>';
+   const warnings=(r.validationWarnings||[]).join('; ');
+   const caseNum=hasGroups&&r.groupIndex!==undefined?`<span style="color:var(--purple);font-weight:700">#${r.groupIndex+1}</span>`:'';
+   tbl+=`<tr>
+    <td>${r.index+1}</td>`;
+   if(hasGroups) tbl+=`<td>${caseNum}</td>`;
+   tbl+=`<td><span class="badge-ready">OK</span></td>
+    <td>${r.alertType}</td>
+    <td>${tag(r.severity)}</td>
+    <td><b>${r.score}</b></td>
+    <td>${tag(r.label)}</td>
+    <td>${r.signalsFired}</td>
+    <td>${readyBadge}</td>
+    <td style="font-size:.72rem;color:var(--yellow)">${warnings?esc(warnings):''}</td>
+   </tr>`;
+  }
+ });
+ tbl+='</table>';
+ document.getElementById('resultsTable').innerHTML=tbl;
+
+ document.getElementById('resultsSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function exportResults(){
+ if(!lastResults){toast('No results to export','');return}
+ const blob=new Blob([JSON.stringify(lastResults,null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+ a.download='vigilis-upload-results-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+ toast('Downloaded','ok');
+}
+
+function viewInCases(){window.location.href='/demo/ui/cases'}
+
+function resetUpload(){
+ uploadedFile=null;fileContent='';previewData=null;lastResults=null;columnOverrides={};
+ document.getElementById('fileName').classList.add('hidden');
+ document.getElementById('analyzeBtn').disabled=true;
+ document.getElementById('step2Card').classList.add('hidden');
+ document.getElementById('resultsSection').classList.add('hidden');
+ document.getElementById('progressWrap').classList.add('hidden');
+ document.getElementById('fileInput').value='';
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

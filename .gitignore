@@ -1,0 +1,174 @@
+# ==============================================================================
+# Vigilis .gitignore
+# ==============================================================================
+# NEVER REMOVE entries from this file without a security review.
+# Adding entries is always safe.
+
+# ------------------------------------------------------------------------------
+# Secrets and environment (CRITICAL)
+# ------------------------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+!.env.example
+
+# Any file with "secret" or "credential" in the name
+**/secrets/
+**/credentials/
+*_secret*
+*_credentials*
+
+# Private keys and certificates
+*.pem
+*.key
+*.pfx
+*.p12
+*.jks
+*.crt
+*.cer
+id_rsa
+id_ed25519
+*.kdbx
+.htpasswd
+
+# ------------------------------------------------------------------------------
+# Python
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# Package build
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+
+# Testing and coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+
+# ------------------------------------------------------------------------------
+# Databases (local dev only — never commit data)
+# ------------------------------------------------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+local.db
+test.db
+postgres_data/
+pg_data/
+
+# ------------------------------------------------------------------------------
+# Large binary test data (re-downloadable, should not be in git)
+# ------------------------------------------------------------------------------
+test_data/public_datasets/*.parquet
+test_data/public_datasets/*.csv
+test_data/public_datasets/*.zip
+*.parquet
+
+# ------------------------------------------------------------------------------
+# Root-level ad-hoc debug / response dumps
+# (These are API test output, not source code)
+# ------------------------------------------------------------------------------
+/cases_resp.json
+/cases_test*.json
+/incidents_resp.json
+/incidents_test*.json
+/upload_resp.json
+/validation_report*.json
+/response_*.json
+/debug_*.json
+
+# Shell-redirect typos (created by pip install > =version)
+=*
+
+# Base64 script dumps
+scripts/*_b64.txt
+scripts/*.b64
+
+# Simulation/eval test result dumps (API response snapshots)
+test_data/sim*_result.json
+test_data/sim*_cases_*.json
+test_data/sim*_incidents_*.json
+test_data/sim*_correlate_*.json
+
+# ------------------------------------------------------------------------------
+# Runtime / logs
+# ------------------------------------------------------------------------------
+*.log
+logs/
+log/
+*.log.gz
+*.pid
+
+# ------------------------------------------------------------------------------
+# IDE and tooling local state
+# ------------------------------------------------------------------------------
+.claude/settings.local.json
+.claude/.last_session
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# ------------------------------------------------------------------------------
+# OS cruft
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ------------------------------------------------------------------------------
+# Node (in case any frontend work is added)
+# ------------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+
+# ------------------------------------------------------------------------------
+# Docker runtime artifacts
+# ------------------------------------------------------------------------------
+docker-compose.override.yml
+.docker/
+
+# ------------------------------------------------------------------------------
+# Project-specific runtime data
+# ------------------------------------------------------------------------------
+# Sysmon export state files
+sysmon_export_state.txt
+# Calibration / learning loop artifacts
+calibration_*.json
+# Threat intel feed caches
+feed_cache/

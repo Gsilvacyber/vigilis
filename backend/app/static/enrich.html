@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vigilis - Enrich & Investigate</title>
+<link rel="stylesheet" href="/static/vigilis.css?v=8">
+<style>
+.container{max-width:1100px;margin:1.5rem auto;padding:0 2rem}
+h1{margin-bottom:.15rem}
+
+/* Tabs */
+.tab-bar{display:flex;gap:0;margin-bottom:1.5rem;border-bottom:2px solid var(--border)}
+.tab{padding:.6rem 1.25rem;cursor:pointer;font-size:.88rem;font-weight:600;color:var(--dim);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* Paste area */
+.paste-wrap{position:relative;margin-bottom:1rem}
+.paste-box{width:100%;min-height:200px;background:var(--surface-3);border:2px dashed var(--border);border-radius:var(--radius);padding:1rem;font-family:var(--mono);font-size:.82rem;color:var(--text);resize:vertical;transition:border-color .2s;line-height:1.5}
+.paste-box:focus{outline:none;border-color:var(--blue)}
+.paste-box::placeholder{color:var(--text-tertiary);font-family:var(--font);font-size:.85rem}
+.paste-hint{position:absolute;bottom:.75rem;right:1rem;font-size:.68rem;color:var(--dim);pointer-events:none}
+.format-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:.72rem;font-weight:600;margin-right:.4rem}
+.fb-json{background:#34d39918;color:var(--green)}.fb-csv{background:#60a5fa18;color:var(--blue)}
+.fb-kv{background:#a78bfa18;color:var(--purple)}.fb-syslog{background:#fbbf2418;color:var(--yellow)}
+.fb-raw{background:#94a3b818;color:var(--dim)}.fb-empty{background:#f8717118;color:var(--red)}
+.btn-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+button{font-family:var(--font);font-size:.85rem;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--dim);padding:.5rem 1rem;cursor:pointer;font-weight:600;transition:all .2s}
+button:hover{color:var(--text);background:var(--surface-2)}
+.sample-btns{display:flex;gap:.35rem;flex-wrap:wrap}
+.sample-btn{font-size:.72rem;padding:.25rem .6rem;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--dim);cursor:pointer}
+.sample-btn:hover{color:var(--text);border-color:var(--blue)}
+
+/* Detection preview */
+.detection-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1rem;display:none}
+.detection-panel.show{display:block}
+.det-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.65rem}
+.det-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);font-weight:600}
+.det-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.5rem .75rem;font-size:.82rem}
+.det-field{display:flex;flex-direction:column;gap:1px}
+.det-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;color:var(--dim);font-weight:600}
+.det-value{font-weight:600}
+.det-notes{margin-top:.65rem;padding-top:.5rem;border-top:1px solid var(--border)}
+.det-note{font-size:.75rem;color:var(--dim);padding:1px 0;display:flex;gap:.4rem;align-items:flex-start}
+.det-note::before{content:'\2192';color:var(--blue);flex-shrink:0}
+.det-fields-preview{margin-top:.65rem;padding-top:.5rem;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:.3rem}
+.field-chip{font-size:.68rem;padding:2px 8px;border-radius:8px;background:var(--surface-3);color:var(--text);font-family:var(--mono)}
+.field-chip .fv{color:var(--dim);margin-left:3px}
+
+/* Result cards — page overrides */
+.impact-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.impact-val{font-size:1.3rem;font-weight:700;color:var(--text)}
+.impact-label{font-size:.72rem;color:var(--dim)}
+
+/* ── IOC Investigation ────────────────────────────────── */
+.ioc-bar{display:flex;gap:.5rem;margin-bottom:1.25rem}
+.ioc-input{flex:1;background:var(--surface-3);border:2px solid var(--border);border-radius:var(--radius);padding:.6rem 1rem;font-family:var(--mono);font-size:.92rem;color:var(--text);transition:border-color .2s}
+.ioc-input:focus{outline:none;border-color:var(--blue)}
+.ioc-input::placeholder{color:var(--text-tertiary);font-family:var(--font)}
+.ioc-type-badge{display:inline-flex;padding:3px 10px;border-radius:12px;font-size:.72rem;font-weight:600}
+.ioc-ip{background:#60a5fa18;color:var(--blue)}
+.ioc-email{background:#a78bfa18;color:var(--purple)}
+.ioc-sha256,.ioc-md5{background:#fb923c18;color:var(--orange)}
+.ioc-domain{background:#22d3ee18;color:var(--cyan)}
+.ioc-keyword{background:#94a3b818;color:var(--dim)}
+.ioc-samples{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:1rem}
+
+/* Summary hero */
+.inv-hero{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
+.inv-hero-top{display:flex;align-items:center;gap:1rem;margin-bottom:.75rem;flex-wrap:wrap}
+.inv-ioc{font-family:var(--mono);font-size:1.15rem;font-weight:700;color:var(--text);word-break:break-all}
+.inv-hero-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem}
+.inv-stat{text-align:center;padding:.5rem}
+.inv-stat-val{font-size:1.4rem;font-weight:700;color:var(--text)}
+.inv-stat-label{font-size:.68rem;color:var(--dim);text-transform:uppercase;letter-spacing:.04em}
+
+/* Entity graph */
+.entity-section{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}
+@media(max-width:700px){.entity-section{grid-template-columns:1fr}}
+.entity-col h3{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:var(--dim);margin-bottom:.4rem}
+.entity-chip{display:inline-block;padding:2px 8px;border-radius:8px;font-size:.78rem;font-family:var(--mono);background:var(--surface-3);color:var(--text);margin:2px 3px 2px 0;cursor:pointer;transition:background .15s}
+.entity-chip:hover{background:#2d3a4d}
+
+/* Geo cards */
+.geo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.5rem}
+.geo-card{background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius);padding:.6rem .8rem;font-size:.8rem}
+.geo-ip{font-family:var(--mono);font-weight:600;margin-bottom:.2rem}
+.geo-loc{color:var(--dim)}
+.geo-flags{display:flex;gap:.4rem;margin-top:.3rem;font-size:.68rem}
+.geo-flag{padding:1px 6px;border-radius:8px}
+.geo-flag.warn{background:#f8717118;color:var(--red)}
+.geo-flag.ok{background:#34d39918;color:var(--green)}
+
+/* Investigation timeline */
+.inv-timeline{position:relative;padding-left:1.5rem}
+.inv-tl-event{position:relative;padding-bottom:1rem;padding-left:.75rem;border-left:2px solid var(--border)}
+.inv-tl-event:last-child{border-left-color:transparent;padding-bottom:0}
+.inv-tl-dot{position:absolute;left:-6px;top:3px;width:10px;height:10px;border-radius:50%;border:2px solid var(--border)}
+.inv-tl-time{font-size:.68rem;color:var(--dim);font-family:var(--mono)}
+.inv-tl-body{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.inv-tl-title{font-size:.82rem;font-weight:600}
+.inv-tl-case-link{font-size:.68rem;color:var(--blue);text-decoration:none;cursor:pointer}
+.inv-tl-case-link:hover{text-decoration:underline}
+
+/* Severity distribution mini bars */
+.sev-dist{display:flex;gap:.35rem;flex-wrap:wrap}
+.sev-dist-item{display:flex;align-items:center;gap:.3rem;font-size:.78rem;padding:3px 8px;border-radius:8px;background:var(--surface-3)}
+
+/* Related incidents */
+.rel-inc{background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius);padding:.65rem .85rem;margin-bottom:.5rem;cursor:pointer;transition:background .15s}
+.rel-inc:hover{background:var(--surface-3)}
+.rel-inc-title{font-weight:600;font-size:.85rem}
+.rel-inc-meta{display:flex;gap:.75rem;font-size:.72rem;color:var(--dim);margin-top:.2rem}
+
+/* No-results */
+.no-results{text-align:center;padding:3rem 1rem;color:var(--dim)}
+.no-results-icon{font-size:2.5rem;margin-bottom:.5rem}
+.no-results-msg{font-size:.95rem}
+.no-results-hint{font-size:.78rem;margin-top:.5rem}
+
+/* ── Compare tab ──────────────────────────────────────── */
+.cmp-inputs{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+@media(max-width:800px){.cmp-inputs{grid-template-columns:1fr}}
+.cmp-col-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);font-weight:600;margin-bottom:.35rem;display:flex;align-items:center;gap:.4rem}
+.cmp-col-label .cmp-dot{width:10px;height:10px;border-radius:50%}
+.cmp-dot-a{background:var(--blue)}.cmp-dot-b{background:var(--purple)}
+.cmp-textarea{width:100%;min-height:140px;background:var(--surface-3);border:2px dashed var(--border);border-radius:var(--radius);padding:.75rem;font-family:var(--mono);font-size:.78rem;color:var(--text);resize:vertical;transition:border-color .2s;line-height:1.5}
+.cmp-textarea:focus{outline:none;border-color:var(--blue)}
+.cmp-textarea::placeholder{color:var(--text-tertiary);font-family:var(--font);font-size:.82rem}
+
+/* Verdict banner */
+.cmp-verdict{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1rem;font-size:.88rem;line-height:1.5}
+.cmp-verdict-text{font-weight:600}
+.cmp-verdict-meta{display:flex;gap:1rem;margin-top:.5rem;font-size:.78rem;color:var(--dim);flex-wrap:wrap}
+
+/* Score comparison */
+.cmp-score-row{display:grid;grid-template-columns:1fr auto 1fr;gap:.75rem;align-items:center;margin-bottom:1rem}
+.cmp-score-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center}
+.cmp-score-val{font-size:2rem;font-weight:700}
+.cmp-score-label{font-size:.68rem;text-transform:uppercase;color:var(--dim);letter-spacing:.04em;margin-top:.2rem}
+.cmp-score-delta{text-align:center;font-size:.82rem;font-weight:700;padding:.5rem}
+.cmp-delta-positive{color:var(--green)}.cmp-delta-negative{color:var(--red)}.cmp-delta-zero{color:var(--dim)}
+
+/* Signal diff table */
+.cmp-sig-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.cmp-sig-table th{text-align:left;padding:.4rem .5rem;color:var(--dim);border-bottom:1px solid var(--border);font-weight:600;font-size:.68rem;text-transform:uppercase}
+.cmp-sig-table td{padding:.4rem .5rem;border-bottom:1px solid var(--border)}
+.sig-both{color:var(--green);font-weight:600}
+.sig-only-a{color:var(--blue);font-weight:600}
+.sig-only-b{color:var(--purple);font-weight:600}
+.sig-neither{color:var(--text-tertiary)}
+
+/* Entity overlap */
+.cmp-entity-section{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem}
+.cmp-entity-cat h4{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:var(--dim);margin-bottom:.3rem}
+.cmp-entity-shared{font-size:.75rem;color:var(--green);font-weight:600;margin-bottom:.2rem}
+.cmp-entity-only{font-size:.72rem;color:var(--dim)}
+.cmp-entity-chip{display:inline-block;padding:1px 6px;border-radius:6px;font-family:var(--mono);font-size:.72rem;margin:1px 2px}
+.chip-shared{background:#34d39915;border:1px solid #34d39933;color:var(--green)}
+.chip-a{background:#60a5fa12;border:1px solid #60a5fa33;color:var(--blue)}
+.chip-b{background:#a78bfa12;border:1px solid #a78bfa33;color:var(--purple)}
+
+/* Playbook diff */
+.cmp-list-diff{font-size:.78rem}
+.cmp-list-shared{color:var(--text);margin-bottom:.15rem}
+.cmp-list-shared::before{content:'= ';color:var(--green);font-weight:700}
+.cmp-list-only-a{color:var(--blue);margin-bottom:.15rem}
+.cmp-list-only-a::before{content:'A ';font-weight:700}
+.cmp-list-only-b{color:var(--purple);margin-bottom:.15rem}
+.cmp-list-only-b::before{content:'B ';font-weight:700}
+
+/* ── Live Feed ────────────────────────────────────────── */
+.feed-controls{display:flex;gap:.75rem;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap}
+.feed-status{font-size:.78rem;color:var(--dim);display:flex;align-items:center;gap:.4rem}
+.feed-dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+.feed-dot.active{background:var(--green);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.feed-counter{font-size:.78rem;color:var(--dim);margin-left:auto}
+.feed-speed{font-size:.72rem;padding:.2rem .5rem;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--dim);cursor:pointer}
+.feed-speed.active{border-color:var(--blue);color:var(--blue)}
+
+.feed-container{display:flex;flex-direction:column;gap:.75rem}
+
+/* Feed card */
+.feed-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;opacity:0;transform:translateY(20px);transition:opacity .4s,transform .4s}
+.feed-card.visible{opacity:1;transform:translateY(0)}
+.feed-card-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.65rem;flex-wrap:wrap}
+.feed-alert-type{font-family:var(--mono);font-size:.82rem;font-weight:600}
+.feed-cat-badge{padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:600;text-transform:uppercase}
+.cat-identity{background:#a78bfa18;color:var(--purple)}
+.cat-endpoint{background:#fb923c18;color:var(--orange)}
+.cat-email{background:#22d3ee18;color:var(--cyan)}
+.cat-cloud{background:#60a5fa18;color:var(--blue)}
+.cat-network{background:#fbbf2418;color:var(--yellow)}
+.feed-identity{font-size:.78rem;color:var(--dim)}
+.feed-score-area{margin-left:auto;display:flex;align-items:center;gap:.5rem}
+.feed-score-num{font-size:1.3rem;font-weight:700;transition:color .3s}
+.feed-score-bar{width:80px;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.feed-score-fill{height:100%;width:0;border-radius:3px;transition:width .8s ease-out,background .3s}
+
+/* Signal pills */
+.feed-signals{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:.5rem}
+.feed-sig{padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:600;opacity:0;transform:scale(.8);transition:opacity .25s,transform .25s,background .2s,color .2s}
+.feed-sig.visible{opacity:1;transform:scale(1)}
+.feed-sig.fired{background:#34d39918;color:var(--green);border:1px solid #34d39933}
+.feed-sig.not-fired{background:var(--surface-3);color:var(--text-tertiary);border:1px solid transparent}
+
+/* Playbook reveal */
+.feed-playbook{font-size:.75rem;color:var(--dim);max-height:0;overflow:hidden;transition:max-height .4s ease-out,opacity .3s;opacity:0}
+.feed-playbook.visible{max-height:200px;opacity:1}
+.feed-playbook ol{padding-left:1rem;margin-top:.3rem}
+.feed-playbook li{margin-bottom:.15rem}
+
+/* Entities row */
+.feed-entities{display:flex;gap:.75rem;font-size:.72rem;color:var(--dim);margin-bottom:.4rem;flex-wrap:wrap}
+.feed-entity-chip{font-family:var(--mono);padding:1px 6px;border-radius:6px;background:var(--surface-3)}
+</style>
+</head>
+<body>
+<script src="/static/vigilis.js?v=10"></script>
+<script>document.write(renderNav('enrich'));</script>
+<div class="container">
+<h1>Enrich &amp; Investigate</h1>
+<p class="subtitle">Paste a raw log to enrich, or search an IOC to see everything Vigilis knows about it.</p>
+
+<div class="tab-bar">
+ <div class="tab active" onclick="switchTab('paste')">Paste &amp; Enrich</div>
+ <div class="tab" onclick="switchTab('investigate')">Investigate IOC</div>
+ <div class="tab" onclick="switchTab('compare')">Compare Alerts</div>
+ <div class="tab" onclick="switchTab('feed')">Live Feed</div>
+</div>
+
+<!-- ═══ TAB 1: Paste & Enrich ═══ -->
+<div class="tab-content active" id="tab-paste">
+<div class="paste-wrap">
+ <textarea class="paste-box" id="pasteInput" placeholder="Paste anything here...
+
+Examples:
+  { &quot;identity&quot;: { &quot;upn&quot;: &quot;alice@corp.com&quot; }, &quot;ips&quot;: [...] }
+  src_ip=198.51.100.7 user=alice action=login status=failed
+  Mar 30 14:02:00 fw01 sshd[1234]: Failed password for alice from 198.51.100.7
+  timestamp,user,action,src_ip,severity
+  2024-03-30T14:02:00Z,alice,login_failure,198.51.100.7,high"></textarea>
+ <div class="paste-hint">JSON &middot; CSV &middot; key=value &middot; syslog &middot; raw text</div>
+</div>
+<div class="btn-row">
+ <button class="primary" id="enrichBtn" onclick="enrichPaste()">Enrich</button>
+ <button id="saveBtn" onclick="savePaste()" style="display:none">Save Case &amp; View</button>
+ <div style="flex:1"></div>
+ <span style="font-size:.72rem;color:var(--dim);margin-right:.25rem">Try a sample:</span>
+ <div class="sample-btns" id="sampleBtns"></div>
+</div>
+<div class="detection-panel" id="detPanel"></div>
+<div id="pasteError" class="hidden" style="color:var(--red);font-size:.85rem;margin-bottom:1rem"></div>
+<div id="pasteResults" class="hidden"></div>
+</div>
+
+<!-- ═══ TAB 2: Investigate IOC ═══ -->
+<div class="tab-content" id="tab-investigate">
+<div class="ioc-bar">
+ <input class="ioc-input" id="iocInput" placeholder="Paste an IP, hash, email, domain, or username..." autocomplete="off">
+ <button class="primary" id="invBtn" onclick="investigateIOC()">Investigate</button>
+</div>
+<div class="ioc-samples" id="iocSamples"></div>
+<div id="invError" class="hidden" style="color:var(--red);font-size:.85rem;margin-bottom:1rem"></div>
+<div id="invResults"></div>
+</div>
+
+<!-- ═══ TAB 4: Live Feed ═══ -->
+<div class="tab-content" id="tab-feed">
+<div class="feed-controls">
+ <button class="primary" id="feedBtn" onclick="startFeed()">Start Feed</button>
+ <button id="feedStopBtn" onclick="stopFeed()" style="display:none">Stop</button>
+ <div class="feed-status" id="feedStatus"><span class="feed-dot" id="feedDot"></span><span id="feedStatusText">Ready</span></div>
+ <div style="display:flex;gap:.25rem">
+  <button class="feed-speed active" data-speed="1200" onclick="setFeedSpeed(this)">Normal</button>
+  <button class="feed-speed" data-speed="600" onclick="setFeedSpeed(this)">Fast</button>
+  <button class="feed-speed" data-speed="2400" onclick="setFeedSpeed(this)">Slow</button>
+ </div>
+ <div class="feed-counter" id="feedCounter"></div>
+</div>
+<div class="feed-container" id="feedContainer"></div>
+</div>
+
+<!-- ═══ TAB 3: Compare Alerts ═══ -->
+<div class="tab-content" id="tab-compare">
+<div class="cmp-inputs">
+ <div>
+  <div class="cmp-col-label"><span class="cmp-dot cmp-dot-a"></span> Alert A</div>
+  <textarea class="cmp-textarea" id="cmpInputA" placeholder="Paste alert A here (any format)..."></textarea>
+ </div>
+ <div>
+  <div class="cmp-col-label"><span class="cmp-dot cmp-dot-b"></span> Alert B</div>
+  <textarea class="cmp-textarea" id="cmpInputB" placeholder="Paste alert B here (any format)..."></textarea>
+ </div>
+</div>
+<div class="btn-row">
+ <button class="primary" id="cmpBtn" onclick="runCompare()">Compare</button>
+ <div style="flex:1"></div>
+ <span style="font-size:.72rem;color:var(--dim);margin-right:.25rem">Load samples:</span>
+ <div class="sample-btns" id="cmpSampleBtns"></div>
+</div>
+<div id="cmpError" class="hidden" style="color:var(--red);font-size:.85rem;margin-bottom:1rem"></div>
+<div id="cmpResults"></div>
+</div>
+
+</div>
+<script>
+let lastResult=null;
+
+function switchTab(id){
+ const tabIds=['paste','investigate','compare','feed'];
+ const idx=tabIds.indexOf(id);
+ document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+ document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+ document.getElementById('tab-'+id).classList.add('active');
+ if(id==='investigate')document.getElementById('iocInput').focus();
+ if(id==='compare')document.getElementById('cmpInputA').focus();
+}
+
+/* ── Paste & Enrich ────────────────────────────────── */
+const SAMPLES={
+ 'JSON':JSON.stringify({"identity":{"upn":"alice@corp.com","userId":"uid-001","displayName":"Alice","privilegeTier":"standard","mfaStatus":"enabled"},"ips":[{"ipAddress":"198.51.100.7","role":"anomalous","geo":{"country":"Romania","city":"Bucharest"}}],"device":{"hostname":"ws-alice-01","os":"Windows 11","managed":true},"location":"Romania","clientApp":"Outlook","mfaUsed":false},null,2),
+ 'CSV':'timestamp,user,action,src_ip,severity,description\n2024-03-30T14:02:00Z,alice@corp.com,login_failure,198.51.100.7,high,Failed sign-in from anomalous location',
+ 'Key=Value':'src_ip=198.51.100.7 user=alice@corp.com action=login_failure severity=high location=Romania mfa_used=false client_app=Outlook',
+ 'Syslog':'<134>Mar 30 14:02:00 fw-corp01 sshd[12345]: Failed password for alice from 198.51.100.7 port 22 ssh2',
+ 'Raw':'Alice attempted to sign in from Romania (198.51.100.7) at 14:02. MFA was not used. The sign-in was blocked due to impossible travel from New York to Bucharest within 30 minutes.'
+};
+
+(function(){
+ const cont=document.getElementById('sampleBtns');
+ for(const [label] of Object.entries(SAMPLES)){
+  const b=document.createElement('button');b.className='sample-btn';b.textContent=label;
+  b.onclick=()=>{document.getElementById('pasteInput').value=SAMPLES[label];document.getElementById('pasteInput').focus()};
+  cont.appendChild(b);
+ }
+})();
+
+function fmtBadge(fmt){
+ const cls={json:'fb-json',json_array:'fb-json',csv:'fb-csv',key_value:'fb-kv',syslog:'fb-syslog',raw_text:'fb-raw',empty:'fb-empty'}[fmt]||'fb-raw';
+ const label={json:'JSON',json_array:'JSON Array',csv:'CSV',key_value:'Key=Value',syslog:'Syslog',raw_text:'Raw Text',empty:'Empty'}[fmt]||fmt;
+ return `<span class="format-badge ${cls}">${label}</span>`;
+}
+
+function showDetection(det){
+ const p=document.getElementById('detPanel');
+ const alertLabel=det.detectedAlertType.replace('.',' / ');
+ const sevClass='tag-'+det.detectedSeverity;
+ let fieldsHtml='';
+ if(det.extractedFields&&Object.keys(det.extractedFields).length){
+  fieldsHtml='<div class="det-fields-preview">';
+  for(const [k,v] of Object.entries(det.extractedFields)){
+   const vs=String(v).length>40?String(v).slice(0,37)+'...':String(v);
+   fieldsHtml+=`<span class="field-chip">${esc(k)}<span class="fv">=${esc(vs)}</span></span>`;
+  }
+  fieldsHtml+='</div>';
+ }
+ let notesHtml='';
+ if(det.notes&&det.notes.length){
+  notesHtml='<div class="det-notes">';
+  for(const n of det.notes)notesHtml+=`<div class="det-note">${esc(n)}</div>`;
+  notesHtml+='</div>';
+ }
+ p.innerHTML=`<div class="det-header"><div class="det-title">Auto-Detection</div>${fmtBadge(det.inputFormat)}</div>
+  <div class="det-grid">
+   <div class="det-field"><span class="det-label">Detected Alert Type</span><span class="det-value">${esc(alertLabel)}</span></div>
+   <div class="det-field"><span class="det-label">Severity</span><span class="det-value"><span class="tag ${sevClass}">${det.detectedSeverity}</span></span></div>
+   <div class="det-field"><span class="det-label">Fields Extracted</span><span class="det-value">${det.fieldsExtracted}</span></div>
+   <div class="det-field"><span class="det-label">Parse Confidence</span><span class="det-value">${det.inputConfidence}</span></div>
+  </div>
+  ${fieldsHtml}${notesHtml}`;
+ p.classList.add('show');
+}
+
+async function enrichPaste(){
+ const btn=document.getElementById('enrichBtn');
+ const text=document.getElementById('pasteInput').value;
+ const errEl=document.getElementById('pasteError');
+ errEl.classList.add('hidden');
+ document.getElementById('detPanel').classList.remove('show');
+ document.getElementById('pasteResults').classList.add('hidden');
+ document.getElementById('saveBtn').style.display='none';
+ if(!text.trim()){errEl.textContent='Paste something first';errEl.classList.remove('hidden');return}
+ btn.disabled=true;btn.textContent='Analyzing...';
+ try{
+  const r=await fetch('/api/v1/demo/paste',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':AK},body:JSON.stringify({text})});
+  if(!r.ok){const err=await r.text();let detail='';try{detail=JSON.parse(err).detail}catch(e){}errEl.textContent='Error '+r.status+': '+(detail||err);errEl.classList.remove('hidden');toast('Enrichment failed',false);return}
+  const d=await r.json();lastResult=d;showDetection(d.detection);renderPasteResults(d);
+  document.getElementById('saveBtn').style.display='inline-block';toast('Enriched successfully',true);
+ }catch(e){errEl.textContent='Request failed: '+e.message;errEl.classList.remove('hidden');toast('Request failed',false)}
+ finally{btn.disabled=false;btn.textContent='Enrich'}
+}
+
+async function savePaste(){
+ const text=document.getElementById('pasteInput').value;
+ const btn=document.getElementById('saveBtn');
+ btn.disabled=true;btn.textContent='Saving...';
+ try{
+  const r=await fetch('/api/v1/demo/paste',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':AK},body:JSON.stringify({text,persist:true})});
+  if(r.ok){toast('Case saved',true);setTimeout(()=>{window.location.href='/demo/ui/cases'},600)}
+  else toast('Save failed',false);
+ }catch(e){toast('Error saving',false)}
+ finally{btn.disabled=false;btn.textContent='Save Case & View'}
+}
+
+function scoreColor(s){return s>=85?'var(--red)':s>=60?'var(--yellow)':s>=30?'var(--blue)':'var(--dim)'}
+function labelTag(l){return `<span class="tag tag-${l}">${l}</span>`}
+function sevColor(s){return{critical:'var(--red)',high:'var(--yellow)',medium:'var(--blue)',low:'var(--dim)',informational:'var(--dim)'}[s]||'var(--dim)'}
+
+function renderPasteResults(d){
+ const el=document.getElementById('pasteResults');
+ const sb=d.scoreBreakdown;const fc=d.finalCase;const imp=fc&&fc.enrichment&&fc.enrichment.impactSummary;
+ let impactHtml='';
+ if(imp){impactHtml=`<div class="card"><h2>Impact Summary</h2>
+  <div class="impact-grid"><div><div class="impact-val">${imp.timeSavedMinutes} min</div><div class="impact-label">Time saved per case</div></div>
+  <div><div class="impact-val">${imp.manualStepsReplaced.length} steps</div><div class="impact-label">Manual steps replaced</div></div></div>
+  <div style="margin-top:.75rem;font-size:.85rem"><b>Risk:</b> ${esc(imp.risk)}</div>
+  <ul style="margin-top:.5rem">${imp.manualStepsReplaced.map(s=>'<li>'+esc(s)+'</li>').join('')}</ul></div>`}
+ let sigRows='';d.derivedSignals.forEach(s=>{const cls=s.fired?'fired':'not-fired';sigRows+=`<tr><td>${esc(s.signal)}</td><td>${s.weight}</td><td class="${cls}">${s.fired?'FIRED':'-'}</td><td>${esc(s.label)}</td></tr>`});
+ let pbItems='';d.recommendedPlaybook.forEach(p=>{pbItems+=`<li><b>${esc(p.title||('Step '+p.step))}</b> - ${esc(p.description||'')} ${labelTag(p.priority||'medium')}</li>`});
+ let actItems='';d.recommendedActions.forEach(a=>{actItems+=`<li><b>${esc(a.title||a.action)}</b> - ${esc(a.description||'')} ${labelTag(a.priority||'medium')}</li>`});
+ el.innerHTML=`
+  <div class="grid"><div>
+   <div class="card"><h2>Confidence Score</h2><div class="score-bar"><div class="score-fill" style="width:${sb.finalScore}%;background:${scoreColor(sb.finalScore)}">${sb.finalScore}/100</div></div>
+   <div style="display:flex;gap:1rem;margin-top:.5rem;font-size:.82rem;flex-wrap:wrap"><span>Base: <b>${sb.severityBase}</b></span><span>Signal boost: <b>+${sb.signalBoost}</b></span><span>Label: ${labelTag(sb.label)}</span></div></div>
+   ${impactHtml}</div>
+   <div><div class="card"><h2>Derived Signals</h2><table><tr><th>Signal</th><th>Wt</th><th>Status</th><th>Label</th></tr>${sigRows}</table></div></div></div>
+  <div class="grid"><div class="card"><h2>Recommended Playbook</h2><ol>${pbItems}</ol></div>
+  <div class="card"><h2>Recommended Actions</h2><ul>${actItems}</ul></div></div>
+  <div class="card"><h2>Full Case JSON</h2><pre>${esc(JSON.stringify(d.finalCase,null,2))}</pre></div>`;
+ el.classList.remove('hidden');
+}
+
+/* ── IOC Investigation ─────────────────────────────── */
+
+const IOC_SAMPLES=['198.51.100.7','alice@corp.com','ws-alice-01','10.0.0.42'];
+(function(){
+ const c=document.getElementById('iocSamples');
+ IOC_SAMPLES.forEach(s=>{
+  const b=document.createElement('button');b.className='sample-btn';b.textContent=s;
+  b.onclick=()=>{document.getElementById('iocInput').value=s;investigateIOC()};
+  c.appendChild(b);
+ });
+ document.getElementById('iocInput').addEventListener('keydown',e=>{if(e.key==='Enter')investigateIOC()});
+})();
+
+function iocTypeBadge(t){
+ const cls='ioc-'+t;
+ const labels={ip:'IP Address',email:'Email',sha256:'SHA-256',md5:'MD5',domain:'Domain',keyword:'Keyword'};
+ return `<span class="ioc-type-badge ${cls}">${labels[t]||t}</span>`;
+}
+
+function fmtDuration(sec){
+ if(!sec&&sec!==0)return'—';
+ if(sec<60)return sec+'s';if(sec<3600)return Math.round(sec/60)+'m';
+ const h=Math.floor(sec/3600);const m=Math.round((sec%3600)/60);return h+'h '+m+'m';
+}
+
+function fmtTime(iso){
+ if(!iso)return'—';
+ try{const d=new Date(iso);return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})}catch(e){return iso}
+}
+
+async function investigateIOC(){
+ const btn=document.getElementById('invBtn');
+ const q=document.getElementById('iocInput').value.trim();
+ const errEl=document.getElementById('invError');
+ const resEl=document.getElementById('invResults');
+ errEl.classList.add('hidden');resEl.innerHTML='';
+ if(!q){errEl.textContent='Enter an IOC to investigate';errEl.classList.remove('hidden');return}
+ btn.disabled=true;btn.textContent='Searching...';
+ try{
+  const r=await fetch(`/api/v1/demo/investigate?q=${encodeURIComponent(q)}`,{headers:{'X-API-Key':AK}});
+  if(!r.ok){const err=await r.text();errEl.textContent='Error '+r.status+': '+err;errEl.classList.remove('hidden');toast('Search failed',false);return}
+  const d=await r.json();
+  renderInvestigation(d);
+  toast(d.found?`Found ${d.totalHits} case(s)`:'No matches found',d.found);
+ }catch(e){errEl.textContent='Request failed: '+e.message;errEl.classList.remove('hidden');toast('Request failed',false)}
+ finally{btn.disabled=false;btn.textContent='Investigate'}
+}
+
+function renderInvestigation(d){
+ const el=document.getElementById('invResults');
+ if(!d.found){
+  el.innerHTML=`<div class="no-results"><div class="no-results-icon">No results</div>
+   <div class="no-results-msg">No cases found for <b style="font-family:var(--mono)">${esc(d.ioc)}</b></div>
+   <div class="no-results-hint">Try running "Simulate Pilot" first to load demo data, then search for an IOC.</div></div>`;
+  return;
+ }
+
+ const eg=d.entityGraph;
+
+ /* Hero summary */
+ let html=`<div class="inv-hero">
+  <div class="inv-hero-top">
+   <span class="inv-ioc">${esc(d.ioc)}</span>
+   ${iocTypeBadge(d.iocType)}
+   <span class="tag tag-${d.riskLevel}">${d.riskLevel.toUpperCase()}</span>
+  </div>
+  <div class="inv-hero-stats">
+   <div class="inv-stat"><div class="inv-stat-val">${d.totalHits}</div><div class="inv-stat-label">Cases</div></div>
+   <div class="inv-stat"><div class="inv-stat-val">${d.avgConfidenceScore}%</div><div class="inv-stat-label">Avg Confidence</div></div>
+   <div class="inv-stat"><div class="inv-stat-val">${eg.userCount}</div><div class="inv-stat-label">Users Touched</div></div>
+   <div class="inv-stat"><div class="inv-stat-val">${eg.ipCount}</div><div class="inv-stat-label">IPs Seen</div></div>
+   <div class="inv-stat"><div class="inv-stat-val">${fmtDuration(d.timeSpanSeconds)}</div><div class="inv-stat-label">Time Span</div></div>
+   <div class="inv-stat"><div class="inv-stat-val">${d.relatedIncidents.length}</div><div class="inv-stat-label">Incidents</div></div>
+  </div></div>`;
+
+ /* Entity graph */
+ html+=`<div class="card"><h2>Entity Graph</h2><div class="entity-section">
+  <div class="entity-col"><h3>Users (${eg.userCount})</h3>${eg.users.map(u=>`<span class="entity-chip" onclick="pivotIOC('${esc(u)}')">${esc(u)}</span>`).join('')||'<span style="color:var(--dim);font-size:.8rem">None</span>'}</div>
+  <div class="entity-col"><h3>IP Addresses (${eg.ipCount})</h3>${eg.ips.map(ip=>`<span class="entity-chip" onclick="pivotIOC('${esc(ip)}')">${esc(ip)}</span>`).join('')||'<span style="color:var(--dim);font-size:.8rem">None</span>'}</div>
+  <div class="entity-col"><h3>Hostnames (${eg.hostnameCount})</h3>${eg.hostnames.map(h=>`<span class="entity-chip" onclick="pivotIOC('${esc(h)}')">${esc(h)}</span>`).join('')||'<span style="color:var(--dim);font-size:.8rem">None</span>'}</div>
+ </div></div>`;
+
+ /* Geo data */
+ if(d.geoData.length){
+  html+=`<div class="card"><h2>Geographic Data</h2><div class="geo-grid">`;
+  for(const g of d.geoData){
+   let flags='';
+   if(g.isKnownVpn)flags+=`<span class="geo-flag warn">VPN</span>`;
+   if(g.isTorExit)flags+=`<span class="geo-flag warn">TOR</span>`;
+   if(!g.isKnownVpn&&!g.isTorExit)flags+=`<span class="geo-flag ok">Direct</span>`;
+   html+=`<div class="geo-card"><div class="geo-ip">${esc(g.ipAddress)}</div><div class="geo-loc">${esc(g.city||'')}${g.city&&g.country?', ':''}${esc(g.country||'Unknown')}</div><div class="geo-flags">${flags}</div></div>`;
+  }
+  html+=`</div></div>`;
+ }
+
+ /* Severity + alert type distribution */
+ html+=`<div class="grid">`;
+ html+=`<div class="card"><h2>Severity Distribution</h2><div class="sev-dist">`;
+ for(const [sev,cnt] of Object.entries(d.severityDistribution)){
+  html+=`<div class="sev-dist-item"><span class="tag tag-${sev}">${sev}</span><span style="font-weight:700">${cnt}</span></div>`;
+ }
+ html+=`</div></div>`;
+ html+=`<div class="card"><h2>Alert Types</h2><div class="sev-dist">`;
+ for(const [at,cnt] of Object.entries(d.alertTypeDistribution)){
+  html+=`<div class="sev-dist-item"><span style="font-family:var(--mono);font-size:.75rem">${esc(at)}</span><span style="font-weight:700">${cnt}</span></div>`;
+ }
+ html+=`</div></div></div>`;
+
+ /* Timeline */
+ html+=`<div class="card"><h2>Event Timeline</h2>
+  <div style="font-size:.75rem;color:var(--dim);margin-bottom:.75rem">First seen: ${fmtTime(d.firstSeen)} &mdash; Last seen: ${fmtTime(d.lastSeen)}</div>
+  <div class="inv-timeline">`;
+ for(const ev of d.timeline){
+  const dotColor=sevColor(ev.severity);
+  html+=`<div class="inv-tl-event">
+   <div class="inv-tl-dot" style="background:${dotColor};border-color:${dotColor}"></div>
+   <div class="inv-tl-time">${fmtTime(ev.time)}</div>
+   <div class="inv-tl-body">
+    <span class="inv-tl-title">${esc(ev.title)}</span>
+    <span class="tag tag-${ev.severity}">${ev.severity}</span>
+    <a class="inv-tl-case-link" href="/demo/ui/case/${ev.caseId}">View case</a>
+   </div></div>`;
+ }
+ html+=`</div></div>`;
+
+ /* Related incidents */
+ if(d.relatedIncidents.length){
+  html+=`<div class="card"><h2>Related Incidents</h2>`;
+  for(const inc of d.relatedIncidents){
+   html+=`<div class="rel-inc" onclick="window.location.href='/demo/ui/incidents'">
+    <div class="rel-inc-title">${esc(inc.title)}</div>
+    <div class="rel-inc-meta">
+     <span class="tag tag-${inc.severity}">${inc.severity}</span>
+     <span>${inc.caseCount} cases</span>
+     <span>Confidence: ${inc.confidenceScore}%</span>
+     <span>Risk: ${(inc.riskLevel||'medium').toUpperCase()}</span>
+    </div></div>`;
+  }
+  html+=`</div>`;
+ }
+
+ /* Cases table */
+ html+=`<div class="card"><h2>All Matching Cases (${d.totalHits})</h2>
+  <table><tr><th>Time</th><th>Alert Type</th><th>Title</th><th>Severity</th><th>Score</th><th>Status</th><th></th></tr>`;
+ for(const c of d.cases){
+  html+=`<tr>
+   <td style="font-family:var(--mono);font-size:.72rem;white-space:nowrap">${fmtTime(c.eventTime)}</td>
+   <td style="font-family:var(--mono);font-size:.72rem">${esc(c.alertType)}</td>
+   <td>${esc(c.title)}</td>
+   <td><span class="tag tag-${c.severity}">${c.severity}</span></td>
+   <td style="font-weight:600">${c.confidenceScore}</td>
+   <td>${esc(c.dispositionStatus)}</td>
+   <td><a class="inv-tl-case-link" href="/demo/ui/case/${c.caseId}">View</a></td>
+  </tr>`;
+ }
+ html+=`</table></div>`;
+
+ el.innerHTML=html;
+}
+
+function pivotIOC(val){
+ document.getElementById('iocInput').value=val;
+ investigateIOC();
+}
+
+/* ── Compare Alerts ────────────────────────────────── */
+
+const CMP_SAMPLES={
+ 'Same Type':[
+  JSON.stringify({"identity":{"upn":"alice@corp.com","mfaStatus":"disabled"},"ips":[{"ipAddress":"198.51.100.7","role":"anomalous","geo":{"country":"Romania"}}],"device":{"hostname":"ws-alice-01"}},null,2),
+  JSON.stringify({"identity":{"upn":"bob@corp.com","mfaStatus":"enabled"},"ips":[{"ipAddress":"10.0.0.42","role":"observed","geo":{"country":"US"}}],"device":{"hostname":"ws-bob-02"}},null,2)
+ ],
+ 'Diff Type':[
+  JSON.stringify({"identity":{"upn":"alice@corp.com"},"ips":[{"ipAddress":"198.51.100.7","role":"anomalous"}],"device":{"hostname":"ws-alice-01"}},null,2),
+  'src_ip=198.51.100.7 user=alice@corp.com action=process_creation severity=high command="powershell -enc SGVsbG8="'
+ ],
+ 'Same Entity':[
+  JSON.stringify({"identity":{"upn":"alice@corp.com","mfaStatus":"disabled"},"ips":[{"ipAddress":"198.51.100.7","role":"anomalous","geo":{"country":"Romania"}}],"device":{"hostname":"ws-alice-01"}},null,2),
+  JSON.stringify({"identity":{"upn":"alice@corp.com"},"ips":[{"ipAddress":"198.51.100.7"}],"mailbox":{"primaryAddress":"alice@corp.com","forwardingAddress":"drop@evil.com","ruleName":"Auto-FWD"}},null,2)
+ ]
+};
+
+(function(){
+ const c=document.getElementById('cmpSampleBtns');
+ for(const [label,[a,b]] of Object.entries(CMP_SAMPLES)){
+  const btn=document.createElement('button');btn.className='sample-btn';btn.textContent=label;
+  btn.onclick=()=>{document.getElementById('cmpInputA').value=a;document.getElementById('cmpInputB').value=b};
+  c.appendChild(btn);
+ }
+})();
+
+async function runCompare(){
+ const btn=document.getElementById('cmpBtn');
+ const textA=document.getElementById('cmpInputA').value;
+ const textB=document.getElementById('cmpInputB').value;
+ const errEl=document.getElementById('cmpError');
+ const resEl=document.getElementById('cmpResults');
+ errEl.classList.add('hidden');resEl.innerHTML='';
+ if(!textA.trim()||!textB.trim()){errEl.textContent='Paste both Alert A and Alert B';errEl.classList.remove('hidden');return}
+ btn.disabled=true;btn.textContent='Comparing...';
+ try{
+  const r=await fetch('/api/v1/demo/compare',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':AK},body:JSON.stringify({textA,textB})});
+  if(!r.ok){const err=await r.text();let d='';try{d=JSON.parse(err).detail}catch(e){}errEl.textContent='Error '+r.status+': '+(d||err);errEl.classList.remove('hidden');toast('Compare failed',false);return}
+  const d=await r.json();
+  renderComparison(d);
+  toast('Comparison ready',true);
+ }catch(e){errEl.textContent='Request failed: '+e.message;errEl.classList.remove('hidden');toast('Request failed',false)}
+ finally{btn.disabled=false;btn.textContent='Compare'}
+}
+
+function renderComparison(d){
+ const el=document.getElementById('cmpResults');
+ const cmp=d.comparison;
+ const a=d.a;const b=d.b;
+ let html='';
+
+ /* Verdict */
+ const verdictColor=Math.abs(cmp.scoreDelta)>=20?'var(--yellow)':cmp.sameAlertType?'var(--green)':'var(--dim)';
+ html+=`<div class="cmp-verdict" style="border-left:3px solid ${verdictColor}">
+  <div class="cmp-verdict-text">${esc(cmp.verdict)}</div>
+  <div class="cmp-verdict-meta">
+   <span>A: ${esc(a.alertType)} (${a.severity})</span>
+   <span>B: ${esc(b.alertType)} (${b.severity})</span>
+   <span>${cmp.sameAlertType?'Same type':'Different types'}</span>
+   <span>${cmp.sameSeverity?'Same severity':'Different severity'}</span>
+  </div></div>`;
+
+ /* Score comparison */
+ const deltaSign=cmp.scoreDelta>0?'+':'';
+ const deltaClass=cmp.scoreDelta>0?'cmp-delta-positive':cmp.scoreDelta<0?'cmp-delta-negative':'cmp-delta-zero';
+ html+=`<div class="cmp-score-row">
+  <div class="cmp-score-card" style="border-left:3px solid var(--blue)">
+   <div class="cmp-score-val" style="color:${scoreColor(cmp.scoreA)}">${cmp.scoreA}</div>
+   <div class="cmp-score-label">Alert A — ${a.scoreBreakdown.label}</div>
+  </div>
+  <div class="cmp-score-delta ${deltaClass}">${deltaSign}${cmp.scoreDelta}<br><span style="font-size:.68rem;font-weight:400">delta</span></div>
+  <div class="cmp-score-card" style="border-left:3px solid var(--purple)">
+   <div class="cmp-score-val" style="color:${scoreColor(cmp.scoreB)}">${cmp.scoreB}</div>
+   <div class="cmp-score-label">Alert B — ${b.scoreBreakdown.label}</div>
+  </div></div>`;
+
+ /* Signal comparison */
+ html+=`<div class="card"><h2>Signal Comparison</h2>
+  <div style="display:flex;gap:1rem;margin-bottom:.65rem;font-size:.72rem;color:var(--dim)">
+   <span><span class="sig-both">&#9679;</span> Both fired</span>
+   <span><span class="sig-only-a">&#9679;</span> Only A</span>
+   <span><span class="sig-only-b">&#9679;</span> Only B</span>
+   <span><span class="sig-neither">&#9679;</span> Neither</span>
+  </div>
+  <table class="cmp-sig-table"><tr><th>Signal</th><th>A</th><th>B</th><th>Weight A</th><th>Weight B</th><th>Label</th></tr>`;
+ for(const s of cmp.signals){
+  const cls='sig-'+s.status.replace('_','-');
+  const firedA=s.firedA?'FIRED':'-';
+  const firedB=s.firedB?'FIRED':'-';
+  const rowBg=s.status==='both'?'background:#34d39908':s.status==='only_a'?'background:#60a5fa08':s.status==='only_b'?'background:#a78bfa08':'';
+  html+=`<tr style="${rowBg}"><td class="${cls}">${esc(s.signal)}</td>
+   <td class="${s.firedA?'fired':'not-fired'}">${firedA}</td>
+   <td class="${s.firedB?'fired':'not-fired'}">${firedB}</td>
+   <td>${s.weightA}</td><td>${s.weightB}</td>
+   <td>${esc(s.labelA||s.labelB)}</td></tr>`;
+ }
+ html+=`</table></div>`;
+
+ /* Entity overlap */
+ html+=`<div class="card"><h2>Entity Overlap</h2><div class="cmp-entity-section">`;
+ const catLabels={users:'Users',ips:'IP Addresses',hostnames:'Hostnames',apps:'Applications'};
+ for(const [cat,label] of Object.entries(catLabels)){
+  const ov=cmp.entityOverlap[cat]||{shared:[],onlyA:[],onlyB:[]};
+  html+=`<div class="cmp-entity-cat"><h4>${label}</h4>`;
+  if(ov.shared.length)html+=`<div class="cmp-entity-shared">${ov.shared.map(v=>`<span class="cmp-entity-chip chip-shared">${esc(v)}</span>`).join('')}</div>`;
+  if(ov.onlyA.length)html+=`<div class="cmp-entity-only">${ov.onlyA.map(v=>`<span class="cmp-entity-chip chip-a">A: ${esc(v)}</span>`).join('')}</div>`;
+  if(ov.onlyB.length)html+=`<div class="cmp-entity-only">${ov.onlyB.map(v=>`<span class="cmp-entity-chip chip-b">B: ${esc(v)}</span>`).join('')}</div>`;
+  if(!ov.shared.length&&!ov.onlyA.length&&!ov.onlyB.length)html+=`<span style="color:var(--dim);font-size:.75rem">None</span>`;
+  html+=`</div>`;
+ }
+ html+=`</div></div>`;
+
+ /* Playbook + Actions diff */
+ html+=`<div class="grid">`;
+ html+=`<div class="card"><h2>Playbook Comparison</h2><div class="cmp-list-diff">`;
+ for(const s of cmp.playbook.shared)html+=`<div class="cmp-list-shared">${esc(s)}</div>`;
+ for(const s of cmp.playbook.onlyA)html+=`<div class="cmp-list-only-a">${esc(s)}</div>`;
+ for(const s of cmp.playbook.onlyB)html+=`<div class="cmp-list-only-b">${esc(s)}</div>`;
+ if(!cmp.playbook.shared.length&&!cmp.playbook.onlyA.length&&!cmp.playbook.onlyB.length)html+=`<span style="color:var(--dim);font-size:.75rem">No playbook steps to compare</span>`;
+ html+=`</div></div>`;
+ html+=`<div class="card"><h2>Actions Comparison</h2><div class="cmp-list-diff">`;
+ for(const s of cmp.actions.shared)html+=`<div class="cmp-list-shared">${esc(s)}</div>`;
+ for(const s of cmp.actions.onlyA)html+=`<div class="cmp-list-only-a">${esc(s)}</div>`;
+ for(const s of cmp.actions.onlyB)html+=`<div class="cmp-list-only-b">${esc(s)}</div>`;
+ if(!cmp.actions.shared.length&&!cmp.actions.onlyA.length&&!cmp.actions.onlyB.length)html+=`<span style="color:var(--dim);font-size:.75rem">No actions to compare</span>`;
+ html+=`</div></div></div>`;
+
+ /* Detection details side by side */
+ html+=`<div class="grid">
+  <div class="card" style="border-left:3px solid var(--blue)"><h2>Alert A — Detection</h2>
+   <div class="det-grid" style="font-size:.78rem">
+    <div class="det-field"><span class="det-label">Format</span><span class="det-value">${fmtBadge(a.detection.inputFormat)}</span></div>
+    <div class="det-field"><span class="det-label">Alert Type</span><span class="det-value">${esc(a.alertType)}</span></div>
+    <div class="det-field"><span class="det-label">Severity</span><span class="det-value"><span class="tag tag-${a.severity}">${a.severity}</span></span></div>
+    <div class="det-field"><span class="det-label">Fields</span><span class="det-value">${a.detection.fieldsExtracted}</span></div>
+   </div></div>
+  <div class="card" style="border-left:3px solid var(--purple)"><h2>Alert B — Detection</h2>
+   <div class="det-grid" style="font-size:.78rem">
+    <div class="det-field"><span class="det-label">Format</span><span class="det-value">${fmtBadge(b.detection.inputFormat)}</span></div>
+    <div class="det-field"><span class="det-label">Alert Type</span><span class="det-value">${esc(b.alertType)}</span></div>
+    <div class="det-field"><span class="det-label">Severity</span><span class="det-value"><span class="tag tag-${b.severity}">${b.severity}</span></span></div>
+    <div class="det-field"><span class="det-label">Fields</span><span class="det-value">${b.detection.fieldsExtracted}</span></div>
+   </div></div></div>`;
+
+ el.innerHTML=html;
+}
+
+/* ── Live Feed ──────────────────────────────────────── */
+
+let feedData=[];
+let feedTimers=[];
+let feedSpeed=1200;
+let feedRunning=false;
+
+function setFeedSpeed(btn){
+ document.querySelectorAll('.feed-speed').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');
+ feedSpeed=parseInt(btn.dataset.speed);
+}
+
+async function startFeed(){
+ if(feedRunning)return;
+ const btn=document.getElementById('feedBtn');
+ const stopBtn=document.getElementById('feedStopBtn');
+ btn.disabled=true;btn.textContent='Loading...';
+ try{
+  const r=await fetch('/api/v1/demo/live-feed',{headers:{'X-API-Key':AK}});
+  if(!r.ok){toast('Failed to load feed',false);return}
+  feedData=await r.json();
+  btn.style.display='none';stopBtn.style.display='inline-block';
+  document.getElementById('feedContainer').innerHTML='';
+  document.getElementById('feedDot').classList.add('active');
+  document.getElementById('feedStatusText').textContent='Processing alerts...';
+  feedRunning=true;
+  animateFeed();
+ }catch(e){toast('Feed error: '+e.message,false)}
+ finally{btn.disabled=false;btn.textContent='Start Feed'}
+}
+
+function stopFeed(){
+ feedRunning=false;
+ feedTimers.forEach(t=>clearTimeout(t));
+ feedTimers=[];
+ document.getElementById('feedBtn').style.display='inline-block';
+ document.getElementById('feedStopBtn').style.display='none';
+ document.getElementById('feedDot').classList.remove('active');
+ document.getElementById('feedStatusText').textContent='Stopped';
+}
+
+function animateFeed(){
+ const container=document.getElementById('feedContainer');
+ feedTimers=[];
+ feedData.forEach((item,idx)=>{
+  const cardDelay=idx*feedSpeed;
+
+  feedTimers.push(setTimeout(()=>{
+   if(!feedRunning)return;
+   document.getElementById('feedCounter').textContent=`${idx+1} / ${feedData.length}`;
+   const card=createFeedCard(item,idx);
+   container.prepend(card);
+   requestAnimationFrame(()=>requestAnimationFrame(()=>card.classList.add('visible')));
+
+   const signals=card.querySelectorAll('.feed-sig');
+   signals.forEach((sig,si)=>{
+    feedTimers.push(setTimeout(()=>{
+     if(!feedRunning)return;
+     sig.classList.add('visible');
+    },150+si*80));
+   });
+
+   const scoreEl=card.querySelector('.feed-score-num');
+   const barEl=card.querySelector('.feed-score-fill');
+   const finalScore=item.scoreBreakdown.finalScore;
+   feedTimers.push(setTimeout(()=>{
+    if(!feedRunning)return;
+    animateScore(scoreEl,barEl,finalScore);
+   },300+signals.length*80));
+
+   const pbEl=card.querySelector('.feed-playbook');
+   feedTimers.push(setTimeout(()=>{
+    if(!feedRunning)return;
+    if(pbEl)pbEl.classList.add('visible');
+   },600+signals.length*80));
+
+   if(idx===feedData.length-1){
+    feedTimers.push(setTimeout(()=>{
+     document.getElementById('feedDot').classList.remove('active');
+     document.getElementById('feedStatusText').textContent='Complete';
+     document.getElementById('feedBtn').style.display='inline-block';
+     document.getElementById('feedBtn').textContent='Replay';
+     document.getElementById('feedStopBtn').style.display='none';
+     feedRunning=false;
+    },1000+signals.length*80));
+   }
+  },cardDelay));
+ });
+}
+
+function animateScore(el,bar,target){
+ let current=0;
+ const step=Math.max(1,Math.ceil(target/20));
+ const interval=setInterval(()=>{
+  current=Math.min(current+step,target);
+  el.textContent=current;
+  el.style.color=scoreColor(current);
+  bar.style.width=current+'%';
+  bar.style.background=scoreColor(current);
+  if(current>=target)clearInterval(interval);
+ },30);
+}
+
+function createFeedCard(item,idx){
+ const card=document.createElement('div');
+ card.className='feed-card';
+ const catCls='cat-'+item.category;
+
+ let sigHtml='';
+ item.signals.forEach(s=>{
+  const cls=s.fired?'fired':'not-fired';
+  sigHtml+=`<span class="feed-sig ${cls}">${esc(s.signal)} ${s.fired?'(+'+s.weight+')':''}</span>`;
+ });
+
+ let entHtml='';
+ if(item.identity.upn)entHtml+=`<span class="feed-entity-chip">${esc(item.identity.upn)}</span>`;
+ if(item.device)entHtml+=`<span class="feed-entity-chip">${esc(item.device)}</span>`;
+ item.ips.forEach(ip=>{if(ip)entHtml+=`<span class="feed-entity-chip">${esc(ip)}</span>`});
+
+ let pbHtml='';
+ if(item.recommendedPlaybook.length){
+  pbHtml='<div class="feed-playbook"><ol>';
+  item.recommendedPlaybook.forEach(p=>{pbHtml+=`<li>${esc(p.title||('Step '+p.step))}</li>`});
+  pbHtml+='</ol></div>';
+ }
+
+ card.innerHTML=`
+  <div class="feed-card-header">
+   <span class="feed-cat-badge ${catCls}">${esc(item.category)}</span>
+   <span class="feed-alert-type">${esc(item.alertType)}</span>
+   <span class="feed-identity">${esc(item.identity.displayName||item.identity.upn||'')}</span>
+   <div class="feed-score-area">
+    <span class="feed-score-num" style="color:var(--dim)">0</span>
+    <div class="feed-score-bar"><div class="feed-score-fill"></div></div>
+    <span class="tag tag-${item.severity}">${item.severity}</span>
+   </div>
+  </div>
+  <div class="feed-entities">${entHtml}</div>
+  <div class="feed-signals">${sigHtml}</div>
+  ${pbHtml}`;
+ return card;
+}
+
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+</script>
+</body>
+</html>

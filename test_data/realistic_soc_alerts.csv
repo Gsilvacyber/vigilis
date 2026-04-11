@@ -1,0 +1,21 @@
+timestamp,event_type,user,src_ip,dest_ip,hostname,action,severity,alert_name,mfa_status,country,device_os,file_name,file_path,sha256,email_sender,email_recipient,forwarding_address,app_name,scopes
+2026-03-31T01:12:00Z,login_failure,admin@acme.corp,185.220.101.44,10.0.1.50,DC-PROD-01,blocked,critical,Brute force against domain admin,not_registered,Russia,Windows Server 2022,,,,,,,
+2026-03-31T01:12:30Z,login_failure,admin@acme.corp,185.220.101.44,10.0.1.50,DC-PROD-01,blocked,critical,Brute force against domain admin,not_registered,Russia,Windows Server 2022,,,,,,,
+2026-03-31T01:13:00Z,login_success,admin@acme.corp,185.220.101.44,10.0.1.50,DC-PROD-01,allowed,critical,Successful login after brute force,disabled,Russia,Windows Server 2022,,,,,,,
+2026-03-31T02:05:00Z,privilege_escalation,admin@acme.corp,185.220.101.44,10.0.1.50,DC-PROD-01,detected,critical,Admin added to Global Admins group,not_applicable,Russia,Windows Server 2022,,,,,,,
+2026-03-31T02:30:00Z,process_creation,admin@acme.corp,10.0.1.50,,DC-PROD-01,detected,high,Suspicious PowerShell execution,not_applicable,United States,Windows Server 2022,powershell.exe,C:\Windows\System32\powershell.exe,a1b2c3d4e5f6a1b2c3d4,,,,
+2026-03-31T02:45:00Z,lateral_movement,admin@acme.corp,10.0.1.50,10.0.2.100,FILE-SRV-01,detected,high,RDP to file server from domain controller,not_applicable,United States,Windows Server 2022,,,,,,,
+2026-03-31T03:00:00Z,data_exfiltration,admin@acme.corp,10.0.2.100,45.33.32.156,FILE-SRV-01,detected,critical,Large outbound data transfer to external IP,not_applicable,United States,Windows Server 2022,,,,,,,
+2026-03-31T08:15:00Z,login_success,jsmith@acme.corp,72.14.200.11,10.0.3.20,WS-JSMITH,allowed,low,Normal business hours login,enabled,United States,Windows 11,,,,,,,
+2026-03-31T08:20:00Z,login_success,jsmith@acme.corp,103.25.40.88,10.0.3.20,WS-JSMITH,allowed,high,Impossible travel - US then Singapore in 5 min,enabled,Singapore,Windows 11,,,,,,,
+2026-03-31T08:45:00Z,oauth_consent,jsmith@acme.corp,103.25.40.88,,WS-JSMITH,detected,high,Suspicious OAuth app consent,enabled,Singapore,Windows 11,,,,,,DocuSign Helper,Mail.Read Mail.Send Files.ReadWrite.All
+2026-03-31T09:00:00Z,email_rule_created,jsmith@acme.corp,103.25.40.88,,,detected,medium,Inbox forwarding rule created,enabled,Singapore,,,,finance-team@acme.corp,jsmith@acme.corp,external-drop@proton.me,,
+2026-03-31T09:30:00Z,malware_download,mwilson@acme.corp,10.0.4.55,,WS-MWILSON,blocked,high,Known malware binary downloaded,enabled,United States,Windows 11,invoice_q1.exe,C:\Users\mwilson\Downloads\invoice_q1.exe,e3b0c44298fc1c149afbf4c8996fb924,,,,
+2026-03-31T09:35:00Z,process_creation,mwilson@acme.corp,10.0.4.55,,WS-MWILSON,detected,high,Malware process spawned child process,enabled,United States,Windows 11,cmd.exe,C:\Windows\System32\cmd.exe,,,,,
+2026-03-31T10:00:00Z,mfa_fatigue,cfo@acme.corp,198.51.100.7,10.0.1.10,WS-CFO,detected,medium,12 MFA push notifications in 3 minutes,not_registered,United States,macOS 14,,,,,,,
+2026-03-31T10:02:00Z,mfa_fatigue,cfo@acme.corp,198.51.100.7,10.0.1.10,WS-CFO,detected,medium,MFA eventually accepted after fatigue,disabled,United States,macOS 14,,,,,,,
+2026-03-31T10:15:00Z,secret_access,cfo@acme.corp,198.51.100.7,,WS-CFO,detected,high,Azure Key Vault accessed - production secrets,not_applicable,United States,macOS 14,,,,,,Azure Key Vault,Secrets.Get Secrets.List
+2026-03-31T11:00:00Z,login_success,svc-backup@acme.corp,10.0.0.5,10.0.1.50,SRV-BACKUP,allowed,low,Service account routine login,not_applicable,United States,Ubuntu 22.04,,,,,,,
+2026-03-31T11:05:00Z,login_success,svc-monitor@acme.corp,10.0.0.6,10.0.1.50,SRV-MONITOR,allowed,low,Service account routine login,not_applicable,United States,Ubuntu 22.04,,,,,,,
+2026-03-31T14:00:00Z,password_spray,unknown,45.77.65.22,10.0.1.50,,detected,high,Password spray against 200 accounts,not_applicable,China,,,,,,,
+2026-03-31T14:05:00Z,password_spray,unknown,45.77.65.22,10.0.1.50,,detected,high,3 successful logins from spray campaign,not_applicable,China,,,,,,,

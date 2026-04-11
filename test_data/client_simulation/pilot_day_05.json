@@ -1,0 +1,287 @@
+[
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-05T08:30:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "k.johnson@meridian-capital.com"
+      },
+      "ip": "10.10.1.50"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "action": "success",
+      "description": "Standard morning login",
+      "geo": "US"
+    },
+    "target": {
+      "hostname": "WS-CORP-10"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-05T09:30:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "l.davis@meridian-capital.com"
+      },
+      "ip": "10.10.1.51"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "action": "success",
+      "description": "Standard morning login",
+      "geo": "US"
+    },
+    "target": {
+      "hostname": "WS-CORP-11"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-05T10:30:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "p.garcia@meridian-capital.com"
+      },
+      "ip": "10.10.1.52"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "action": "success",
+      "description": "Standard morning login",
+      "geo": "US"
+    },
+    "target": {
+      "hostname": "WS-CORP-12"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-05T06:00:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "svc-nagios@meridian-capital.com"
+      },
+      "ip": "10.10.0.2"
+    },
+    "security_result": {
+      "severity": "LOW"
+    },
+    "additional": {
+      "action": "success",
+      "description": "Automated monitoring"
+    },
+    "target": {
+      "hostname": "MON-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-05T23:20:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "j.parker@meridian-capital.com"
+      },
+      "ip": "10.50.12.88"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "US",
+      "action": "success",
+      "description": "After-hours login night 5"
+    },
+    "target": {
+      "hostname": "TRADER-WS-04"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-05T23:35:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "j.parker@meridian-capital.com"
+      },
+      "ip": "10.50.12.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "execute",
+      "process_name": "7z.exe",
+      "command_line": "7z a -p data_batch_5.7z C:\\ClientData\\"
+    },
+    "target": {
+      "hostname": "TRADER-WS-04"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-05T23:50:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": "j.parker@meridian-capital.com"
+      },
+      "ip": "10.50.12.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "upload",
+      "bytes": "524288000",
+      "dst_ip": "162.125.1.1",
+      "description": "Night 5: 500MB upload to personal cloud"
+    },
+    "target": {
+      "hostname": "PROXY-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-05T23:50:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "data_exfiltration"
+    },
+    "principal": {
+      "user": {
+        "userid": "j.parker@meridian-capital.com"
+      },
+      "ip": "10.50.12.88"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "exfil",
+      "description": "DLP: cumulative exfiltration threshold exceeded \u2014 Day 5"
+    },
+    "target": {
+      "hostname": "DLP-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-05T01:15:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin-pay@meridian-capital.com"
+      },
+      "ip": "94.102.49.190"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "create_key",
+      "description": "New API key from scanner IP"
+    },
+    "target": {
+      "hostname": "PAY-API-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-05T01:30:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "privilege_escalation"
+    },
+    "principal": {
+      "user": {
+        "userid": "admin-pay@meridian-capital.com"
+      },
+      "ip": "94.102.49.190"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "role_change",
+      "description": "Elevated to DBA role on payment database"
+    },
+    "target": {
+      "hostname": "PAY-DB-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-05T09:00:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "phishing_detected"
+    },
+    "principal": {
+      "user": {
+        "userid": "m.wong@meridian-capital.com"
+      },
+      "ip": "185.220.100.252"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "detected",
+      "sender": "ceo-update@merid1an-capital.co",
+      "description": "CEO impersonation phishing"
+    },
+    "target": {
+      "hostname": "MAIL-GW-01"
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2026-04-05T09:00:00Z",
+      "product_name": "Meridian SIEM",
+      "event_type": "phishing_detected"
+    },
+    "principal": {
+      "user": {
+        "userid": "r.shah@meridian-capital.com"
+      },
+      "ip": "185.220.100.252"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "detected",
+      "sender": "ceo-update@merid1an-capital.co",
+      "description": "CEO impersonation phishing"
+    },
+    "target": {
+      "hostname": "MAIL-GW-01"
+    }
+  }
+]

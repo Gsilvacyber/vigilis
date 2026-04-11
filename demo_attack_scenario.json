@@ -1,0 +1,374 @@
+[
+  {
+    "_scenario": "SCENARIO 1: Business Email Compromise (BEC) — CFO targeted",
+    "_narrative": "Attacker logs in from Nigeria using stolen credentials, then creates a forwarding rule to siphon emails",
+    "alertType": "identity.suspiciousSignIn",
+    "severity": "high",
+    "eventTime": "2026-04-02T08:12:00Z",
+    "identity": {
+      "identityType": "user",
+      "userId": "u-cfo-001",
+      "upn": "cfo@acmecorp.com",
+      "displayName": "Sarah Chen (CFO)",
+      "privilegeTier": "admin",
+      "title": "Chief Financial Officer",
+      "mfaStatus": "enabled",
+      "riskLevel": "high"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "41.58.120.33", "geo": {"country": "NG", "city": "Lagos"}}
+    ],
+    "device": {
+      "hostname": "unknown-device",
+      "managed": false,
+      "os": "Chrome OS",
+      "identificationStatus": "unknown"
+    }
+  },
+
+  {
+    "_scenario": "SCENARIO 1 continued: CFO mailbox forwarding rule created 6 minutes later",
+    "alertType": "email.forwardingRule",
+    "severity": "medium",
+    "eventTime": "2026-04-02T08:18:00Z",
+    "identity": {
+      "identityType": "user",
+      "userId": "u-cfo-001",
+      "upn": "cfo@acmecorp.com",
+      "displayName": "Sarah Chen (CFO)",
+      "privilegeTier": "admin",
+      "title": "Chief Financial Officer"
+    },
+    "mailbox": {
+      "primaryAddress": "cfo@acmecorp.com",
+      "displayName": "CFO Mailbox",
+      "ruleName": ".",
+      "forwardingAddress": "sarah-chen-backup@protonmail.com"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "41.58.120.33", "geo": {"country": "NG", "city": "Lagos"}}
+    ]
+  },
+
+  {
+    "_scenario": "SCENARIO 2: Password Spray Attack — target 1 of 5 (all same IP, 50 seconds apart)",
+    "alertType": "identity.suspiciousSignIn",
+    "severity": "medium",
+    "eventTime": "2026-04-02T09:00:00Z",
+    "identity": {
+      "identityType": "user",
+      "userId": "u-alex",
+      "upn": "alex.rivera@acmecorp.com",
+      "displayName": "Alex Rivera"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "45.77.112.33", "geo": {"country": "RU", "city": "Moscow"}}
+    ]
+  },
+  {
+    "_scenario": "SCENARIO 2: spray target 2",
+    "alertType": "identity.suspiciousSignIn",
+    "severity": "medium",
+    "eventTime": "2026-04-02T09:00:12Z",
+    "identity": {
+      "identityType": "user",
+      "userId": "u-bri",
+      "upn": "bri.nakamura@acmecorp.com",
+      "displayName": "Bri Nakamura"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "45.77.112.33", "geo": {"country": "RU", "city": "Moscow"}}
+    ]
+  },
+  {
+    "_scenario": "SCENARIO 2: spray target 3",
+    "alertType": "identity.suspiciousSignIn",
+    "severity": "medium",
+    "eventTime": "2026-04-02T09:00:25Z",
+    "identity": {
+      "identityType": "user",
+      "userId": "u-chris",
+      "upn": "chris.okafor@acmecorp.com",
+      "displayName": "Chris Okafor"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "45.77.112.33", "geo": {"country": "RU", "city": "Moscow"}}
+    ]
+  },
+  {
+    "_scenario": "SCENARIO 2: spray target 4",
+    "alertType": "identity.suspiciousSignIn",
+    "severity": "medium",
+    "eventTime": "2026-04-02T09:00:38Z",
+    "identity": {
+      "identityType": "user",
+      "userId": "u-dina",
+      "upn": "dina.petrov@acmecorp.com",
+      "displayName": "Dina Petrov"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "45.77.112.33", "geo": {"country": "RU", "city": "Moscow"}}
+    ]
+  },
+  {
+    "_scenario": "SCENARIO 2: spray target 5 — this one SUCCEEDED (no MFA)",
+    "alertType": "identity.suspiciousSignIn",
+    "severity": "high",
+    "eventTime": "2026-04-02T09:00:50Z",
+    "identity": {
+      "identityType": "user",
+      "userId": "u-evan",
+      "upn": "evan.banks@acmecorp.com",
+      "displayName": "Evan Banks",
+      "mfaStatus": "disabled"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "45.77.112.33", "geo": {"country": "RU", "city": "Moscow"}}
+    ]
+  },
+
+  {
+    "_scenario": "SCENARIO 3: Full Kill Chain — Step 1: suspicious sign-in from Tor exit node",
+    "_narrative": "Compromised admin account → privilege escalation → malware → data exfiltration",
+    "alertType": "identity.suspiciousSignIn",
+    "severity": "high",
+    "eventTime": "2026-04-02T10:05:00Z",
+    "identity": {
+      "identityType": "user",
+      "userId": "u-marcus",
+      "upn": "marcus.liu@acmecorp.com",
+      "displayName": "Marcus Liu",
+      "privilegeTier": "admin",
+      "mfaStatus": "disabled",
+      "riskLevel": "high"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "185.220.101.42", "geo": {"country": "DE", "city": "Frankfurt"}},
+      {"role": "anomalous", "ipAddress": "23.129.64.210", "geo": {"country": "US", "city": "Seattle"}}
+    ],
+    "device": {
+      "hostname": "MARCUS-LAPTOP",
+      "managed": true,
+      "os": "Windows 11",
+      "identificationStatus": "identified"
+    }
+  },
+  {
+    "_scenario": "SCENARIO 3: Step 2: privilege escalation via rogue service principal",
+    "alertType": "identity.privilegeElevation",
+    "severity": "high",
+    "eventTime": "2026-04-02T10:22:00Z",
+    "identity": {
+      "identityType": "user",
+      "userId": "u-marcus",
+      "upn": "marcus.liu@acmecorp.com",
+      "displayName": "Marcus Liu",
+      "newPrivilegeTier": "admin"
+    },
+    "actor": {
+      "identityType": "service_principal",
+      "servicePrincipalId": "sp-rogue",
+      "displayName": "Rogue Automation Script"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "185.220.101.42"}
+    ]
+  },
+  {
+    "_scenario": "SCENARIO 3: Step 3: Cobalt Strike beacon dropped and executed",
+    "alertType": "endpoint.suspiciousProcess",
+    "severity": "high",
+    "eventTime": "2026-04-02T10:48:00Z",
+    "identity": {
+      "identityType": "user",
+      "upn": "marcus.liu@acmecorp.com",
+      "displayName": "Marcus Liu"
+    },
+    "device": {
+      "deviceId": "d-marcus-1",
+      "hostname": "MARCUS-LAPTOP",
+      "managed": true,
+      "os": "Windows 11",
+      "identificationStatus": "identified"
+    },
+    "file": {
+      "fileName": "svchost-update.exe",
+      "filePath": "C:\\Users\\Marcus\\AppData\\Local\\Temp\\svchost-update.exe",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "signer": null,
+      "prevalence": "rare"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "185.220.101.42"}
+    ]
+  },
+  {
+    "_scenario": "SCENARIO 3: Step 4: data exfiltration via cloud storage API",
+    "alertType": "cloud.secretStoreAccessAnomaly",
+    "severity": "high",
+    "eventTime": "2026-04-02T11:15:00Z",
+    "identity": {
+      "identityType": "user",
+      "userId": "u-marcus",
+      "upn": "marcus.liu@acmecorp.com",
+      "displayName": "Marcus Liu"
+    },
+    "app": {
+      "appId": "app-shadow",
+      "name": "DataSync Pro",
+      "publisher": "ShadowSoft LLC",
+      "firstSeenInTenantAt": null
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "185.220.101.42"}
+    ]
+  },
+
+  {
+    "_scenario": "SCENARIO 4: Cloud Infrastructure Attack — svc-terraform CreateAccessKey",
+    "alertType": "cloud.secretStoreAccessAnomaly",
+    "severity": "high",
+    "eventTime": "2026-04-02T11:30:00Z",
+    "description": "CreateAccessKey operation detected from service account outside normal CIDR range",
+    "identity": {
+      "identityType": "service_principal",
+      "userId": "svc-terraform",
+      "upn": "svc-terraform@acmecorp.com",
+      "displayName": "Terraform Automation"
+    },
+    "app": {
+      "appId": "app-terraform",
+      "name": "Terraform Cloud Runner",
+      "publisher": "HashiCorp"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "52.14.88.201", "geo": {"country": "US", "city": "Columbus"}}
+    ]
+  },
+  {
+    "_scenario": "SCENARIO 4 continued: anomalous API calls from svc-terraform",
+    "alertType": "cloud.secretStoreAccessAnomaly",
+    "severity": "high",
+    "eventTime": "2026-04-02T11:45:00Z",
+    "description": "Anomalous bulk secret retrieval from svc-terraform — 47 secrets accessed in 90 seconds",
+    "identity": {
+      "identityType": "service_principal",
+      "userId": "svc-terraform",
+      "upn": "svc-terraform@acmecorp.com",
+      "displayName": "Terraform Automation"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "52.14.88.201"}
+    ]
+  },
+
+  {
+    "_scenario": "SCENARIO 5: Benign noise — daily backup service (should be SUPPRESSED)",
+    "alertType": "cloud.secretStoreAccessAnomaly",
+    "severity": "low",
+    "eventTime": "2026-04-02T03:00:00Z",
+    "identity": {
+      "identityType": "service_principal",
+      "userId": "svc-backup-daily",
+      "upn": "svc-backup@acmecorp.com",
+      "displayName": "Daily Backup Service"
+    },
+    "ips": [
+      {"role": "expected", "ipAddress": "10.0.1.50"}
+    ],
+    "device": {
+      "hostname": "BACKUP-SRV-01",
+      "managed": true,
+      "os": "Ubuntu 22.04"
+    }
+  },
+
+  {
+    "_scenario": "SCENARIO 6: Domain Controller login from North Korea — critical asset",
+    "alertType": "identity.suspiciousSignIn",
+    "severity": "high",
+    "eventTime": "2026-04-02T14:30:00Z",
+    "identity": {
+      "identityType": "user",
+      "upn": "admin-dc@acmecorp.com",
+      "displayName": "DC Administrator",
+      "privilegeTier": "admin"
+    },
+    "device": {
+      "hostname": "DC-PRIMARY-01",
+      "managed": true,
+      "os": "Windows Server 2022",
+      "identificationStatus": "identified"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "31.13.72.100", "geo": {"country": "KP", "city": "Pyongyang"}}
+    ]
+  },
+
+  {
+    "_scenario": "SCENARIO 7: OAuth consent phishing — broad permissions to unknown app",
+    "alertType": "identity.oauthConsentRisk",
+    "severity": "medium",
+    "eventTime": "2026-04-02T15:00:00Z",
+    "identity": {
+      "identityType": "user",
+      "userId": "u-jessica",
+      "upn": "jessica.wong@acmecorp.com",
+      "displayName": "Jessica Wong",
+      "privilegeTier": "admin"
+    },
+    "app": {
+      "appId": "app-phish-harvest",
+      "name": "DocuHarvest Pro",
+      "publisher": "UnknownDevCo",
+      "scopes": [
+        "Mail.ReadWrite", "Files.ReadWrite.All",
+        "User.ReadWrite.All", "Directory.ReadWrite.All"
+      ],
+      "firstSeenInTenantAt": null
+    }
+  },
+
+  {
+    "_scenario": "SCENARIO 8: Impossible travel — VP of Sales in Moscow and Cupertino simultaneously",
+    "alertType": "network.impossibleGeoAccess",
+    "severity": "medium",
+    "eventTime": "2026-04-02T16:00:00Z",
+    "identity": {
+      "identityType": "user",
+      "upn": "travel.exec@acmecorp.com",
+      "displayName": "VP of Sales",
+      "privilegeTier": "privileged"
+    },
+    "ips": [
+      {"role": "anomalous", "ipAddress": "87.250.250.242", "geo": {"country": "RU", "city": "Moscow"}},
+      {"role": "normal", "ipAddress": "17.253.144.10", "geo": {"country": "US", "city": "Cupertino"}}
+    ]
+  },
+
+  {
+    "_scenario": "SCENARIO 9: Endpoint malware — unsigned binary with rare hash on sales laptop",
+    "alertType": "endpoint.malwareDetection",
+    "severity": "high",
+    "eventTime": "2026-04-02T16:30:00Z",
+    "identity": {
+      "identityType": "user",
+      "upn": "nina.sales@acmecorp.com",
+      "displayName": "Nina (Sales)"
+    },
+    "device": {
+      "deviceId": "d-nina-1",
+      "hostname": "NINA-PC",
+      "managed": true,
+      "os": "Windows 11",
+      "identificationStatus": "identified"
+    },
+    "file": {
+      "fileName": "invoice_Q1_2026.exe",
+      "filePath": "C:\\Users\\Nina\\Downloads\\invoice_Q1_2026.exe",
+      "sha256": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+      "signer": null,
+      "prevalence": "rare"
+    }
+  }
+]

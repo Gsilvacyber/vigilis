@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vigilis - Case List</title>
+<link rel="stylesheet" href="/static/vigilis.css?v=8">
+<style>
+.container{max-width:1400px;margin:1.5rem auto;padding:0 2rem}
+table{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.count{color:var(--dim);font-size:.85rem;margin-left:.5rem}
+
+/* Case summary row */
+.case-summary{font-size:.75rem;color:var(--dim);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px;line-height:1.4}
+
+/* Per-row delete button (hover-reveal) */
+.row-del{background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;opacity:0;transition:opacity .15s,background .15s,color .15s;margin-left:.4rem}
+tr:hover .row-del{opacity:.7}
+.row-del:hover{opacity:1;color:var(--red);background:#fef2f2}
+
+/* Quality flags */
+.qf{display:inline-block;padding:1px 6px;border-radius:4px;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-left:.3rem;vertical-align:middle}
+.qf-low-conf{background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.2)}
+.qf-incomplete{background:rgba(148,163,184,.1);color:var(--dim);border:1px solid rgba(148,163,184,.2)}
+.qf-no-signals{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.15)}
+
+/* Action badge */
+.act-badge{display:inline-block;padding:2px 7px;border-radius:8px;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-left:.35rem}
+.act-investigate{background:rgba(96,165,250,.12);color:var(--blue)}
+.act-escalate{background:rgba(248,113,113,.12);color:var(--red)}
+.act-suppress{background:rgba(148,163,184,.12);color:var(--dim)}
+.act-close{background:rgba(52,211,153,.12);color:var(--green)}
+
+
+/* Kill chain badge */
+.kc-badge{display:inline-block;padding:1px 6px;border-radius:6px;font-size:.6rem;font-weight:600;background:rgba(167,139,250,.1);color:var(--purple);margin-top:2px}
+
+/* Incident group header */
+.inc-group-header td{background:var(--surface-2);border-bottom:2px solid var(--accent);padding:.5rem .7rem;font-size:.78rem;font-weight:600;color:var(--accent)}
+.inc-group-header td a{color:var(--accent);text-decoration:none}
+.inc-group-header td a:hover{text-decoration:underline}
+.unlinked-header td{background:var(--surface-2);border-bottom:1px solid var(--border);padding:.4rem .7rem;font-size:.72rem;font-weight:600;color:var(--dim)}
+
+/* Kill chain progression bar */
+.kc-flow{display:flex;align-items:center;gap:0;margin-top:5px;flex-wrap:wrap}
+.kc-step{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:.6rem;font-weight:600;letter-spacing:.02em;white-space:nowrap}
+.kc-step.s-initial-access{background:rgba(96,165,250,.12);color:var(--blue)}
+.kc-step.s-credential-access{background:rgba(167,139,250,.12);color:var(--purple)}
+.kc-step.s-execution{background:rgba(251,191,36,.12);color:var(--yellow)}
+.kc-step.s-privilege-escalation{background:rgba(248,113,113,.12);color:var(--red)}
+.kc-step.s-lateral-movement{background:rgba(251,146,60,.12);color:#fb923c}
+.kc-step.s-exfiltration{background:rgba(239,68,68,.15);color:#ef4444}
+.kc-arrow{color:var(--dim);font-size:.55rem;margin:0 3px;opacity:.6}
+
+/* Time window badge */
+.tw-badge{display:inline-block;font-size:.6rem;color:var(--dim);font-weight:400;margin-left:.5rem;padding:1px 6px;border-radius:4px;background:rgba(148,163,184,.08);border:1px solid rgba(148,163,184,.12)}
+
+/* Collapsed alert type row */
+.collapsed-row td{background:rgba(148,163,184,.03)}
+.collapsed-toggle{cursor:pointer;color:var(--blue);font-size:.62rem;margin-left:.4rem;opacity:.7}
+.collapsed-toggle:hover{opacity:1}
+.child-row{display:none}
+.child-row.expanded{display:table-row}
+.child-row td{padding-left:2rem!important;border-left:2px solid rgba(96,165,250,.15)}
+</style>
+</head>
+<body>
+<script src="/static/vigilis.js?v=10"></script>
+<script>document.write(renderNav('cases'));</script>
+<div class="container">
+<h1>Case List <span class="count" id="count"></span></h1>
+
+<!-- Filter Bar -->
+<div class="filter-bar" id="filterBar">
+ <label>Severity</label>
+ <select id="fSeverity"><option value="">All</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+ <label>Disposition</label>
+ <select id="fDisposition"><option value="">All</option><option value="open">Open</option><option value="investigating">Investigating</option><option value="benign">Benign</option><option value="true_positive">True Positive</option><option value="escalated">Escalated</option><option value="closed">Closed</option></select>
+ <label>Conf Min</label>
+ <input type="number" id="fConfMin" min="0" max="100" placeholder="0">
+ <label>Conf Max</label>
+ <input type="number" id="fConfMax" min="0" max="100" placeholder="100">
+ <label>Search</label>
+ <input type="text" id="fSearch" placeholder="Alert type or case ID...">
+ <button class="btn" onclick="applyFilters()" style="font-size:.78rem;padding:.35rem .6rem">Apply</button>
+ <button class="btn" onclick="clearFilters()" style="font-size:.78rem;padding:.35rem .6rem">Clear</button>
+</div>
+
+<div id="content"></div>
+
+<!-- Bulk Action Bar (hidden by default) -->
+<div class="bulk-bar" id="bulkBar" style="display:none">
+ <span class="bulk-count" id="bulkCount">0 selected</span>
+ <label style="color:var(--dim);font-size:.78rem">Mark as:</label>
+ <select id="bulkStatus">
+  <option value="open">open</option><option value="investigating">investigating</option>
+  <option value="benign">benign</option><option value="true_positive">true_positive</option>
+  <option value="escalated">escalated</option><option value="closed">closed</option>
+ </select>
+ <button class="btn-primary" style="font-size:.78rem;padding:.35rem .8rem" onclick="bulkDisposition()">Apply</button>
+ <button class="btn" style="font-size:.78rem;padding:.35rem .8rem" onclick="bulkSendSoar()">Send to SOAR</button>
+ <button class="btn" style="font-size:.78rem;padding:.35rem .8rem;color:var(--red);border-color:var(--red)" onclick="bulkDelete()">Delete</button>
+ <div style="flex:1"></div>
+ <button class="btn" style="font-size:.72rem;padding:.3rem .5rem" onclick="clearSelection()">Cancel</button>
+</div>
+<div class="pagination" style="display:flex;gap:.5rem;align-items:center;justify-content:center;padding:1rem">
+ <button class="btn" onclick="prevPage()" id="prevBtn" disabled>&larr; Previous</button>
+ <span id="pageInfo" style="font-size:.82rem;color:var(--dim)">Page 1</span>
+ <button class="btn" onclick="nextPage()" id="nextBtn">Next &rarr;</button>
+</div>
+</div>
+<script>
+const STATUSES=['open','investigating','benign','true_positive','escalated','closed'];
+let webhookMap={};
+let allCases=[];
+let filteredCases=[];
+let incidentMap={};  // caseId -> incident title
+let allIncidents=[];
+let sortCol='confidence';
+let sortDir='desc';
+let selectedIds=new Set();
+let currentPage=0;
+const PAGE_SIZE=50;
+
+/* ── Filters ─────────────────────────────────────────── */
+function applyFilters(){
+ const sev=document.getElementById('fSeverity').value;
+ const disp=document.getElementById('fDisposition').value;
+ const cMin=parseInt(document.getElementById('fConfMin').value)||0;
+ const cMax=parseInt(document.getElementById('fConfMax').value)||100;
+ const search=document.getElementById('fSearch').value.toLowerCase();
+
+ filteredCases=allCases.filter(c=>{
+  // Hide auto-suppressed noise by default (unless user explicitly filters for benign)
+  if(!disp && c.disposition.status==='benign' && c.disposition.setBy && c.disposition.setBy.startsWith('auto:'))return false;
+  if(sev&&c.severity!==sev)return false;
+  if(disp&&c.disposition.status!==disp)return false;
+  if(c.confidence.score<cMin||c.confidence.score>cMax)return false;
+  if(search&&!c.alertType.toLowerCase().includes(search)&&!c.caseId.toLowerCase().includes(search))return false;
+  return true;
+ });
+ sortCases();
+ renderTable();
+}
+
+function clearFilters(){
+ document.getElementById('fSeverity').value='';
+ document.getElementById('fDisposition').value='';
+ document.getElementById('fConfMin').value='';
+ document.getElementById('fConfMax').value='';
+ document.getElementById('fSearch').value='';
+ filteredCases=[...allCases];
+ sortCases();
+ renderTable();
+}
+
+/* ── Sorting ─────────────────────────────────────────── */
+const SEV_ORDER={critical:0,high:1,medium:2,low:3};
+function sortCases(){
+ filteredCases.sort((a,b)=>{
+  let va,vb;
+  switch(sortCol){
+   case 'type': va=a.alertType;vb=b.alertType;break;
+   case 'alerts': va=a.alertCount||1;vb=b.alertCount||1;break;
+   case 'severity': va=SEV_ORDER[a.severity]??9;vb=SEV_ORDER[b.severity]??9;break;
+   case 'confidence': va=a.confidence.score;vb=b.confidence.score;break;
+   case 'disposition': va=a.disposition.status;vb=b.disposition.status;break;
+   case 'created': default: va=a.timestamps.eventTime||a.timestamps.ingestedTime||'';vb=b.timestamps.eventTime||b.timestamps.ingestedTime||'';break;
+  }
+  if(va<vb)return sortDir==='asc'?-1:1;
+  if(va>vb)return sortDir==='asc'?1:-1;
+  return 0;
+ });
+}
+
+function toggleSort(col){
+ if(sortCol===col){sortDir=sortDir==='asc'?'desc':'asc'}
+ else{sortCol=col;sortDir='desc'}
+ sortCases();
+ renderTable();
+}
+
+/* ── Selection / Bulk ────────────────────────────────── */
+function toggleSelectAll(el){
+ if(el.checked){filteredCases.forEach(c=>selectedIds.add(c.caseId))}
+ else{selectedIds.clear()}
+ renderTable();
+ updateBulkBar();
+}
+function toggleSelect(id){
+ if(selectedIds.has(id))selectedIds.delete(id);else selectedIds.add(id);
+ updateBulkBar();
+}
+function updateBulkBar(){
+ const bar=document.getElementById('bulkBar');
+ if(selectedIds.size>0){bar.style.display='flex';document.getElementById('bulkCount').textContent=selectedIds.size+' selected'}
+ else{bar.style.display='none'}
+}
+function clearSelection(){selectedIds.clear();renderTable();updateBulkBar()}
+
+async function bulkDisposition(){
+ const status=document.getElementById('bulkStatus').value;
+ const ids=[...selectedIds];
+ // Try bulk endpoint first, fall back to individual calls
+ try{
+  const r=await fetch('/api/v1/cases/bulk-disposition',{
+   method:'POST',headers:{'Content-Type':'application/json','X-API-Key':AK},
+   body:JSON.stringify({caseIds:ids,status:status,setBy:'demo-analyst'})
+  });
+  if(r.ok){toast(ids.length+' cases updated','ok');selectedIds.clear();reload();return}
+ }catch(e){}
+ // Fallback: individual calls
+ for(const id of ids){
+  await fetch('/api/v1/cases/'+id+'/disposition',{
+   method:'PATCH',headers:{'Content-Type':'application/json','X-API-Key':AK},
+   body:JSON.stringify({status:status,setBy:'demo-analyst'})
+  });
+ }
+ toast(ids.length+' cases updated','ok');
+ selectedIds.clear();reload();
+}
+
+async function bulkSendSoar(){
+ const ids=[...selectedIds];
+ let ok=0;
+ for(const id of ids){
+  const r=await fetch('/api/v1/cases/'+id+'/deliver-webhook',{
+   method:'POST',headers:{'Content-Type':'application/json','X-API-Key':AK},body:'{}'
+  });
+  if(r.ok)ok++;
+ }
+ toast(ok+'/'+ids.length+' sent to SOAR','ok');
+ selectedIds.clear();setTimeout(()=>reload(),1000);
+}
+
+async function bulkDelete(){
+ const ids=[...selectedIds];
+ if(!ids.length)return;
+ if(!confirm('Delete '+ids.length+' case(s)?\n\nThis permanently removes the selected cases and all their notes, signals, and webhook history. Cannot be undone.'))return;
+ const r=await fetch('/api/v1/cases/bulk-delete',{
+  method:'POST',headers:{'Content-Type':'application/json','X-API-Key':AK},
+  body:JSON.stringify({caseIds:ids})
+ });
+ if(r.ok){const d=await r.json();toast('Deleted '+(d.deleted||0)+' case(s)','ok');selectedIds.clear();reload()}
+ else toast('Delete failed','')
+}
+
+async function deleteCase(caseId,evt){
+ if(evt){evt.stopPropagation();evt.preventDefault()}
+ if(!confirm('Delete this case?\n\nThis permanently removes the case and all its notes, signals, and webhook history. Cannot be undone.'))return;
+ const r=await fetch('/api/v1/cases/'+caseId,{
+  method:'DELETE',headers:{'X-API-Key':AK}
+ });
+ if(r.ok){toast('Case deleted','ok');selectedIds.delete(caseId);reload()}
+ else toast('Delete failed','')
+}
+
+/* ── Individual Actions (setDisposition is now in vigilis.js) ── */
+
+function showRulePrompt(caseId){
+ let bar=document.getElementById('rulePrompt');
+ if(!bar){
+  bar=document.createElement('div');
+  bar.id='rulePrompt';
+  bar.style.cssText='position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:var(--surface-2);border:1px solid var(--yellow);border-radius:var(--radius);padding:.6rem 1.25rem;display:flex;align-items:center;gap:.75rem;z-index:95;box-shadow:0 4px 16px rgba(0,0,0,.1);font-size:.85rem;animation:fadeInUp .2s ease-out';
+  document.body.appendChild(bar);
+ }
+ bar.innerHTML=`<span style="color:var(--yellow);font-weight:700;font-size:.78rem">PATTERN DETECTED</span> &mdash; Seen this before? <a href="/demo/ui/rules?from=${caseId}" style="color:var(--blue);font-weight:600;text-decoration:none">Create a suppression rule &rarr;</a> <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:1rem;margin-left:.5rem">&times;</button>`;
+ setTimeout(()=>{if(bar.parentElement)bar.remove()},8000);
+}
+
+async function sendToSoar(caseId,btn){
+ btn.disabled=true;btn.textContent='Sending...';
+ try{
+  const r=await fetch('/api/v1/cases/'+caseId+'/deliver-webhook',{
+   method:'POST',headers:{'Content-Type':'application/json','X-API-Key':AK},body:'{}'
+  });
+  if(r.ok){btn.textContent='Sent';btn.classList.add('sent');toast('Sent to SOAR','ok')}
+  else{btn.textContent='Failed';btn.style.color='var(--red)';toast('Webhook failed','')}
+ }catch(e){btn.textContent='Error';toast('Error: '+e.message,'')}
+ setTimeout(()=>reload(),1000);
+}
+
+/* ── Helpers ──────────────────────────────────────────── */
+function thClass(col){
+ let cls='sortable';
+ if(sortCol===col)cls+=' '+sortDir;
+ return cls;
+}
+
+function buildSummary(c){
+ // Build a plain English summary from entity + enrichment data
+ const parts=[];
+ const ent=c.entities||{};
+ const id=ent.identity||{};
+ const dev=ent.device||{};
+ const ips=ent.ips||[];
+ const enr=c.enrichment||{};
+ const notes=enr.enrichmentNotes||[];
+ const impact=enr.impactSummary||{};
+
+ // Who
+ if(id.displayName||id.upn){
+  const who=id.displayName||(id.upn||'').split('@')[0];
+  const email=id.upn?` (${id.upn})`:'';
+  parts.push(who+email);
+ }
+
+ // What happened (use first enrichment note or risk)
+ if(notes.length){
+  parts.push('— '+notes[0]);
+ }else if(impact.risk){
+  parts.push('— '+impact.risk);
+ }
+
+ // Where (geo from IPs)
+ for(const ip of ips){
+  if(ip.geo&&ip.geo.country){parts.push('from '+ip.geo.country);break}
+ }
+
+ return parts.join(' ')||c.title||c.description||'';
+}
+
+function buildEntityIcons(c){
+ const ent=c.entities||{};
+ const icons=[];
+ const id=ent.identity||{};
+ const dev=ent.device||{};
+ const ips=ent.ips||[];
+ const app=ent.app||{};
+ const file=ent.file||{};
+ const mb=ent.mailbox||{};
+
+ icons.push({letter:'U',has:!!(id.userId||id.upn),title:'Identity'});
+ icons.push({letter:'D',has:!!(dev.hostname||dev.deviceId),title:'Device'});
+ icons.push({letter:'IP',has:ips.length>0,title:'IP Addresses'});
+ icons.push({letter:'A',has:!!(app.name||app.appId),title:'Application'});
+ icons.push({letter:'F',has:!!(file.fileName||file.sha256),title:'File'});
+ icons.push({letter:'M',has:!!(mb.primaryAddress),title:'Mailbox'});
+
+ return icons.map(i=>`<span class="ei ${i.has?'has':''}" title="${i.title}">${i.letter}</span>`).join('');
+}
+
+function getActionBadge(c){
+ const score=c.confidence.score;
+ const disp=c.disposition.status;
+ if(disp==='benign'||disp==='closed')return '<span class="act-badge act-close">Closed</span>';
+ if(disp==='escalated'||disp==='true_positive')return '<span class="act-badge act-escalate">Escalated</span>';
+ if(score>=70)return '<span class="act-badge act-escalate">Investigate</span>';
+ if(score>=40)return '<span class="act-badge act-investigate">Review</span>';
+ return '<span class="act-badge act-suppress">Suppress</span>';
+}
+
+const KILL_CHAIN_MAP={
+ 'identity.suspiciousSignIn':'Initial Access','identity.passwordSpray':'Credential Access',
+ 'identity.mfaFatigue':'Credential Access','identity.oauthConsentRisk':'Credential Access',
+ 'identity.privilegeElevation':'Privilege Escalation','endpoint.malwareDetection':'Execution',
+ 'endpoint.suspiciousProcess':'Execution','email.forwardingRule':'Initial Access',
+ 'cloud.secretStoreAccessAnomaly':'Exfiltration','network.impossibleGeoAccess':'Lateral Movement',
+};
+function getKillChainBadge(at){
+ const stage=KILL_CHAIN_MAP[at];
+ if(!stage)return '';
+ return ` <span class="kc-badge">${stage}</span>`;
+}
+
+function getSourceBadge(c){
+ const src=c.sources&&c.sources[0];
+ if(!src)return '';
+ const name=src.sourceSystem||src.sourceName||'';
+ if(!name||name==='custom')return '';
+ return ` <span style="font-size:.58rem;color:var(--dim);margin-left:.3rem">${escapeHtml(name)}</span>`;
+}
+
+/* ── Render ───────────────────────────────────────────── */
+function renderTable(){
+ const cases=filteredCases;
+ const suppressed=allCases.filter(c=>c.disposition.status==='benign'&&c.disposition.setBy&&c.disposition.setBy.startsWith('auto:')).length;
+ const suppText=suppressed>0?` (${suppressed} auto-suppressed)`:'';
+ document.getElementById('count').textContent=cases.length+' cases'+suppText;
+ if(!cases.length){document.getElementById('content').innerHTML='<div class="spinner">No cases match. Click <b>Try with Sample Data</b> in the nav bar.</div>';return}
+
+ // Group cases by incident
+ const grouped={};  // incTitle -> [cases]
+ const unlinked=[];
+ cases.forEach(c=>{
+  const incTitle=incidentMap[c.caseId];
+  if(incTitle){
+   grouped[incTitle]=grouped[incTitle]||[];
+   grouped[incTitle].push(c);
+  }else{
+   unlinked.push(c);
+  }
+ });
+
+ // Sort incident groups by highest case score
+ const incGroups=Object.entries(grouped).sort((a,b)=>{
+  const maxA=Math.max(...a[1].map(c=>c.confidence.score));
+  const maxB=Math.max(...b[1].map(c=>c.confidence.score));
+  return maxB-maxA;
+ });
+
+ const allChecked=cases.every(c=>selectedIds.has(c.caseId));
+ let html=`<table><tr>
+  <th style="width:28px"><input type="checkbox" class="row-check" ${allChecked?'checked':''} onchange="toggleSelectAll(this)"></th>
+  <th class="${thClass('type')}" onclick="toggleSort('type')">Case</th>
+  <th class="${thClass('severity')}" onclick="toggleSort('severity')">Severity</th>
+  <th class="${thClass('confidence')}" onclick="toggleSort('confidence')">Confidence</th>
+  <th>Action</th>
+  <th>Disposition</th>
+  <th class="${thClass('created')}" onclick="toggleSort('created')">When</th>
+ </tr>`;
+
+ function renderRow(c){
+  const opts=STATUSES.map(s=>`<option value="${s}"${s===c.disposition.status?' selected':''}>${s}</option>`).join('');
+  const checked=selectedIds.has(c.caseId)?'checked':'';
+  const summary=buildSummary(c);
+  const actionBadge=getActionBadge(c);
+  const alertCount=c.alertCount||1;
+  const alertBit=alertCount>1?` <span style="background:rgba(167,139,250,.12);color:var(--purple);padding:1px 6px;border-radius:8px;font-size:.62rem;font-weight:700">${alertCount} alerts</span>`:'';
+  const qFlags=(c.enrichment&&c.enrichment.qualityFlags)||[];
+  let flagHtml='';
+  if(qFlags.includes('LOW_CONFIDENCE'))flagHtml+='<span class="qf qf-low-conf">Low Confidence</span>';
+  if(qFlags.includes('INCOMPLETE_DATA'))flagHtml+='<span class="qf qf-incomplete">Incomplete Data</span>';
+  if(qFlags.includes('NO_SIGNALS'))flagHtml+='<span class="qf qf-no-signals">No Signals</span>';
+  const created=(c.timestamps.eventTime||c.timestamps.ingestedTime)?timeAgo(c.timestamps.eventTime||c.timestamps.ingestedTime):'';
+  return `<tr data-case-id="${escapeHtml(c.caseId)}">
+   <td><input type="checkbox" class="row-check" ${checked} onchange="toggleSelect('${escapeHtml(c.caseId)}')"></td>
+   <td>
+    <a class="type-link" href="/demo/ui/cases/${encodeURIComponent(c.caseId)}">${escapeHtml(c.alertType)}</a>${alertBit}${getKillChainBadge(c.alertType)}${flagHtml}
+    <div class="case-summary" title="${escapeHtml(summary)}">${escapeHtml(summary)}</div>
+   </td>
+   <td>${tag(c.severity)}</td>
+   <td><span style="font-weight:600">${c.confidence.score}</span> ${tag(c.confidence.label)}</td>
+   <td>${actionBadge}</td>
+   <td><select class="inline" onchange="setDisposition('${escapeHtml(c.caseId)}',this.value)">${opts}</select></td>
+   <td style="font-size:.72rem;color:var(--dim);white-space:nowrap"><span>${created}</span> <button class="row-del" onclick="deleteCase('${escapeHtml(c.caseId)}',event)" title="Delete this case">&times;</button></td>
+  </tr>`;
+ }
+
+ // Kill chain stage ordering for progression bar
+ const KC_ORDER=['Initial Access','Credential Access','Execution','Privilege Escalation','Lateral Movement','Exfiltration'];
+ function kcSlug(stage){return stage.toLowerCase().replace(/\s+/g,'-')}
+
+ function buildKillChainFlow(groupCases){
+  const stages=new Set();
+  groupCases.forEach(c=>{const s=KILL_CHAIN_MAP[c.alertType];if(s)stages.add(s)});
+  const ordered=KC_ORDER.filter(s=>stages.has(s));
+  if(ordered.length<2)return '';
+  return '<div class="kc-flow">'+ordered.map((s,i)=>(i>0?'<span class="kc-arrow">&#9654;</span>':'')+`<span class="kc-step s-${kcSlug(s)}">${s}</span>`).join('')+'</div>';
+ }
+
+ function buildTimeWindow(groupCases){
+  let earliest=null,latest=null;
+  groupCases.forEach(c=>{
+   const t=c.timestamps.eventTime||c.timestamps.ingestedTime;
+   if(!t)return;
+   const d=new Date(t);
+   if(!earliest||d<earliest)earliest=d;
+   if(!latest||d>latest)latest=d;
+  });
+  if(!earliest||!latest)return '';
+  const diffMs=latest-earliest;
+  const diffMin=Math.round(diffMs/60000);
+  let dur;
+  if(diffMin<1)dur='<1m window';
+  else if(diffMin<60)dur=diffMin+'m window';
+  else{const h=Math.floor(diffMin/60);const m=diffMin%60;dur=h+'h'+(m>0?' '+m+'m':'')+' window'}
+  return `<span class="tw-badge">${dur}</span>`;
+ }
+
+ function renderCollapsedGroup(alertType, groupCases, groupIdx){
+  groupCases.sort((a,b)=>b.confidence.score-a.confidence.score);
+  const topCase=groupCases[0];
+  const maxScore=Math.max(...groupCases.map(c=>c.confidence.score));
+  const maxSev=groupCases.reduce((worst,c)=>{const o=SEV_ORDER[c.severity]??9;return o<(SEV_ORDER[worst]??9)?c.severity:worst},groupCases[0].severity);
+  const maxLabel=groupCases.reduce((worst,c)=>{const o=SEV_ORDER[c.confidence.label]??9;return o<(SEV_ORDER[worst]??9)?c.confidence.label:worst},groupCases[0].confidence.label);
+  const alertCount=groupCases.reduce((sum,c)=>sum+(c.alertCount||1),0);
+  const summary=buildSummary(topCase);
+  const actionBadge=getActionBadge(topCase);
+  const kcBadge=getKillChainBadge(alertType);
+  const created=(topCase.timestamps.eventTime||topCase.timestamps.ingestedTime)?timeAgo(topCase.timestamps.eventTime||topCase.timestamps.ingestedTime):'';
+  const toggleId='grp-'+groupIdx;
+
+  let html=`<tr class="collapsed-row" data-case-id="${escapeHtml(topCase.caseId)}">
+   <td><input type="checkbox" class="row-check" onchange="toggleSelect('${escapeHtml(topCase.caseId)}')"></td>
+   <td>
+    <a class="type-link" href="/demo/ui/cases/${encodeURIComponent(topCase.caseId)}">${escapeHtml(alertType)}</a>
+    <span style="background:rgba(167,139,250,.12);color:var(--purple);padding:1px 6px;border-radius:8px;font-size:.62rem;font-weight:700;margin-left:.3rem">${alertCount} alerts</span>${kcBadge}
+    <span class="collapsed-toggle" onclick="toggleChildRows('${toggleId}')">[expand]</span>
+    <div class="case-summary" title="${escapeHtml(summary)}">${escapeHtml(summary)}</div>
+   </td>
+   <td>${tag(maxSev)}</td>
+   <td><span style="font-weight:600">${maxScore}</span> ${tag(maxLabel)}</td>
+   <td>${actionBadge}</td>
+   <td></td>
+   <td style="font-size:.72rem;color:var(--dim)">${created}</td>
+  </tr>`;
+
+  for(const c of groupCases){
+   const opts=STATUSES.map(s=>`<option value="${s}"${s===c.disposition.status?' selected':''}>${s}</option>`).join('');
+   const chk=selectedIds.has(c.caseId)?'checked':'';
+   const cs=buildSummary(c);
+   const cr=(c.timestamps.eventTime||c.timestamps.ingestedTime)?timeAgo(c.timestamps.eventTime||c.timestamps.ingestedTime):'';
+   html+=`<tr class="child-row ${toggleId}" data-case-id="${escapeHtml(c.caseId)}">
+    <td><input type="checkbox" class="row-check" ${chk} onchange="toggleSelect('${escapeHtml(c.caseId)}')"></td>
+    <td><a class="type-link" href="/demo/ui/cases/${encodeURIComponent(c.caseId)}" style="font-size:.72rem">${escapeHtml(c.alertType)}</a><div class="case-summary" title="${escapeHtml(cs)}">${escapeHtml(cs)}</div></td>
+    <td>${tag(c.severity)}</td>
+    <td><span style="font-weight:600">${c.confidence.score}</span> ${tag(c.confidence.label)}</td>
+    <td>${getActionBadge(c)}</td>
+    <td><select class="inline" onchange="setDisposition('${escapeHtml(c.caseId)}',this.value)">${opts}</select></td>
+    <td style="font-size:.72rem;color:var(--dim);white-space:nowrap"><span>${cr}</span> <button class="row-del" onclick="deleteCase('${escapeHtml(c.caseId)}',event)" title="Delete this case">&times;</button></td>
+   </tr>`;
+  }
+  return html;
+ }
+
+ // Render grouped by incident, then independent events
+ if(incGroups.length>0){
+  let groupIdx=0;
+  for(const [title, groupCases] of incGroups){
+   // Build kill chain flow + time window for this incident
+   const kcFlow=buildKillChainFlow(groupCases);
+   const timeWin=buildTimeWindow(groupCases);
+   html+=`<tr class="inc-group-header"><td colspan="7"><a href="/demo/ui/incidents">${escapeHtml(title)}</a> <span style="color:var(--dim);font-weight:400">${groupCases.length} cases</span>${timeWin}${kcFlow}</td></tr>`;
+
+   // Sub-group by alertType for collapsing
+   const byType={};
+   groupCases.forEach(c=>{byType[c.alertType]=byType[c.alertType]||[];byType[c.alertType].push(c)});
+   const typeEntries=Object.entries(byType).sort((a,b)=>{
+    const maxA=Math.max(...a[1].map(c=>c.confidence.score));
+    const maxB=Math.max(...b[1].map(c=>c.confidence.score));
+    return maxB-maxA;
+   });
+
+   for(const [aType, typeCases] of typeEntries){
+    if(typeCases.length>1){
+     html+=renderCollapsedGroup(aType, typeCases, groupIdx++);
+    }else{
+     html+=renderRow(typeCases[0]);
+    }
+   }
+  }
+  if(unlinked.length>0){
+   html+=`<tr class="unlinked-header"><td colspan="7">Independent events <span style="font-weight:400">(${unlinked.length})</span></td></tr>`;
+   unlinked.forEach(c=>{html+=renderRow(c)});
+  }
+ }else{
+  cases.forEach(c=>{html+=renderRow(c)});
+ }
+
+ html+='</table>';
+ document.getElementById('content').innerHTML=html;
+}
+
+function toggleChildRows(groupId){
+ const rows=document.querySelectorAll('.'+groupId);
+ const isExpanded=rows.length>0&&rows[0].classList.contains('expanded');
+ rows.forEach(r=>r.classList.toggle('expanded'));
+ const toggle=document.querySelector(`[onclick="toggleChildRows('${groupId}')"]`);
+ if(toggle)toggle.textContent=isExpanded?'[expand]':'[collapse]';
+}
+
+/* ── Load Data ────────────────────────────────────────── */
+async function reload(){
+ document.getElementById('content').innerHTML=skeletonTable(5,10);
+ try{
+  const [caseR,whR,incR]=await Promise.all([
+   fetch('/api/v1/cases?tenantId=demo-tenant&limit='+PAGE_SIZE+'&offset='+(currentPage*PAGE_SIZE),{headers:{'X-API-Key':AK}}),
+   fetch('/api/v1/webhooks/logs?limit=200',{headers:{'X-API-Key':AK}}),
+   fetch('/api/v1/incidents',{headers:{'X-API-Key':AK}}).catch(()=>({json:()=>[]}))
+  ]);
+  const cases=await caseR.json();
+  const wh=await whR.json();
+  const incidents=await incR.json();
+  webhookMap={};
+  wh.forEach(w=>{if(w.status==='delivered')webhookMap[w.caseId]=w});
+  // Build incident lookup: for each incident, fetch its case links
+  incidentMap={};
+  allIncidents=Array.isArray(incidents)?incidents:[];
+  for(const inc of allIncidents){
+   try{
+    const detail=await fetch('/api/v1/incidents/'+inc.id,{headers:{'X-API-Key':AK}}).then(r=>r.json());
+    const timeline=detail.timeline||[];
+    timeline.forEach(ev=>{if(ev.caseId)incidentMap[ev.caseId]=inc.title});
+   }catch(e){}
+  }
+  allCases=cases;
+  filteredCases=[...allCases];
+  applyFilters();
+  updatePagination(cases.length);
+ }catch(e){document.getElementById('content').innerHTML='<div class="spinner" style="color:var(--red)">Error: '+escapeHtml(e.message)+'</div>'}
+}
+function prevPage(){if(currentPage>0){currentPage--;reload()}}
+function nextPage(){currentPage++;reload()}
+function updatePagination(caseCount){
+ document.getElementById('prevBtn').disabled=currentPage===0;
+ document.getElementById('nextBtn').disabled=caseCount<PAGE_SIZE;
+ document.getElementById('pageInfo').textContent='Page '+(currentPage+1);
+}
+reload();
+
+// Upload summary banner (shown once after redirect from upload page)
+try {
+  const raw = sessionStorage.getItem('uploadSummary');
+  if (raw) {
+    sessionStorage.removeItem('uploadSummary');
+    const s = JSON.parse(raw);
+    const labels = s.labels || {};
+    const parts = [];
+    if (labels.critical) parts.push(labels.critical + ' critical');
+    if (labels.high) parts.push(labels.high + ' high');
+    if (labels.medium) parts.push(labels.medium + ' medium');
+    if (labels.low) parts.push(labels.low + ' low');
+    const labelStr = parts.length ? parts.join(', ') : 'awaiting triage';
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:var(--surface-2,#edf0f4);border-left:4px solid var(--accent,#244DA6);border-radius:8px;padding:14px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;animation:fadeInUp .3s ease';
+    banner.innerHTML = `<div>
+      <strong style="color:var(--accent,#244DA6)">Upload Complete</strong>
+      <span style="color:var(--text-primary,#f1f5f9);margin-left:12px">${escapeHtml(s.processed)} alerts &rarr; ${escapeHtml(s.caseCount || s.enriched)} cases</span>
+      <span style="color:var(--text-tertiary,#64748b);margin-left:12px">${escapeHtml(labelStr)}</span>
+      ${s.avgScore ? '<span style="color:var(--text-tertiary);margin-left:12px">Avg score: ' + Math.round(s.avgScore) + '</span>' : ''}
+      ${s.truncated ? '<span style="color:#f59e0b;margin-left:12px">Truncated from ' + escapeHtml(s.originalRowCount) + ' rows</span>' : ''}
+    </div>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:1.2rem">&times;</button>`;
+    const container = document.querySelector('.container') || document.body;
+    container.insertBefore(banner, container.firstChild);
+  }
+} catch(e) {}
+
+// Connect WebSocket for real-time updates
+connectWsFeed((msg) => {
+ if (msg.type === 'new_case' || msg.type === 'disposition_change') {
+  // Highlight the row if visible, then reload data
+  if (msg.caseId) {
+   const row = document.querySelector(`tr[data-case-id="${msg.caseId}"]`);
+   if (row) {
+    row.style.transition = 'background .3s';
+    row.style.background = 'rgba(96,165,250,.08)';
+    setTimeout(() => { row.style.background = ''; }, 2000);
+   }
+  }
+  // Debounce reload
+  clearTimeout(window._wsReloadTimer);
+  window._wsReloadTimer = setTimeout(reload, 500);
+ }
+});
+</script>
+</body>
+</html>

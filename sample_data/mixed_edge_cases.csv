@@ -1,0 +1,9 @@
+Timestamp,SourceIP,Computer_Name,EventSeverity,AlertTitle,UserDisplay,Notes
+2026-03-25T06:00:00Z,10.10.8.14,WORKSTATION-012,high,Suspicious Login Attempt,james.burton@widgets.io,Standard login anomaly from known subnet
+2026-03-25T06:45:22Z,172.16.5.99,SRV-CORP-DB02,10,Malware Detected - Virus Signature Match,nadia.osei@widgets.io,Numeric severity value outside expected enum
+2026-03-25T07:30:10Z,10.10.9.3,LAPTOP-XP-099,,Password Spray Attack Detected,,Empty username and empty severity - both missing required fields
+2026-03-25T08:12:05Z,203.0.113.55,LAPTOP-CMS-003,high,Impossible Geo Access Detected,佐藤 健太 (Kenta Sato),Non-English display name; no UPN present - mapper must handle gracefully
+2026-03-25T08:50:30Z,10.10.2.17,DESKTOP-INV-007,medium,OAuth App Consent Risk,priya.nair@widgets.io,App consent from unverified publisher - scopes include Files.ReadWrite
+2026-03-25T09:33:44Z,192.168.100.45,SRV-FILE-01,low,Suspicious Process Execution,tom.jensen@widgets.io,LOLBin execution via mshta.exe with encoded argument
+2026-03-25T10:01:59Z,185.220.101.45,LAPTOP-RMT-011,critical,Sign-In From Threat Actor IP,yuki.tanaka@widgets.io,IP matches Tor exit node - non-RFC1918 anomalous geo source
+2026-03-25T11:20:00Z,10.10.1.200,WORKSTATION-031,high,Brute Force Authentication Failure,unknown_service_acct,Service account with no domain - no @ in identifier

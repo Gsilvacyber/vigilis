@@ -1,0 +1,249 @@
+"""Threat Intel Feed Ingestion — downloads free IOC feeds into Postgres.
+
+Downloads curated threat feeds from abuse.ch on startup and every 24 hours.
+All feeds are FREE and explicitly allow commercial use.
+
+Feeds:
+  - Feodo Tracker: Botnet C2 server IPs (~300 IPs)
+  - URLhaus: Malicious URLs/domains (~1000 URLs)
+  - ThreatFox: Mixed IOCs — IPs, domains, hashes (~2000 IOCs)
+"""
+from __future__ import annotations
+
+import asyncio
+import csv
+import io
+import logging
+from datetime import datetime, timezone
+
+import httpx
+
+_log = logging.getLogger(__name__)
+
+# Feed URLs (all abuse.ch — free, commercial-use allowed)
+_FEODO_URL = "https://feodotracker.abuse.ch/downloads/ipblocklist.csv"
+_URLHAUS_URL = "https://urlhaus.abuse.ch/downloads/csv_recent/"
+_THREATFOX_URL = "https://threatfox.abuse.ch/export/csv/recent/"
+
+
+async def update_feeds_loop(interval_hours: int = 24):
+    """Background task: download IOC feeds on startup and every 24h."""
+    _log.info("Feed ingestion task started (interval=%dh)", interval_hours)
+    # Run immediately on startup
+    _run_feed_update()
+    while True:
+        await asyncio.sleep(interval_hours * 3600)
+        try:
+            _run_feed_update()
+        except Exception:
+            _log.exception("Feed update failed")
+
+
+def _run_feed_update():
+    """Download all configured feeds and upsert into DB."""
+    total = 0
+    total += _download_feodo_tracker()
+    total += _download_urlhaus()
+    total += _download_threatfox()
+    _log.info("Feed update complete: %d IOCs ingested", total)
+
+
+def _upsert_ioc(session, ioc_type: str, ioc_value: str, source: str,
+                threat_type: str = "", malware: str = "", confidence: float = 0.85):
+    """Insert or update a single IOC in the database."""
+    from backend.app.db.models import ThreatIntelIOC
+    from sqlmodel import select
+
+    existing = session.exec(
+        select(ThreatIntelIOC).where(
+            ThreatIntelIOC.ioc_type == ioc_type,
+            ThreatIntelIOC.ioc_value == ioc_value,
+            ThreatIntelIOC.source == source,
+        )
+    ).first()
+
+    if existing:
+        existing.last_seen = datetime.now(timezone.utc)
+        existing.confidence = confidence
+        if malware:
+            existing.malware = malware
+        session.add(existing)
+    else:
+        session.add(ThreatIntelIOC(
+            ioc_type=ioc_type,
+            ioc_value=ioc_value,
+            source=source,
+            threat_type=threat_type,
+            malware=malware,
+            confidence=confidence,
+            details=f"{source}: {threat_type}" if threat_type else source,
+        ))
+
+
+def _download_feodo_tracker() -> int:
+    """Download Feodo Tracker botnet C2 IP blocklist."""
+    try:
+        resp = httpx.get(_FEODO_URL, timeout=30, follow_redirects=True)
+        if resp.status_code != 200:
+            _log.warning("Feodo Tracker returned %d", resp.status_code)
+            return 0
+
+        from backend.app.core.db import get_session
+
+        count = 0
+        with get_session() as session:
+            reader = csv.reader(io.StringIO(resp.text))
+            for row in reader:
+                if not row or row[0].startswith("#") or row[0].startswith('"first'):
+                    continue
+                # Feodo CSV: first_seen, dst_ip, dst_port, c2_status, last_online, malware
+                if len(row) < 2:
+                    continue
+                ip = row[1].strip().strip('"')
+                malware = row[5].strip().strip('"') if len(row) > 5 else ""
+                if ip and "." in ip and not ip[0].isalpha():
+                    _upsert_ioc(session, "ip", ip, "feodo_tracker",
+                                threat_type="botnet_cc", malware=malware,
+                                confidence=0.90)
+                    count += 1
+            session.commit()
+
+        _log.info("Feodo Tracker: %d botnet C2 IPs ingested", count)
+        return count
+
+    except Exception:
+        _log.exception("Feodo Tracker download failed")
+        return 0
+
+
+def _download_urlhaus() -> int:
+    """Download URLhaus malicious URL list — extract domains."""
+    try:
+        resp = httpx.get(_URLHAUS_URL, timeout=30, follow_redirects=True)
+        if resp.status_code != 200:
+            _log.warning("URLhaus returned %d", resp.status_code)
+            return 0
+
+        from backend.app.core.db import get_session
+        from urllib.parse import urlparse
+
+        count = 0
+        with get_session() as session:
+            reader = csv.reader(io.StringIO(resp.text))
+            for row in reader:
+                if not row or row[0].startswith("#"):
+                    continue
+                try:
+                    # CSV: id, dateadded, url, url_status, last_online, threat, tags, urlhaus_link, reporter
+                    if len(row) < 6:
+                        continue
+                    url = row[2].strip().strip('"')
+                    threat = row[5].strip().strip('"') if len(row) > 5 else ""
+                    tags = row[6].strip().strip('"') if len(row) > 6 else ""
+
+                    # Extract domain from URL
+                    parsed = urlparse(url)
+                    domain = parsed.hostname
+                    if domain and "." in domain:
+                        malware_name = tags.split(",")[0].strip() if tags else ""
+                        _upsert_ioc(session, "domain", domain, "urlhaus",
+                                    threat_type=threat or "malware_distribution",
+                                    malware=malware_name, confidence=0.85)
+                        count += 1
+                except (IndexError, ValueError):
+                    continue
+
+            session.commit()
+
+        _log.info("URLhaus: %d malicious domains ingested", count)
+        return count
+
+    except Exception:
+        _log.exception("URLhaus download failed")
+        return 0
+
+
+def _download_threatfox() -> int:
+    """Download ThreatFox IOC export — mixed IPs, domains, hashes."""
+    try:
+        resp = httpx.get(_THREATFOX_URL, timeout=30, follow_redirects=True)
+        if resp.status_code != 200:
+            _log.warning("ThreatFox returned %d", resp.status_code)
+            return 0
+
+        from backend.app.core.db import get_session
+
+        count = 0
+        with get_session() as session:
+            reader = csv.reader(io.StringIO(resp.text))
+            for row in reader:
+                if not row or row[0].startswith("#"):
+                    continue
+                try:
+                    # ThreatFox CSV: date, ioc_id, ioc_value, ioc_type, threat_type, malware, ...
+                    if len(row) < 6:
+                        continue
+
+                    ioc_value = row[2].strip().strip('"')
+                    ioc_type_raw = row[3].strip().strip('"').lower()
+                    threat_type = row[4].strip().strip('"')
+                    malware = row[5].strip().strip('"')
+                    conf_raw = row[6].strip().strip('"') if len(row) > 6 else "75"
+
+                    # Map ThreatFox ioc_type to our types
+                    if "ip" in ioc_type_raw:
+                        ioc_type = "ip"
+                        # ThreatFox IPs may include port: "1.2.3.4:443"
+                        ioc_value = ioc_value.split(":")[0]
+                    elif "domain" in ioc_type_raw or "url" in ioc_type_raw:
+                        ioc_type = "domain"
+                        if "://" in ioc_value:
+                            from urllib.parse import urlparse
+                            ioc_value = urlparse(ioc_value).hostname or ioc_value
+                    elif "hash" in ioc_type_raw or "sha256" in ioc_type_raw or "md5" in ioc_type_raw:
+                        ioc_type = "hash"
+                    else:
+                        continue
+
+                    if not ioc_value or len(ioc_value) < 3:
+                        continue
+
+                    # Parse confidence
+                    try:
+                        confidence = int(conf_raw) / 100 if conf_raw.isdigit() else 0.75
+                    except (ValueError, TypeError):
+                        confidence = 0.75
+
+                    _upsert_ioc(session, ioc_type, ioc_value, "threatfox",
+                                threat_type=threat_type, malware=malware,
+                                confidence=min(confidence, 0.95))
+                    count += 1
+
+                except (IndexError, ValueError):
+                    continue
+
+            session.commit()
+
+        _log.info("ThreatFox: %d IOCs ingested", count)
+        return count
+
+    except Exception:
+        _log.exception("ThreatFox download failed")
+        return 0
+
+
+def get_feed_stats() -> dict:
+    """Return IOC counts per source for health/status endpoints."""
+    try:
+        from backend.app.core.db import get_session
+        from backend.app.db.models import ThreatIntelIOC
+        from sqlmodel import select, func
+
+        with get_session() as session:
+            sources = session.exec(
+                select(ThreatIntelIOC.source, func.count(ThreatIntelIOC.id))
+                .group_by(ThreatIntelIOC.source)
+            ).all()
+            return {source: count for source, count in sources}
+    except Exception:
+        return {}

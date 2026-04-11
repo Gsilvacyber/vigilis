@@ -1,0 +1,8 @@
+Friday-WorkingHours-Afternoon- | total=225745 | benign=97718 | attacks={'DDoS': 128027}
+Friday-WorkingHours-Afternoon- | total=286467 | benign=127537 | attacks={'PortScan': 158930}
+Friday-WorkingHours-Morning.pc | total=191033 | benign=189067 | attacks={'Bot': 1966}
+Monday-WorkingHours.pcap_ISCX. | total=529918 | benign=529918 | attacks={}
+Thursday-WorkingHours-Afternoo | total=288602 | benign=288566 | attacks={'Infiltration': 36}
+Thursday-WorkingHours-Morning- | total=170366 | benign=168186 | attacks={'Web Attack � Brute Force': 1507, 'Web Attack � XSS': 652, 'Web Attack � Sql Injection': 21}
+Tuesday-WorkingHours.pcap_ISCX | total=445909 | benign=432074 | attacks={'FTP-Patator': 7938, 'SSH-Patator': 5897}
+Wednesday-workingHours.pcap_IS | total=692703 | benign=440031 | attacks={'DoS slowloris': 5796, 'DoS Slowhttptest': 5499, 'DoS Hulk': 231073, 'DoS GoldenEye': 10293, 'Heartbleed': 11}

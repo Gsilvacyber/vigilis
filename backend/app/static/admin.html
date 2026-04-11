@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vigilis - Admin</title>
+<link rel="stylesheet" href="/static/vigilis.css?v=8">
+<style>
+.container{max-width:1280px;margin:1.5rem auto;padding:0 2rem}
+.admin-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.5rem}
+.admin-section h2{margin:0 0 1rem;font-size:1rem;font-weight:700;color:var(--text)}
+table{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.create-form{display:flex;gap:.5rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap}
+.create-form input,.create-form select{font-size:.8rem;padding:.35rem .6rem}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:.4rem;vertical-align:middle}
+.dot-active{background:var(--green)}
+.dot-inactive{background:var(--red)}
+.health-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem}
+.health-item{background:var(--surface-2);border-radius:var(--radius);padding:1rem;text-align:center}
+.health-val{font-size:1.4rem;font-weight:700;color:var(--text)}
+.health-label{font-size:.75rem;color:var(--dim);margin-top:.25rem}
+.filter-row{display:flex;gap:.5rem;align-items:center;margin-bottom:.75rem;flex-wrap:wrap}
+.filter-row label{font-size:.78rem;color:var(--dim)}
+.filter-row select,.filter-row input{font-size:.78rem;padding:.3rem .5rem}
+</style>
+</head>
+<body>
+<script src="/static/vigilis.js?v=10"></script>
+<script>document.write(renderNav('admin'));</script>
+<div class="container">
+<h1>Admin Dashboard</h1>
+
+<!-- Section 1: API Keys -->
+<div class="admin-section">
+ <h2>API Keys</h2>
+ <div class="create-form">
+  <input type="text" id="newKeyTenant" placeholder="Tenant ID" value="demo-tenant">
+  <input type="text" id="newKeyName" placeholder="Key name">
+  <select id="newKeyRole"><option value="analyst">analyst</option><option value="admin">admin</option></select>
+  <button class="btn-primary" style="font-size:.78rem;padding:.35rem .8rem" onclick="createKey()">Create Key</button>
+ </div>
+ <div id="newKeyResult" style="display:none;margin-bottom:.75rem;padding:.5rem .75rem;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:var(--radius);font-size:.78rem;word-break:break-all"></div>
+ <div id="keysTable"></div>
+</div>
+
+<!-- Section 2: Audit Log -->
+<div class="admin-section">
+ <h2>Audit Log</h2>
+ <div class="filter-row">
+  <label>Action</label>
+  <select id="auditActionFilter" onchange="loadAudit()">
+   <option value="">All</option>
+   <option value="key.created">key.created</option>
+   <option value="key.listed">key.listed</option>
+   <option value="case.created">case.created</option>
+   <option value="case.deleted">case.deleted</option>
+   <option value="disposition.changed">disposition.changed</option>
+   <option value="incident.created">incident.created</option>
+   <option value="rule.created">rule.created</option>
+  </select>
+  <label style="margin-left:.5rem">Limit</label>
+  <input type="number" id="auditLimit" value="50" min="1" max="500" style="width:60px" onchange="loadAudit()">
+ </div>
+ <div id="auditTable"></div>
+</div>
+
+<!-- Section 3: System Health -->
+<div class="admin-section">
+ <h2>System Health</h2>
+ <div class="health-grid" id="healthGrid"></div>
+</div>
+</div>
+
+<script>
+/* ── API Keys ───────────────────────────────────────────── */
+async function loadKeys(){
+ try{
+  const r=await fetch('/api/v1/admin/api-keys',{headers:{'X-API-Key':AK}});
+  if(!r.ok){document.getElementById('keysTable').innerHTML='<span style="color:var(--dim);font-size:.8rem">Failed to load keys (admin role required)</span>';return}
+  const keys=await r.json();
+  if(!keys.length){document.getElementById('keysTable').innerHTML='<span style="color:var(--dim);font-size:.8rem">No API keys found</span>';return}
+  let html='<table><tr><th>Prefix</th><th>Tenant</th><th>Name</th><th>Role</th><th>Active</th><th>Created</th></tr>';
+  for(const k of keys){
+   const dot=k.isActive?'<span class="status-dot dot-active"></span>Yes':'<span class="status-dot dot-inactive"></span>No';
+   html+=`<tr>
+    <td style="font-family:var(--mono);font-size:.75rem">${escapeHtml(k.key)}</td>
+    <td>${escapeHtml(k.tenantId)}</td>
+    <td>${escapeHtml(k.name||'-')}</td>
+    <td>${escapeHtml(k.role||'analyst')}</td>
+    <td>${dot}</td>
+    <td style="font-size:.72rem;color:var(--dim)">${fmtTime(k.createdAt)}</td>
+   </tr>`;
+  }
+  html+='</table>';
+  document.getElementById('keysTable').innerHTML=html;
+ }catch(e){document.getElementById('keysTable').innerHTML='<span style="color:var(--red);font-size:.8rem">Error: '+escapeHtml(e.message)+'</span>'}
+}
+
+async function createKey(){
+ const tenant=document.getElementById('newKeyTenant').value.trim();
+ const name=document.getElementById('newKeyName').value.trim();
+ const role=document.getElementById('newKeyRole').value;
+ if(!tenant){toast('Tenant ID required','');return}
+ try{
+  const r=await fetch('/api/v1/admin/api-keys',{
+   method:'POST',headers:{'Content-Type':'application/json','X-API-Key':AK},
+   body:JSON.stringify({tenantId:tenant,name:name,role:role})
+  });
+  if(!r.ok){toast('Failed to create key (admin required)','');return}
+  const data=await r.json();
+  const el=document.getElementById('newKeyResult');
+  el.style.display='block';
+  el.innerHTML='<strong>New key created:</strong> <code>'+escapeHtml(data.key)+'</code><br><span style="color:var(--dim)">Copy this key now &mdash; it cannot be shown again.</span>';
+  document.getElementById('newKeyName').value='';
+  loadKeys();
+ }catch(e){toast('Error: '+e.message,'')}
+}
+
+/* ── Audit Log ──────────────────────────────────────────── */
+async function loadAudit(){
+ const action=document.getElementById('auditActionFilter').value;
+ const limit=document.getElementById('auditLimit').value||50;
+ let url='/api/v1/admin/audit-log?limit='+limit;
+ if(action)url+='&action='+encodeURIComponent(action);
+ try{
+  const r=await fetch(url,{headers:{'X-API-Key':AK}});
+  if(!r.ok){document.getElementById('auditTable').innerHTML='<span style="color:var(--dim);font-size:.8rem">Failed to load audit log (admin role required)</span>';return}
+  const events=await r.json();
+  if(!events.length){document.getElementById('auditTable').innerHTML='<span style="color:var(--dim);font-size:.8rem">No audit events found</span>';return}
+  let html='<table><tr><th>Timestamp</th><th>Actor</th><th>Action</th><th>Resource</th><th>Details</th></tr>';
+  for(const e of events){
+   const details=e.details?JSON.stringify(e.details):'';
+   const shortDetails=details.length>80?details.slice(0,80)+'...':details;
+   html+=`<tr>
+    <td style="font-size:.72rem;color:var(--dim);white-space:nowrap">${fmtTime(e.timestamp)}</td>
+    <td style="font-family:var(--mono);font-size:.75rem">${escapeHtml(e.actor)}</td>
+    <td>${escapeHtml(e.action)}</td>
+    <td style="font-size:.75rem">${escapeHtml(e.resourceType||'')}${e.resourceId?' / '+escapeHtml(e.resourceId):''}</td>
+    <td style="font-size:.72rem;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(details)}">${escapeHtml(shortDetails)}</td>
+   </tr>`;
+  }
+  html+='</table>';
+  document.getElementById('auditTable').innerHTML=html;
+ }catch(e){document.getElementById('auditTable').innerHTML='<span style="color:var(--red);font-size:.8rem">Error: '+escapeHtml(e.message)+'</span>'}
+}
+
+/* ── System Health ──────────────────────────────────────── */
+async function loadHealth(){
+ const grid=document.getElementById('healthGrid');
+ let items=[];
+ // Health endpoint
+ try{
+  const r=await fetch('/health');
+  const h=await r.json();
+  items.push({label:'API Status',value:h.status||'ok',color:'var(--green)'});
+  items.push({label:'Database',value:h.database||h.db||'connected',color:'var(--green)'});
+ }catch(e){items.push({label:'API Status',value:'unreachable',color:'var(--red)'})}
+
+ // Job queue
+ try{
+  const r=await fetch('/api/v1/jobs',AH);
+  const jobs=await r.json();
+  const running=jobs.filter(j=>j.status==='running'||j.status==='pending').length;
+  const failed=jobs.filter(j=>j.status==='failed').length;
+  items.push({label:'Active Jobs',value:running,color:running>0?'var(--blue)':'var(--dim)'});
+  items.push({label:'Failed Jobs',value:failed,color:failed>0?'var(--red)':'var(--dim)'});
+ }catch(e){}
+
+ // Cache stats (try the endpoint, may not exist)
+ try{
+  const r=await fetch('/api/v1/cache/stats',AH);
+  if(r.ok){
+   const s=await r.json();
+   items.push({label:'Cache Hit Rate',value:(s.hitRate||0)+'%',color:'var(--blue)'});
+   items.push({label:'Cache Entries',value:s.size||s.entries||0,color:'var(--dim)'});
+  }
+ }catch(e){}
+
+ // Cases summary
+ try{
+  const r=await fetch('/api/v1/metrics/summary',AH);
+  if(r.ok){
+   const s=await r.json();
+   items.push({label:'Total Cases',value:s.totalCases||0,color:'var(--text)'});
+   items.push({label:'Avg Confidence',value:s.avgConfidenceScore||0,color:'var(--blue)'});
+  }
+ }catch(e){}
+
+ grid.innerHTML=items.map(i=>`<div class="health-item">
+  <div class="health-val" style="color:${i.color}">${escapeHtml(String(i.value))}</div>
+  <div class="health-label">${escapeHtml(i.label)}</div>
+ </div>`).join('');
+}
+
+// Load all sections
+loadKeys();
+loadAudit();
+loadHealth();
+</script>
+</body>
+</html>

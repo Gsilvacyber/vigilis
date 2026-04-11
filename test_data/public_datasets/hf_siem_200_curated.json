@@ -1,0 +1,5082 @@
+[
+  {
+    "metadata": {
+      "event_timestamp": "2026-11-16 11:59:20",
+      "product_name": "Darktrace v6.0.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "james74"
+      },
+      "ip": "10.15.91.122"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Kiribati",
+      "action": "locked",
+      "description": "Auth locked for james74 via passwordless from 10.15.91.122 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2020-11-07 05:07:51",
+      "product_name": "Splunk v9.0.2",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "rpope"
+      },
+      "ip": "169.163.6.209"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Marshall Islands",
+      "action": "bypass",
+      "description": "Auth bypass for rpope via password from 169.163.6.209 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-19 18:32:56",
+      "product_name": "Suricata v6.0.10",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "jgonzalez"
+      },
+      "ip": "104.91.47.220"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Ghana",
+      "action": "failed",
+      "description": "Auth failed for jgonzalez via SAML from 104.91.47.220 MITRE Technique: T1110.003"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-12 21:25:52",
+      "product_name": "Palo Alto Cortex v3.0.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "vwallace"
+      },
+      "ip": "100.55.120.239"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Argentina",
+      "action": "timeout",
+      "description": "Auth timeout for vwallace via OAuth from 100.55.120.239 MITRE Technique: T1059.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-06 00:15:08",
+      "product_name": "Carbon Black v7.8.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "erin92"
+      },
+      "ip": "10.67.211.109"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Mauritius",
+      "action": "bypass",
+      "description": "Auth bypass for erin92 via password from 10.67.211.109 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-16 08:39:53",
+      "product_name": "Zeek v5.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "amberbates"
+      },
+      "ip": "198.207.24.241"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Morocco",
+      "action": "failed",
+      "description": "Auth failed for amberbates via biometric from 198.207.24.241 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-28 00:35:21",
+      "product_name": "Zeek v5.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "michaelhoward"
+      },
+      "ip": "196.84.148.183"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Bosnia and Herzegovina",
+      "action": "failed",
+      "description": "Auth failed for michaelhoward via SAML from 196.84.148.183 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-08 00:57:29",
+      "product_name": "Trellix v10.7.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "crogers"
+      },
+      "ip": "65.89.191.42"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Canada",
+      "action": "failed",
+      "description": "Auth failed for crogers via SAML from 65.89.191.42 MITRE Technique: T1059.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-16 04:22:40",
+      "product_name": "Tanium v7.4.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "christopher76"
+      },
+      "ip": "22.10.161.181"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Chad",
+      "action": "success",
+      "description": "Auth success for christopher76 via SAML from 22.10.161.181 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-19 15:23:52",
+      "product_name": "QRadar v7.5.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "justin75"
+      },
+      "ip": "141.70.234.228"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Tanzania",
+      "action": "challenge",
+      "description": "Auth challenge for justin75 via passwordless from 141.70.234.228 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-29 10:08:59",
+      "product_name": "LogRhythm v7.5.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "marshallkayla"
+      },
+      "ip": "83.231.240.63"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "New Zealand",
+      "action": "bypass",
+      "description": "Auth bypass for marshallkayla via password from 83.231.240.63 MITRE Technique: T1134.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-16 11:42:14",
+      "product_name": "Splunk v9.0.2",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "yschaefer"
+      },
+      "ip": "81.7.28.26"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Anguilla",
+      "action": "locked",
+      "description": "Auth locked for yschaefer via MFA from 81.7.28.26 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-31 13:55:21",
+      "product_name": "Palo Alto Cortex v3.0.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "oharrington"
+      },
+      "ip": "212.185.5.93"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Cayman Islands",
+      "action": "timeout",
+      "description": "Auth timeout for oharrington via key from 212.185.5.93 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-21 02:27:53",
+      "product_name": "Palo Alto Cortex v3.0.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "dianeterrell"
+      },
+      "ip": "219.176.110.217"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Georgia",
+      "action": "locked",
+      "description": "Auth locked for dianeterrell via key from 219.176.110.217 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-11 14:41:18",
+      "product_name": "Vectra AI v5.0.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "karenball"
+      },
+      "ip": "37.108.87.50"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Portugal",
+      "action": "bypass",
+      "description": "Auth bypass for karenball via password from 37.108.87.50 MITRE Technique: T1053.005"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-28 09:06:57",
+      "product_name": "Darktrace v6.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "deborah65"
+      },
+      "ip": "102.191.83.93"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Jordan",
+      "action": "failed",
+      "description": "Auth failed for deborah65 via SAML from 102.191.83.93 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-18 03:15:40",
+      "product_name": "Splunk v9.0.2",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "cwhite"
+      },
+      "ip": "68.197.1.59"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Chad",
+      "action": "bypass",
+      "description": "Auth bypass for cwhite via SAML from 68.197.1.59 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-29 20:35:47",
+      "product_name": "OSSEC v3.7.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "elizabethkhan"
+      },
+      "ip": "47.21.81.25"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Niue",
+      "action": "timeout",
+      "description": "Auth timeout for elizabethkhan via password from 47.21.81.25 MITRE Technique: T1566.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-06 09:38:08",
+      "product_name": "Vectra AI v5.0.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "ericksonbrian"
+      },
+      "ip": "144.152.208.87"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Guinea-Bissau",
+      "action": "challenge",
+      "description": "Auth challenge for ericksonbrian via passwordless from 144.152.208.87 Associated Threat Actor: Conti"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-25 21:26:11",
+      "product_name": "Elastic SIEM v8.9.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "matthewhernandez"
+      },
+      "ip": "41.114.86.72"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Tuvalu",
+      "action": "success",
+      "description": "Auth success for matthewhernandez via SAML from 41.114.86.72 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-11 12:07:34",
+      "product_name": "Carbon Black v7.8.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "schmidtcrystal"
+      },
+      "ip": "145.176.66.54"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "South Africa",
+      "action": "locked",
+      "description": "Auth locked for schmidtcrystal via MFA from 145.176.66.54 MITRE Technique: T1059.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-07 13:29:31",
+      "product_name": "Darktrace v6.0.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "brittanymartinez"
+      },
+      "ip": "118.236.132.250"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Iran",
+      "action": "timeout",
+      "description": "Auth timeout for brittanymartinez via password from 118.236.132.250 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-27 11:45:17",
+      "product_name": "CrowdStrike v6.45.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "valerie11"
+      },
+      "ip": "46.231.133.8"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Dominican Republic",
+      "action": "success",
+      "description": "Auth success for valerie11 via passwordless from 46.231.133.8 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-15 11:01:09",
+      "product_name": "Palo Alto Cortex v3.0.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "samanthathornton"
+      },
+      "ip": "125.108.21.39"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Cocos (Keeling) Islands",
+      "action": "success",
+      "description": "Auth success for samanthathornton via key from 125.108.21.39 MITRE Technique: T1053.005"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-05 22:36:14",
+      "product_name": "AlienVault v5.7.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "sarah50"
+      },
+      "ip": "61.1.64.145"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "British Indian Ocean Territory (Chagos Archipelago)",
+      "action": "challenge",
+      "description": "Auth challenge for sarah50 via MFA from 61.1.64.145 Credential stuffing pattern detected"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-15 04:16:38",
+      "product_name": "Microsoft Sentinel v1.0.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "csummers"
+      },
+      "ip": "10.15.202.90"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Saint Kitts and Nevis",
+      "action": "bypass",
+      "description": "Auth bypass for csummers via password from 10.15.202.90 MITRE Technique: T1078.004"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-29 20:58:13",
+      "product_name": "Elastic SIEM v8.9.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "romeroedward"
+      },
+      "ip": "111.29.229.9"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Croatia",
+      "action": "failed",
+      "description": "Auth failed for romeroedward via OAuth from 111.29.229.9 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-12 09:41:44",
+      "product_name": "CrowdStrike v6.45.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "jeffreystewart"
+      },
+      "ip": "71.65.175.177"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Anguilla",
+      "action": "success",
+      "description": "Auth success for jeffreystewart via key from 71.65.175.177 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-24 07:05:46",
+      "product_name": "QRadar v7.5.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "karen64"
+      },
+      "ip": "5.146.133.171"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Brunei Darussalam",
+      "action": "challenge",
+      "description": "Auth challenge for karen64 via key from 5.146.133.171 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-01 23:03:40",
+      "product_name": "OSSEC v3.7.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "jennifer58"
+      },
+      "ip": "31.195.28.122"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Brunei Darussalam",
+      "action": "success",
+      "description": "Auth success for jennifer58 via passwordless from 31.195.28.122 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2024-06-01 15:19:07",
+      "product_name": "Trellix v10.7.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "hhenderson"
+      },
+      "ip": "123.175.105.26"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Netherlands Antilles",
+      "action": "challenge",
+      "description": "Auth challenge for hhenderson via OAuth from 123.175.105.26 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-07 05:39:55",
+      "product_name": "Darktrace v6.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "agarcia"
+      },
+      "ip": "10.116.249.133"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Qatar",
+      "action": "failed",
+      "description": "Auth failed for agarcia via key from 10.116.249.133 MITRE Technique: T1543.003"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-25 04:37:14",
+      "product_name": "Wazuh v4.5.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "steve47"
+      },
+      "ip": "175.43.75.110"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Heard Island and McDonald Islands",
+      "action": "bypass",
+      "description": "Auth bypass for steve47 via OAuth from 175.43.75.110 MITRE Technique: T1566.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-21 08:01:33",
+      "product_name": "Zeek v5.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "andersoncorey"
+      },
+      "ip": "74.5.5.53"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Monaco",
+      "action": "failed",
+      "description": "Auth failed for andersoncorey via OAuth from 74.5.5.53 Associated Threat Actor: DarkSide"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-03 08:43:17",
+      "product_name": "ArcSight v7.4.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "bethparker"
+      },
+      "ip": "73.19.141.93"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Benin",
+      "action": "locked",
+      "description": "Auth locked for bethparker via password from 73.19.141.93 MITRE Technique: T1110.003 | Unconventional IOC: Power consumption spikes"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2024-03-12 11:45:09",
+      "product_name": "Carbon Black v7.8.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "jmcclain"
+      },
+      "ip": "159.51.90.163"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Barbados",
+      "action": "failed",
+      "description": "Auth failed for jmcclain via password from 159.51.90.163 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-29 00:23:14",
+      "product_name": "Trellix v10.7.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": "yvalenzuela"
+      },
+      "ip": "195.190.69.111"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Mauritania",
+      "action": "failed",
+      "description": "Auth failed for yvalenzuela via OAuth from 195.190.69.111 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-27 06:10:59",
+      "product_name": "Vectra AI v5.0.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "rodriguezlauren"
+      },
+      "ip": "178.103.97.133"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Afghanistan",
+      "action": "locked",
+      "description": "Auth locked for rodriguezlauren via passwordless from 178.103.97.133 MITRE Technique: T1547.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-12 10:04:49",
+      "product_name": "FireEye HX v4.5.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "vgibson"
+      },
+      "ip": "12.245.128.255"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Estonia",
+      "action": "bypass",
+      "description": "Auth bypass for vgibson via SAML from 12.245.128.255 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-23 03:29:09",
+      "product_name": "AlienVault v5.7.0",
+      "event_type": "login_success"
+    },
+    "principal": {
+      "user": {
+        "userid": "lmendoza"
+      },
+      "ip": "183.91.242.179"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "geo": "Eritrea",
+      "action": "success",
+      "description": "Auth success for lmendoza via biometric from 183.91.242.179 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-28 23:46:49",
+      "product_name": "Microsoft Sentinel v1.0.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "deannataylor"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "file_access",
+      "object": "/I/fear.ppt",
+      "process_id": "8141.0",
+      "parent_process": "explorer.exe",
+      "description": "Endpoint file_access /I/fear.ppt by deannataylor No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-27 03:01:12",
+      "product_name": "LogRhythm v7.5.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "weaveranthony"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "scheduled_task",
+      "object": "station",
+      "process_id": "3322.0",
+      "parent_process": "explorer.exe",
+      "description": "Endpoint scheduled_task station by weaveranthony No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-21 09:47:27",
+      "product_name": "CrowdStrike v6.45.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "mosestyler"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "powershell_exec",
+      "object": "/loss/business.key",
+      "process_id": "5305.0",
+      "parent_process": "svchost.exe",
+      "description": "Endpoint powershell_exec /loss/business.key by mosestyler Associated Threat Actor: APT38"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-12 17:12:31",
+      "product_name": "Elastic SIEM v8.9.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "lopezcraig"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "service_install",
+      "object": "/name/church.js",
+      "process_id": "9006.0",
+      "parent_process": "cmd.exe",
+      "description": "Endpoint service_install /name/church.js by lopezcraig MITRE Technique: T1486 | Fileless execution detected"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-28 22:14:47",
+      "product_name": "LogRhythm v7.5.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "michaelrobinson"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "memory_injection",
+      "object": "/kitchen/save.png",
+      "process_id": "3784.0",
+      "parent_process": "cmd.exe",
+      "description": "Endpoint memory_injection /kitchen/save.png by michaelrobinson No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-17 16:29:05",
+      "product_name": "FireEye HX v4.5.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "hollyschmitt"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "process_stop",
+      "object": "service",
+      "process_id": "6128.0",
+      "parent_process": "svchost.exe",
+      "description": "Endpoint process_stop service by hollyschmitt MITRE Technique: T1071.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-04 19:37:20",
+      "product_name": "Snort v2.9.20",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "jessica49"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "process_start",
+      "object": "/turn/letter.jpg",
+      "process_id": "8199.0",
+      "parent_process": "powershell.exe",
+      "description": "Endpoint process_start /turn/letter.jpg by jessica49 Associated Threat Actor: APT29"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-07 20:47:03",
+      "product_name": "Microsoft Sentinel v1.0.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "annegutierrez"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "registry_change",
+      "object": "final",
+      "process_id": "9905.0",
+      "parent_process": "cmd.exe",
+      "description": "Endpoint registry_change final by annegutierrez No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-20 04:50:05",
+      "product_name": "Trellix v10.7.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "ehernandez"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "service_install",
+      "object": "movie",
+      "process_id": "9327.0",
+      "parent_process": "powershell.exe",
+      "description": "Endpoint service_install movie by ehernandez MITRE Technique: T1059.001 | Associated Threat Actor: APT35 | Unconventional IOC: UEFI variable tampering"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-19 23:23:51",
+      "product_name": "OSSEC v3.7.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "wareashley"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "process_stop",
+      "object": "/agree/bit.txt",
+      "process_id": "6977.0",
+      "parent_process": "cmd.exe",
+      "description": "Endpoint process_stop /agree/bit.txt by wareashley No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-05 17:31:04",
+      "product_name": "Zeek v5.0.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "smithtracy"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "scheduled_task",
+      "object": "/magazine/owner.css",
+      "process_id": "9793.0",
+      "parent_process": "cmd.exe",
+      "description": "Endpoint scheduled_task /magazine/owner.css by smithtracy No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-08 02:18:20",
+      "product_name": "Elastic SIEM v8.9.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "gpage"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "file_access",
+      "object": "/home/worry.css",
+      "process_id": "1916.0",
+      "parent_process": "powershell.exe",
+      "description": "Endpoint file_access /home/worry.css by gpage MITRE Technique: T1574.002 | Associated Threat Actor: Mustang Panda | Living-off-the-land technique detected"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-02 14:13:53",
+      "product_name": "QRadar v7.5.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "christina64"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "service_install",
+      "object": "/me/government.txt",
+      "process_id": "6512.0",
+      "parent_process": "powershell.exe",
+      "description": "Endpoint service_install /me/government.txt by christina64 Living-off-the-land technique detected"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-18 12:16:21",
+      "product_name": "Suricata v6.0.10",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "pcampbell"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "powershell_exec",
+      "object": "/to/inside.js",
+      "process_id": "8399.0",
+      "parent_process": "explorer.exe",
+      "description": "Endpoint powershell_exec /to/inside.js by pcampbell No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-07 16:26:50",
+      "product_name": "LogRhythm v7.5.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "melissa67"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "driver_load",
+      "object": "similar",
+      "process_id": "7146.0",
+      "parent_process": "powershell.exe",
+      "description": "Endpoint driver_load similar by melissa67 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-07 05:36:18",
+      "product_name": "OSSEC v3.7.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "ashley75"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "scheduled_task",
+      "object": "/could/forget.wav",
+      "process_id": "738.0",
+      "parent_process": "cmd.exe",
+      "description": "Endpoint scheduled_task /could/forget.wav by ashley75 MITRE Technique: T1218.011 | Living-off-the-land technique detected"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-24 09:14:07",
+      "product_name": "OSSEC v3.7.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "imorrison"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "powershell_exec",
+      "object": "/group/why.avi",
+      "process_id": "3790.0",
+      "parent_process": "explorer.exe",
+      "description": "Endpoint powershell_exec /group/why.avi by imorrison No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-07-07 21:11:32",
+      "product_name": "Suricata v6.0.10",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "shelly67"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "persistence_mechanism",
+      "object": "/son/evidence.webm",
+      "process_id": "4855.0",
+      "parent_process": "cmd.exe",
+      "description": "Endpoint persistence_mechanism /son/evidence.webm by shelly67 MITRE Technique: T1059.005"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-29 23:08:42",
+      "product_name": "Suricata v6.0.10",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "williamslinda"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "memory_injection",
+      "object": "/least/individual.jpeg",
+      "process_id": "2909.0",
+      "parent_process": "powershell.exe",
+      "description": "Endpoint memory_injection /least/individual.jpeg by williamslinda Living-off-the-land technique detected"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-17 13:59:35",
+      "product_name": "Elastic SIEM v8.9.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "jgutierrez"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "service_install",
+      "object": "senior",
+      "process_id": "9422.0",
+      "parent_process": "svchost.exe",
+      "description": "Endpoint service_install senior by jgutierrez No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-02 10:54:43",
+      "product_name": "Zeek v5.0.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "courtneyhenderson"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "wmi_exec",
+      "object": "one",
+      "process_id": "4712.0",
+      "parent_process": "cmd.exe",
+      "description": "Endpoint wmi_exec one by courtneyhenderson No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-26 00:33:03",
+      "product_name": "Suricata v6.0.10",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "pamela70"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "process_stop",
+      "object": "hotel",
+      "process_id": "3016.0",
+      "parent_process": "powershell.exe",
+      "description": "Endpoint process_stop hotel by pamela70 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2027-09-11 02:24:41",
+      "product_name": "FireEye HX v4.5.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "mfloyd"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "scheduled_task",
+      "object": "than",
+      "process_id": "6794.0",
+      "parent_process": "svchost.exe",
+      "description": "Endpoint scheduled_task than by mfloyd No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-16 05:37:54",
+      "product_name": "CrowdStrike v6.45.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "williampowell"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "persistence_mechanism",
+      "object": "picture",
+      "process_id": "2960.0",
+      "parent_process": "cmd.exe",
+      "description": "Endpoint persistence_mechanism picture by williampowell MITRE Technique: T1574.002"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-17 21:42:48",
+      "product_name": "Splunk v9.0.2",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "cunninghamjose"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "powershell_exec",
+      "object": "ago",
+      "process_id": "6216.0",
+      "parent_process": "svchost.exe",
+      "description": "Endpoint powershell_exec ago by cunninghamjose Associated Threat Actor: REvil"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-01 14:46:11",
+      "product_name": "ArcSight v7.4.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "aaronyoung"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "powershell_exec",
+      "object": "/worker/anything.wav",
+      "process_id": "8991.0",
+      "parent_process": "explorer.exe",
+      "description": "Endpoint powershell_exec /worker/anything.wav by aaronyoung No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-07-01 07:49:34",
+      "product_name": "ArcSight v7.4.0",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "darlene38"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "process_start",
+      "object": "/former/leader.css",
+      "process_id": "5390.0",
+      "parent_process": "powershell.exe",
+      "description": "Endpoint process_start /former/leader.css by darlene38 MITRE Technique: T1543.003"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-01 02:12:55",
+      "product_name": "Trellix v10.7.0",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "fblack"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "process_start",
+      "object": "eight",
+      "process_id": "5881.0",
+      "parent_process": "cmd.exe",
+      "description": "Endpoint process_start eight by fblack MITRE Technique: T1566.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-27 19:26:20",
+      "product_name": "Wazuh v4.5.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "xcole"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "persistence_mechanism",
+      "object": "/bring/fish.webm",
+      "process_id": "1805.0",
+      "parent_process": "explorer.exe",
+      "description": "Endpoint persistence_mechanism /bring/fish.webm by xcole No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-19 03:08:00",
+      "product_name": "Suricata v6.0.10",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "ndavis"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "process_start",
+      "object": "/more/force.png",
+      "process_id": "5151.0",
+      "parent_process": "explorer.exe",
+      "description": "Endpoint process_start /more/force.png by ndavis MITRE Technique: T1218.011 | Unconventional IOC: ACPI table modifications | Living-off-the-land technique detected"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-25 10:45:21",
+      "product_name": "Microsoft Sentinel v1.0.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "gyoung"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "driver_load",
+      "object": "/it/notice.mov",
+      "process_id": "4221.0",
+      "parent_process": "explorer.exe",
+      "description": "Endpoint driver_load /it/notice.mov by gyoung No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-30 08:15:04",
+      "product_name": "Palo Alto Cortex v3.0.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "powerscassandra"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "scheduled_task",
+      "object": "/rest/part.webm",
+      "process_id": "8624.0",
+      "parent_process": "explorer.exe",
+      "description": "Endpoint scheduled_task /rest/part.webm by powerscassandra No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2023-05-21 00:21:55",
+      "product_name": "Splunk v9.0.2",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "wsmith"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "scheduled_task",
+      "object": "/plan/family.webm",
+      "process_id": "9026.0",
+      "parent_process": "svchost.exe",
+      "description": "Endpoint scheduled_task /plan/family.webm by wsmith No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-16 06:04:13",
+      "product_name": "Snort v2.9.20",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "maria31"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "persistence_mechanism",
+      "object": "/talk/actually.html",
+      "process_id": "427.0",
+      "parent_process": "explorer.exe",
+      "description": "Endpoint persistence_mechanism /talk/actually.html by maria31 Associated Threat Actor: BlueNoroff | Living-off-the-land technique detected"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-24 15:36:32",
+      "product_name": "Vectra AI v5.0.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "joangarcia"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "persistence_mechanism",
+      "object": "/name/right.avi",
+      "process_id": "2234.0",
+      "parent_process": "explorer.exe",
+      "description": "Endpoint persistence_mechanism /name/right.avi by joangarcia No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-17 09:08:56",
+      "product_name": "Palo Alto Cortex v3.0.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "zsherman"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "process_stop",
+      "object": "process",
+      "process_id": "4640.0",
+      "parent_process": "cmd.exe",
+      "description": "Endpoint process_stop process by zsherman MITRE Technique: T1218.011"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-19 13:48:51",
+      "product_name": "Splunk v9.0.2",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "jessica33"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "registry_change",
+      "object": "need",
+      "process_id": "7028.0",
+      "parent_process": "powershell.exe",
+      "description": "Endpoint registry_change need by jessica33 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-13 11:44:32",
+      "product_name": "FireEye HX v4.5.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "shannonelliott"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "service_install",
+      "object": "/try/teach.jpg",
+      "process_id": "609.0",
+      "parent_process": "powershell.exe",
+      "description": "Endpoint service_install /try/teach.jpg by shannonelliott No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2030-06-01 20:03:26",
+      "product_name": "Elastic SIEM v8.9.0",
+      "event_type": "suspicious_process"
+    },
+    "principal": {
+      "user": {
+        "userid": "comptoneric"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "wmi_exec",
+      "object": "/light/watch.jpeg",
+      "process_id": "3725.0",
+      "parent_process": "svchost.exe",
+      "description": "Endpoint wmi_exec /light/watch.jpeg by comptoneric Unconventional IOC: TPM attestation failures"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-18 06:21:56",
+      "product_name": "Suricata v6.0.10",
+      "event_type": "process_execution"
+    },
+    "principal": {
+      "user": {
+        "userid": "edwardsantonio"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "process_start",
+      "object": "/what/east.webm",
+      "process_id": "2263.0",
+      "parent_process": "powershell.exe",
+      "description": "Endpoint process_start /what/east.webm by edwardsantonio MITRE Technique: T1110.003 | Unconventional IOC: Quantum random number deviations"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-21 10:03:20",
+      "product_name": "Carbon Black v7.8.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "54.159.34.148"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "",
+      "category": "Exploit",
+      "signature_id": "SIG-9267",
+      "description": "Carbon Black Alert: Credential Stuffing detected from 54.159.34.148 targeting N/A No additional info",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-05 05:52:12",
+      "product_name": "QRadar v7.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "196.221.103.178"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "",
+      "category": "Recon",
+      "signature_id": "SIG-3838",
+      "description": "QRadar Alert: Fileless Attack detected from 196.221.103.178 targeting N/A MITRE Technique: T1190",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-14 18:45:36",
+      "product_name": "Splunk v9.0.2",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "18.11.108.18"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "",
+      "category": "Recon",
+      "signature_id": "SIG-9233",
+      "description": "Splunk Alert: Credential Stuffing detected from 18.11.108.18 targeting N/A MITRE Technique: T1218.011",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-28 07:23:57",
+      "product_name": "ArcSight v7.4.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "81.246.43.100"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Policy",
+      "signature_id": "SIG-5477",
+      "description": "ArcSight Alert: Container Escape detected from 81.246.43.100 targeting N/A Unconventional IOC: TPM attestation failures",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-22 05:33:43",
+      "product_name": "Tanium v7.4.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "10.180.90.215"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Policy",
+      "signature_id": "SIG-8598",
+      "description": "Tanium Alert: DNS Tunneling detected from 10.180.90.215 targeting 123.198.77.58 No additional info",
+      "dst_ip": "123.198.77.58"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-20 22:41:55",
+      "product_name": "Vectra AI v5.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "20.244.70.237"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Recon",
+      "signature_id": "SIG-6396",
+      "description": "Vectra AI Alert: Cloud API Abuse detected from 20.244.70.237 targeting 169.158.142.25 MITRE Technique: T1190",
+      "dst_ip": "169.158.142.25"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-01 23:09:15",
+      "product_name": "CrowdStrike v6.45.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "148.203.68.188"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Recon",
+      "signature_id": "SIG-6260",
+      "description": "CrowdStrike Alert: Supply Chain Compromise detected from 148.203.68.188 targeting 99.255.188.200 No additional info",
+      "dst_ip": "99.255.188.200"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-07 00:57:34",
+      "product_name": "ArcSight v7.4.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "3.17.60.36"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Policy",
+      "signature_id": "SIG-8603",
+      "description": "ArcSight Alert: Container Escape detected from 3.17.60.36 targeting N/A No additional info",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2022-07-05 16:00:22",
+      "product_name": "CrowdStrike v6.45.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "88.153.230.102"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Exploit",
+      "signature_id": "SIG-9861",
+      "description": "CrowdStrike Alert: XSS detected from 88.153.230.102 targeting 56.172.100.220 No additional info",
+      "dst_ip": "56.172.100.220"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-25 18:17:48",
+      "product_name": "Zeek v5.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "10.169.70.161"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Exploit",
+      "signature_id": "SIG-9209",
+      "description": "Zeek Alert: Cloud API Abuse detected from 10.169.70.161 targeting 191.205.73.183 No additional info",
+      "dst_ip": "191.205.73.183"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-25 22:00:54",
+      "product_name": "QRadar v7.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "173.224.153.22"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Exploit",
+      "signature_id": "SIG-7791",
+      "description": "QRadar Alert: Cloud API Abuse detected from 173.224.153.22 targeting 177.99.147.198 No additional info",
+      "dst_ip": "177.99.147.198"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-15 13:18:13",
+      "product_name": "Splunk v9.0.2",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "193.133.128.184"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Evasion",
+      "signature_id": "SIG-9708",
+      "description": "Splunk Alert: Credential Stuffing detected from 193.133.128.184 targeting 101.25.10.50 MITRE Technique: T1486",
+      "dst_ip": "101.25.10.50"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-14 02:26:21",
+      "product_name": "Suricata v6.0.10",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "38.235.18.216"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Recon",
+      "signature_id": "SIG-5875",
+      "description": "Suricata Alert: MFA Bypass detected from 38.235.18.216 targeting 26.148.44.160 No additional info",
+      "dst_ip": "26.148.44.160"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-19 14:28:09",
+      "product_name": "Tanium v7.4.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "142.154.182.54"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "",
+      "category": "Policy",
+      "signature_id": "SIG-3869",
+      "description": "Tanium Alert: Credential Stuffing detected from 142.154.182.54 targeting N/A No additional info",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-31 23:11:03",
+      "product_name": "FireEye HX v4.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "10.106.57.40"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Exploit",
+      "signature_id": "SIG-7956",
+      "description": "FireEye HX Alert: Cloud API Abuse detected from 10.106.57.40 targeting N/A No additional info",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-07-02 04:44:33",
+      "product_name": "OSSEC v3.7.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "166.4.200.152"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Recon",
+      "signature_id": "SIG-1203",
+      "description": "OSSEC Alert: Supply Chain Compromise detected from 166.4.200.152 targeting 10.191.251.6 No additional info",
+      "dst_ip": "10.191.251.6"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-31 23:37:12",
+      "product_name": "Tanium v7.4.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "7.246.17.230"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Recon",
+      "signature_id": "SIG-3961",
+      "description": "Tanium Alert: DDoS detected from 7.246.17.230 targeting 55.69.37.213 MITRE Technique: T1543.003",
+      "dst_ip": "55.69.37.213"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2023-12-24 15:07:25",
+      "product_name": "Microsoft Sentinel v1.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "10.153.174.66"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Exploit",
+      "signature_id": "SIG-2030",
+      "description": "Microsoft Sentinel Alert: Fileless Attack detected from 10.153.174.66 targeting 10.183.148.178 MITRE Technique: T1134.001",
+      "dst_ip": "10.183.148.178"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-15 08:46:28",
+      "product_name": "Snort v2.9.20",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "88.104.35.178"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Recon",
+      "signature_id": "SIG-5673",
+      "description": "Snort Alert: SQL Injection detected from 88.104.35.178 targeting 1.203.77.16 No additional info",
+      "dst_ip": "1.203.77.16"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-28 02:23:01",
+      "product_name": "Wazuh v4.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "91.233.40.17"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "",
+      "category": "Recon",
+      "signature_id": "SIG-9200",
+      "description": "Wazuh Alert: Fileless Attack detected from 91.233.40.17 targeting 64.82.211.17 MITRE Technique: T1566.001 | Zero-day exploit pattern detected",
+      "dst_ip": "64.82.211.17"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-05 11:45:44",
+      "product_name": "AlienVault v5.7.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "161.203.119.241"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "",
+      "category": "Exploit",
+      "signature_id": "SIG-3374",
+      "description": "AlienVault Alert: Credential Stuffing detected from 161.203.119.241 targeting 117.18.55.214 No additional info",
+      "dst_ip": "117.18.55.214"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-05 20:32:18",
+      "product_name": "Darktrace v6.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "75.9.134.70"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "",
+      "category": "Recon",
+      "signature_id": "SIG-2162",
+      "description": "Darktrace Alert: MFA Bypass detected from 75.9.134.70 targeting N/A MITRE Technique: T1071.001",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-17 22:03:24",
+      "product_name": "Vectra AI v5.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "13.118.151.106"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Exploit",
+      "signature_id": "SIG-9964",
+      "description": "Vectra AI Alert: DDoS detected from 13.118.151.106 targeting N/A No additional info",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-12 07:58:30",
+      "product_name": "ArcSight v7.4.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "42.75.61.163"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "",
+      "category": "Exploit",
+      "signature_id": "SIG-2860",
+      "description": "ArcSight Alert: XSS detected from 42.75.61.163 targeting 19.152.25.139 MITRE Technique: T1218.011",
+      "dst_ip": "19.152.25.139"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-24 19:54:48",
+      "product_name": "FireEye HX v4.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "7.112.154.134"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "",
+      "category": "Evasion",
+      "signature_id": "SIG-8501",
+      "description": "FireEye HX Alert: Supply Chain Compromise detected from 7.112.154.134 targeting N/A No additional info",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-28 10:50:19",
+      "product_name": "OSSEC v3.7.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "95.174.154.129"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Malware",
+      "signature_id": "SIG-2812",
+      "description": "OSSEC Alert: Zero-Day Exploit detected from 95.174.154.129 targeting 44.59.188.19 No additional info",
+      "dst_ip": "44.59.188.19"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2024-01-14 18:03:31",
+      "product_name": "Tanium v7.4.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "214.24.129.164"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Evasion",
+      "signature_id": "SIG-7611",
+      "description": "Tanium Alert: ICS Attack detected from 214.24.129.164 targeting N/A Unconventional IOC: Bios timestamp anomalies",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-05 16:33:36",
+      "product_name": "Trellix v10.7.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "149.112.21.14"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Exploit",
+      "signature_id": "SIG-7204",
+      "description": "Trellix Alert: Domain Fronting detected from 149.112.21.14 targeting N/A No additional info",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-18 09:52:18",
+      "product_name": "CrowdStrike v6.45.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "58.36.246.70"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Recon",
+      "signature_id": "SIG-9310",
+      "description": "CrowdStrike Alert: Brute Force detected from 58.36.246.70 targeting 10.221.212.80 No additional info",
+      "dst_ip": "10.221.212.80"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-14 20:04:28",
+      "product_name": "Trellix v10.7.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "196.204.109.134"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Evasion",
+      "signature_id": "SIG-5106",
+      "description": "Trellix Alert: Zero-Day Exploit detected from 196.204.109.134 targeting N/A Associated Threat Actor: Leafminer",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-02 12:58:28",
+      "product_name": "Vectra AI v5.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "207.204.7.70"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Malware",
+      "signature_id": "SIG-1368",
+      "description": "Vectra AI Alert: Domain Fronting detected from 207.204.7.70 targeting 151.130.173.140 MITRE Technique: T1059.005",
+      "dst_ip": "151.130.173.140"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-10 23:37:34",
+      "product_name": "Tanium v7.4.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "118.74.217.177"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Policy",
+      "signature_id": "SIG-8786",
+      "description": "Tanium Alert: Zero-Day Exploit detected from 118.74.217.177 targeting 101.42.61.226 No additional info",
+      "dst_ip": "101.42.61.226"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-20 00:22:19",
+      "product_name": "Vectra AI v5.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "39.151.71.194"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Malware",
+      "signature_id": "SIG-3191",
+      "description": "Vectra AI Alert: Domain Fronting detected from 39.151.71.194 targeting N/A MITRE Technique: T1204.002",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-11 00:00:43",
+      "product_name": "LogRhythm v7.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "10.181.50.32"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Malware",
+      "signature_id": "SIG-3324",
+      "description": "LogRhythm Alert: Supply Chain Compromise detected from 10.181.50.32 targeting N/A No additional info",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-07 18:09:43",
+      "product_name": "FireEye HX v4.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "76.57.66.243"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "",
+      "category": "Policy",
+      "signature_id": "SIG-9361",
+      "description": "FireEye HX Alert: Supply Chain Compromise detected from 76.57.66.243 targeting 27.155.147.77 No additional info",
+      "dst_ip": "27.155.147.77"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-27 22:46:41",
+      "product_name": "Wazuh v4.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "140.221.154.118"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Recon",
+      "signature_id": "SIG-3552",
+      "description": "Wazuh Alert: Credential Stuffing detected from 140.221.154.118 targeting 8.3.80.109 No additional info",
+      "dst_ip": "8.3.80.109"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-06 21:03:08",
+      "product_name": "Microsoft Sentinel v1.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "151.194.188.11"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "",
+      "category": "Policy",
+      "signature_id": "SIG-2125",
+      "description": "Microsoft Sentinel Alert: AI Model Poisoning detected from 151.194.188.11 targeting 69.197.223.118 MITRE Technique: T1204.002",
+      "dst_ip": "69.197.223.118"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-21 03:31:13",
+      "product_name": "Carbon Black v7.8.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "104.12.87.146"
+    },
+    "security_result": {
+      "severity": "EMERGENCY"
+    },
+    "additional": {
+      "action": "",
+      "category": "Recon",
+      "signature_id": "SIG-5733",
+      "description": "Carbon Black Alert: Zero-Day Exploit detected from 104.12.87.146 targeting N/A No additional info",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-20 03:17:57",
+      "product_name": "CrowdStrike v6.45.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "206.250.253.179"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "",
+      "category": "Malware",
+      "signature_id": "SIG-5982",
+      "description": "CrowdStrike Alert: Brute Force detected from 206.250.253.179 targeting N/A No additional info",
+      "dst_ip": "N/A"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-20 14:07:10",
+      "product_name": "Zeek v5.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "215.178.216.197"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "",
+      "category": "Policy",
+      "signature_id": "SIG-2174",
+      "description": "Zeek Alert: DNS Tunneling detected from 215.178.216.197 targeting 130.141.51.220 No additional info",
+      "dst_ip": "130.141.51.220"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-24 03:07:16",
+      "product_name": "QRadar v7.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "154.67.212.53"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "deny",
+      "dst_ip": "10.222.147.90",
+      "protocol": "TCP",
+      "bytes": "519723.0",
+      "description": "Firewall deny TCP traffic from 154.67.212.53:384 to 10.222.147.90:109 MITRE Technique: T1190"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-04 10:05:00",
+      "product_name": "Snort v2.9.20",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "179.60.117.219"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "deny",
+      "dst_ip": "76.225.7.226",
+      "protocol": "HTTP",
+      "bytes": "807443.0",
+      "description": "Firewall deny HTTP traffic from 179.60.117.219:820 to 76.225.7.226:368 MITRE Technique: T1543.003"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-01 06:20:58",
+      "product_name": "Splunk v9.0.2",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "68.14.74.108"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "drop",
+      "dst_ip": "10.251.11.159",
+      "protocol": "SSH",
+      "bytes": "135344.0",
+      "description": "Firewall drop SSH traffic from 68.14.74.108:804 to 10.251.11.159:211 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-01 15:02:03",
+      "product_name": "ArcSight v7.4.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "13.57.147.175"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "log-only",
+      "dst_ip": "69.210.87.235",
+      "protocol": "RDP",
+      "bytes": "580398.0",
+      "description": "Firewall log-only RDP traffic from 13.57.147.175:241 to 69.210.87.235:305 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-31 20:50:17",
+      "product_name": "Carbon Black v7.8.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "56.118.239.202"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "deny",
+      "dst_ip": "98.81.18.146",
+      "protocol": "SSH",
+      "bytes": "910879.0",
+      "description": "Firewall deny SSH traffic from 56.118.239.202:260 to 98.81.18.146:945 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-30 11:54:37",
+      "product_name": "Elastic SIEM v8.9.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "197.15.133.169"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "quarantine",
+      "dst_ip": "50.158.192.66",
+      "protocol": "ICMP",
+      "bytes": "245837.0",
+      "description": "Firewall quarantine ICMP traffic from 197.15.133.169:938 to 50.158.192.66:921 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-10 22:21:20",
+      "product_name": "ArcSight v7.4.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "11.179.16.181"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "drop",
+      "dst_ip": "137.152.122.86",
+      "protocol": "TCP",
+      "bytes": "603505.0",
+      "description": "Firewall drop TCP traffic from 11.179.16.181:878 to 137.152.122.86:254 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-21 09:40:56",
+      "product_name": "QRadar v7.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "219.82.22.174"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "log-only",
+      "dst_ip": "55.197.163.64",
+      "protocol": "HTTP",
+      "bytes": "921327.0",
+      "description": "Firewall log-only HTTP traffic from 219.82.22.174:49721 to 55.197.163.64:985 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-06 04:56:00",
+      "product_name": "Carbon Black v7.8.0",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "10.243.222.245"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "allow",
+      "dst_ip": "10.14.158.189",
+      "protocol": "RDP",
+      "bytes": "536007.0",
+      "description": "Firewall allow RDP traffic from 10.243.222.245:33818 to 10.14.158.189:62 MITRE Technique: T1071.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-18 14:59:59",
+      "product_name": "QRadar v7.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "133.17.74.88"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "drop",
+      "dst_ip": "92.198.241.148",
+      "protocol": "SSH",
+      "bytes": "706340.0",
+      "description": "Firewall drop SSH traffic from 133.17.74.88:951 to 92.198.241.148:61225 MITRE Technique: T1486 | Associated Threat Actor: Inception Framework | Unconventional IOC: CPU microcode changes"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-05 13:17:25",
+      "product_name": "FireEye HX v4.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "30.244.195.150"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "deny",
+      "dst_ip": "29.83.174.60",
+      "protocol": "TCP",
+      "bytes": "127790.0",
+      "description": "Firewall deny TCP traffic from 30.244.195.150:284 to 29.83.174.60:328 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-12 20:16:45",
+      "product_name": "Tanium v7.4.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "65.216.180.206"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "inspect",
+      "dst_ip": "5.202.194.115",
+      "protocol": "ICMP",
+      "bytes": "644908.0",
+      "description": "Firewall inspect ICMP traffic from 65.216.180.206:834 to 5.202.194.115:41838 MITRE Technique: T1543.003 | Unconventional IOC: Unusual DNS TXT records"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-26 14:21:30",
+      "product_name": "Tanium v7.4.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "185.44.127.117"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "deny",
+      "dst_ip": "174.185.111.23",
+      "protocol": "DNS",
+      "bytes": "104002.0",
+      "description": "Firewall deny DNS traffic from 185.44.127.117:12066 to 174.185.111.23:14937 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-12 20:50:41",
+      "product_name": "Microsoft Sentinel v1.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "196.157.26.57"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "inspect",
+      "dst_ip": "89.104.72.247",
+      "protocol": "TCP",
+      "bytes": "602645.0",
+      "description": "Firewall inspect TCP traffic from 196.157.26.57:377 to 89.104.72.247:5205 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-23 01:50:38",
+      "product_name": "Splunk v9.0.2",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "183.23.60.109"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "drop",
+      "dst_ip": "217.251.87.237",
+      "protocol": "HTTPS",
+      "bytes": "211805.0",
+      "description": "Firewall drop HTTPS traffic from 183.23.60.109:911 to 217.251.87.237:684 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-26 22:08:46",
+      "product_name": "FireEye HX v4.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "164.25.253.193"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "drop",
+      "dst_ip": "205.150.174.142",
+      "protocol": "SSH",
+      "bytes": "917966.0",
+      "description": "Firewall drop SSH traffic from 164.25.253.193:735 to 205.150.174.142:1019 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-05 09:19:54",
+      "product_name": "LogRhythm v7.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "9.197.18.37"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "inspect",
+      "dst_ip": "88.47.111.67",
+      "protocol": "SMB",
+      "bytes": "954776.0",
+      "description": "Firewall inspect SMB traffic from 9.197.18.37:971 to 88.47.111.67:63 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-19 23:26:16",
+      "product_name": "Wazuh v4.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "155.79.44.135"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "inspect",
+      "dst_ip": "49.17.236.139",
+      "protocol": "TCP",
+      "bytes": "955059.0",
+      "description": "Firewall inspect TCP traffic from 155.79.44.135:434 to 49.17.236.139:853 MITRE Technique: T1059.005 | Unconventional IOC: Quantum random number deviations"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-28 13:15:26",
+      "product_name": "Wazuh v4.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "159.202.171.145"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "quarantine",
+      "dst_ip": "197.210.82.110",
+      "protocol": "HTTP",
+      "bytes": "702284.0",
+      "description": "Firewall quarantine HTTP traffic from 159.202.171.145:570 to 197.210.82.110:348 MITRE Technique: T1110.003"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-23 19:36:55",
+      "product_name": "Snort v2.9.20",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "39.33.126.122"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "deny",
+      "dst_ip": "10.204.237.123",
+      "protocol": "HTTPS",
+      "bytes": "634504.0",
+      "description": "Firewall deny HTTPS traffic from 39.33.126.122:15799 to 10.204.237.123:306 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-14 23:15:46",
+      "product_name": "Palo Alto Cortex v3.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "10.25.166.26"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "drop",
+      "dst_ip": "90.228.72.84",
+      "protocol": "SSH",
+      "bytes": "202211.0",
+      "description": "Firewall drop SSH traffic from 10.25.166.26:806 to 90.228.72.84:672 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-21 11:41:42",
+      "product_name": "LogRhythm v7.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "123.139.244.87"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "deny",
+      "dst_ip": "59.221.106.118",
+      "protocol": "HTTPS",
+      "bytes": "734424.0",
+      "description": "Firewall deny HTTPS traffic from 123.139.244.87:503 to 59.221.106.118:570 MITRE Technique: T1547.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-25 03:08:26",
+      "product_name": "Elastic SIEM v8.9.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "10.98.145.17"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "drop",
+      "dst_ip": "10.246.140.77",
+      "protocol": "TCP",
+      "bytes": "638967.0",
+      "description": "Firewall drop TCP traffic from 10.98.145.17:440 to 10.246.140.77:948 MITRE Technique: T1190"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-21 17:54:39",
+      "product_name": "Darktrace v6.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "62.232.184.44"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "drop",
+      "dst_ip": "17.203.223.208",
+      "protocol": "DNS",
+      "bytes": "58050.0",
+      "description": "Firewall drop DNS traffic from 62.232.184.44:32551 to 17.203.223.208:373 Associated Threat Actor: Leafminer"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-06 21:17:19",
+      "product_name": "FireEye HX v4.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "174.25.236.56"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "deny",
+      "dst_ip": "194.63.7.204",
+      "protocol": "ICMP",
+      "bytes": "927491.0",
+      "description": "Firewall deny ICMP traffic from 174.25.236.56:771 to 194.63.7.204:252 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-15 17:04:35",
+      "product_name": "Microsoft Sentinel v1.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "183.110.85.186"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "inspect",
+      "dst_ip": "88.171.150.27",
+      "protocol": "RDP",
+      "bytes": "903649.0",
+      "description": "Firewall inspect RDP traffic from 183.110.85.186:421 to 88.171.150.27:36001 MITRE Technique: T1078.004"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-13 19:00:43",
+      "product_name": "QRadar v7.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "22.182.42.111"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "deny",
+      "dst_ip": "45.157.87.216",
+      "protocol": "UDP",
+      "bytes": "660470.0",
+      "description": "Firewall deny UDP traffic from 22.182.42.111:755 to 45.157.87.216:375 MITRE Technique: T1134.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-21 06:21:21",
+      "product_name": "Zeek v5.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "145.118.252.245"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "deny",
+      "dst_ip": "174.82.128.154",
+      "protocol": "DNS",
+      "bytes": "601360.0",
+      "description": "Firewall deny DNS traffic from 145.118.252.245:847 to 174.82.128.154:48 Associated Threat Actor: APT34"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-07-07 04:17:24",
+      "product_name": "Wazuh v4.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "174.160.117.56"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "deny",
+      "dst_ip": "30.88.14.86",
+      "protocol": "HTTP",
+      "bytes": "820716.0",
+      "description": "Firewall deny HTTP traffic from 174.160.117.56:70 to 30.88.14.86:850 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-26 02:38:37",
+      "product_name": "LogRhythm v7.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "60.101.64.23"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "quarantine",
+      "dst_ip": "95.166.114.69",
+      "protocol": "SSH",
+      "bytes": "126725.0",
+      "description": "Firewall quarantine SSH traffic from 60.101.64.23:25274 to 95.166.114.69:230 MITRE Technique: T1134.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-28 09:03:28",
+      "product_name": "AlienVault v5.7.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "10.62.210.133"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "deny",
+      "dst_ip": "173.47.25.201",
+      "protocol": "TCP",
+      "bytes": "288141.0",
+      "description": "Firewall deny TCP traffic from 10.62.210.133:772 to 173.47.25.201:694 MITRE Technique: T1574.002"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-24 18:43:38",
+      "product_name": "LogRhythm v7.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "10.53.39.243"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "quarantine",
+      "dst_ip": "107.242.142.255",
+      "protocol": "DNS",
+      "bytes": "636675.0",
+      "description": "Firewall quarantine DNS traffic from 10.53.39.243:933 to 107.242.142.255:59021 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-31 21:24:24",
+      "product_name": "Wazuh v4.5.0",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "53.197.138.227"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "allow",
+      "dst_ip": "169.101.250.53",
+      "protocol": "RDP",
+      "bytes": "143515.0",
+      "description": "Firewall allow RDP traffic from 53.197.138.227:250 to 169.101.250.53:1014 MITRE Technique: T1190"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-19 15:55:58",
+      "product_name": "Carbon Black v7.8.0",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "107.187.155.150"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "allow",
+      "dst_ip": "85.176.240.201",
+      "protocol": "NTP",
+      "bytes": "943861.0",
+      "description": "Firewall allow NTP traffic from 107.187.155.150:1016 to 85.176.240.201:845 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-13 10:33:38",
+      "product_name": "Microsoft Sentinel v1.0.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "100.11.208.82"
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "log-only",
+      "dst_ip": "87.28.111.10",
+      "protocol": "TCP",
+      "bytes": "681671.0",
+      "description": "Firewall log-only TCP traffic from 100.11.208.82:186 to 87.28.111.10:768 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-03 00:15:10",
+      "product_name": "Suricata v6.0.10",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "162.244.101.146"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "drop",
+      "dst_ip": "10.230.225.115",
+      "protocol": "TCP",
+      "bytes": "434854.0",
+      "description": "Firewall drop TCP traffic from 162.244.101.146:18175 to 10.230.225.115:26510 Associated Threat Actor: Equation Group"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-07-06 00:24:07",
+      "product_name": "FireEye HX v4.5.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "169.173.42.2"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "log-only",
+      "dst_ip": "34.33.236.199",
+      "protocol": "SMB",
+      "bytes": "734595.0",
+      "description": "Firewall log-only SMB traffic from 169.173.42.2:918 to 34.33.236.199:679 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-16 14:43:23",
+      "product_name": "Suricata v6.0.10",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "115.237.128.167"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "allow",
+      "dst_ip": "195.42.47.160",
+      "protocol": "HTTP",
+      "bytes": "949639.0",
+      "description": "Firewall allow HTTP traffic from 115.237.128.167:870 to 195.42.47.160:3192 Beaconing behavior detected"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-01 21:24:31",
+      "product_name": "Snort v2.9.20",
+      "event_type": "large_data_transfer"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "193.49.177.68"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "allow",
+      "dst_ip": "32.62.13.214",
+      "protocol": "UDP",
+      "bytes": "27778.0",
+      "description": "Firewall allow UDP traffic from 193.49.177.68:322 to 32.62.13.214:455 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-30 07:52:07",
+      "product_name": "ArcSight v7.4.0",
+      "event_type": "suspicious_signin"
+    },
+    "principal": {
+      "user": {
+        "userid": ""
+      },
+      "ip": "3.33.232.26"
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "inspect",
+      "dst_ip": "141.62.224.32",
+      "protocol": "UDP",
+      "bytes": "391244.0",
+      "description": "Firewall inspect UDP traffic from 3.33.232.26:541 to 141.62.224.32:656 MITRE Technique: T1110.003"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-07 05:54:43",
+      "product_name": "QRadar v7.5.0",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "jerome86"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "api_abuse",
+      "cloud_service": "AWS",
+      "resource_id": "res-78f9ed2c",
+      "description": "Cloud api_abuse in AWS by jerome86 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-20 06:05:26",
+      "product_name": "CrowdStrike v6.45.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "pamela23"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "container_escape",
+      "cloud_service": "OCI",
+      "resource_id": "res-42725d05",
+      "description": "Cloud container_escape in OCI by pamela23 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-18 00:16:35",
+      "product_name": "Elastic SIEM v8.9.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "dbrown"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "shadow_it",
+      "cloud_service": "GCP",
+      "resource_id": "res-ad621b05",
+      "description": "Cloud shadow_it in GCP by dbrown Associated Threat Actor: Leafminer"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-17 03:09:06",
+      "product_name": "ArcSight v7.4.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "mwhite"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "container_escape",
+      "cloud_service": "Azure",
+      "resource_id": "res-3f293092",
+      "description": "Cloud container_escape in Azure by mwhite No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-23 21:23:57",
+      "product_name": "Wazuh v4.5.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "monica22"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "container_escape",
+      "cloud_service": "Alibaba",
+      "resource_id": "res-dec7a2f2",
+      "description": "Cloud container_escape in Alibaba by monica22 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-13 01:57:46",
+      "product_name": "OSSEC v3.7.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "sharpanna"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "container_escape",
+      "cloud_service": "GCP",
+      "resource_id": "res-6c75ef16",
+      "description": "Cloud container_escape in GCP by sharpanna MITRE Technique: T1059.005"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-28 10:37:01",
+      "product_name": "Palo Alto Cortex v3.0.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "williamswendy"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "instance_creation",
+      "cloud_service": "Azure",
+      "resource_id": "res-e64d13f2",
+      "description": "Cloud instance_creation in Azure by williamswendy No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-15 11:00:30",
+      "product_name": "Carbon Black v7.8.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "colleenmcdaniel"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "permission_escalation",
+      "cloud_service": "Alibaba",
+      "resource_id": "res-4a007efd",
+      "description": "Cloud permission_escalation in Alibaba by colleenmcdaniel MITRE Technique: T1134.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-03 23:12:35",
+      "product_name": "Carbon Black v7.8.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "jamesjohnny"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "container_escape",
+      "cloud_service": "GCP",
+      "resource_id": "res-68e632f0",
+      "description": "Cloud container_escape in GCP by jamesjohnny MITRE Technique: T1059.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-28 12:25:06",
+      "product_name": "ArcSight v7.4.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "ashleyhines"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "container_escape",
+      "cloud_service": "Azure",
+      "resource_id": "res-a000906b",
+      "description": "Cloud container_escape in Azure by ashleyhines No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2028-01-27 06:37:19",
+      "product_name": "Vectra AI v5.0.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "xmorgan"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "shadow_it",
+      "cloud_service": "OCI",
+      "resource_id": "res-ad8f4e62",
+      "description": "Cloud shadow_it in OCI by xmorgan No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-16 18:48:47",
+      "product_name": "OSSEC v3.7.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "dereksimmons"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "lambda_execution",
+      "cloud_service": "OCI",
+      "resource_id": "res-c91d898e",
+      "description": "Cloud lambda_execution in OCI by dereksimmons No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-22 13:13:18",
+      "product_name": "Carbon Black v7.8.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "karenwilliams"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "config_change",
+      "cloud_service": "AWS",
+      "resource_id": "res-f8dc50d7",
+      "description": "Cloud config_change in AWS by karenwilliams No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-15 16:40:17",
+      "product_name": "OSSEC v3.7.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "vasquezsamuel"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "crypto_mining",
+      "cloud_service": "OCI",
+      "resource_id": "res-b0f6bab3",
+      "description": "Cloud crypto_mining in OCI by vasquezsamuel MITRE Technique: T1547.001"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-16 21:38:23",
+      "product_name": "OSSEC v3.7.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "matthewgraham"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "storage_access",
+      "cloud_service": "Azure",
+      "resource_id": "res-6c73e65a",
+      "description": "Cloud storage_access in Azure by matthewgraham MITRE Technique: T1574.002"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-04 18:21:19",
+      "product_name": "ArcSight v7.4.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "pbecker"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "lambda_execution",
+      "cloud_service": "OCI",
+      "resource_id": "res-635a329e",
+      "description": "Cloud lambda_execution in OCI by pbecker No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-11 21:42:13",
+      "product_name": "CrowdStrike v6.45.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "jason81"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "storage_access",
+      "cloud_service": "Azure",
+      "resource_id": "res-b43b73d5",
+      "description": "Cloud storage_access in Azure by jason81 MITRE Technique: T1574.002"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-03 04:55:57",
+      "product_name": "Elastic SIEM v8.9.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "austin09"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "container_escape",
+      "cloud_service": "GCP",
+      "resource_id": "res-c9623fe4",
+      "description": "Cloud container_escape in GCP by austin09 MITRE Technique: T1190"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-17 13:04:59",
+      "product_name": "Trellix v10.7.0",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "ndavis"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "api_abuse",
+      "cloud_service": "Alibaba",
+      "resource_id": "res-054a94c1",
+      "description": "Cloud api_abuse in Alibaba by ndavis No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-16 05:57:37",
+      "product_name": "Microsoft Sentinel v1.0.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "lisaherring"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "storage_access",
+      "cloud_service": "AWS",
+      "resource_id": "res-debb235b",
+      "description": "Cloud storage_access in AWS by lisaherring No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-01 12:28:05",
+      "product_name": "Darktrace v6.0.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "rwalters"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "crypto_mining",
+      "cloud_service": "OCI",
+      "resource_id": "res-30b44fe7",
+      "description": "Cloud crypto_mining in OCI by rwalters Associated Threat Actor: FIN7"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2029-02-14 22:25:58",
+      "product_name": "Palo Alto Cortex v3.0.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "jeff98"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "config_change",
+      "cloud_service": "OCI",
+      "resource_id": "res-59d73e8b",
+      "description": "Cloud config_change in OCI by jeff98 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-25 23:16:36",
+      "product_name": "Darktrace v6.0.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "brandonlucas"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "crypto_mining",
+      "cloud_service": "Azure",
+      "resource_id": "res-7ab9f27b",
+      "description": "Cloud crypto_mining in Azure by brandonlucas No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-03-08 05:16:32",
+      "product_name": "LogRhythm v7.5.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "aoconnor"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "permission_escalation",
+      "cloud_service": "Alibaba",
+      "resource_id": "res-ce5c57cf",
+      "description": "Cloud permission_escalation in Alibaba by aoconnor MITRE Technique: T1059.005"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-14 01:50:55",
+      "product_name": "FireEye HX v4.5.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "diazjoshua"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "instance_creation",
+      "cloud_service": "Alibaba",
+      "resource_id": "res-9461bc16",
+      "description": "Cloud instance_creation in Alibaba by diazjoshua MITRE Technique: T1204.002"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-25 21:29:56",
+      "product_name": "Microsoft Sentinel v1.0.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "bridget77"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "instance_creation",
+      "cloud_service": "Azure",
+      "resource_id": "res-82e036d4",
+      "description": "Cloud instance_creation in Azure by bridget77 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-02 18:31:23",
+      "product_name": "Snort v2.9.20",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "jennifer21"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "lambda_execution",
+      "cloud_service": "Alibaba",
+      "resource_id": "res-11a7b073",
+      "description": "Cloud lambda_execution in Alibaba by jennifer21 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-24 22:07:05",
+      "product_name": "Wazuh v4.5.0",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "jacobjensen"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "api_abuse",
+      "cloud_service": "Alibaba",
+      "resource_id": "res-3fc0b49a",
+      "description": "Cloud api_abuse in Alibaba by jacobjensen No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-30 07:45:26",
+      "product_name": "Palo Alto Cortex v3.0.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "mike66"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "crypto_mining",
+      "cloud_service": "Azure",
+      "resource_id": "res-ad35d7eb",
+      "description": "Cloud crypto_mining in Azure by mike66 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-10 04:26:32",
+      "product_name": "AlienVault v5.7.0",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "michelehawkins"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "api_abuse",
+      "cloud_service": "Alibaba",
+      "resource_id": "res-515002f4",
+      "description": "Cloud api_abuse in Alibaba by michelehawkins No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-23 07:34:41",
+      "product_name": "Wazuh v4.5.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "sheila28"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "permission_escalation",
+      "cloud_service": "OCI",
+      "resource_id": "res-c095adf0",
+      "description": "Cloud permission_escalation in OCI by sheila28 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-22 18:18:10",
+      "product_name": "Splunk v9.0.2",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "qrios"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "container_escape",
+      "cloud_service": "GCP",
+      "resource_id": "res-710cc5c5",
+      "description": "Cloud container_escape in GCP by qrios No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-06-14 11:18:07",
+      "product_name": "Vectra AI v5.0.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "wrightgeorge"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "lambda_execution",
+      "cloud_service": "GCP",
+      "resource_id": "res-7d88d746",
+      "description": "Cloud lambda_execution in GCP by wrightgeorge No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-05-01 07:42:28",
+      "product_name": "Microsoft Sentinel v1.0.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "travisodonnell"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "shadow_it",
+      "cloud_service": "GCP",
+      "resource_id": "res-6e1a9da2",
+      "description": "Cloud shadow_it in GCP by travisodonnell Cross-tenant access detected"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-22 09:58:10",
+      "product_name": "Microsoft Sentinel v1.0.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "jsantiago"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "instance_creation",
+      "cloud_service": "Azure",
+      "resource_id": "res-028e6010",
+      "description": "Cloud instance_creation in Azure by jsantiago MITRE Technique: T1574.002"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-17 20:08:55",
+      "product_name": "Tanium v7.4.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "lucas61"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "lambda_execution",
+      "cloud_service": "AWS",
+      "resource_id": "res-d7746c7f",
+      "description": "Cloud lambda_execution in AWS by lucas61 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-25 11:07:39",
+      "product_name": "Elastic SIEM v8.9.0",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "jamie86"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "api_abuse",
+      "cloud_service": "Alibaba",
+      "resource_id": "res-50c9a796",
+      "description": "Cloud api_abuse in Alibaba by jamie86 No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-01-17 16:24:54",
+      "product_name": "Vectra AI v5.0.0",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "gdavis"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "api_abuse",
+      "cloud_service": "Alibaba",
+      "resource_id": "res-ccc70f82",
+      "description": "Cloud api_abuse in Alibaba by gdavis No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-04-26 21:02:47",
+      "product_name": "AlienVault v5.7.0",
+      "event_type": "anomalous_api_call"
+    },
+    "principal": {
+      "user": {
+        "userid": "beckholly"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "HIGH"
+    },
+    "additional": {
+      "action": "api_abuse",
+      "cloud_service": "AWS",
+      "resource_id": "res-16ebd448",
+      "description": "Cloud api_abuse in AWS by beckholly Associated Threat Actor: FIN7"
+    },
+    "target": {
+      "hostname": ""
+    }
+  },
+  {
+    "metadata": {
+      "event_timestamp": "2025-02-13 16:34:18",
+      "product_name": "Wazuh v4.5.0",
+      "event_type": "CreateAccessKey"
+    },
+    "principal": {
+      "user": {
+        "userid": "chapmankrista"
+      },
+      "ip": ""
+    },
+    "security_result": {
+      "severity": "CRITICAL"
+    },
+    "additional": {
+      "action": "permission_escalation",
+      "cloud_service": "Azure",
+      "resource_id": "res-f463f498",
+      "description": "Cloud permission_escalation in Azure by chapmankrista No additional info"
+    },
+    "target": {
+      "hostname": ""
+    }
+  }
+]

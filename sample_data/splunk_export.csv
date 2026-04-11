@@ -1,0 +1,11 @@
+_time,src_user,src_ip,dest_ip,host,severity,signature,category,action
+2026-03-25T08:14:02Z,jsmith@acme.com,10.10.1.45,10.20.0.5,ws-jsmith-01,high,Suspicious Login From New Country,identity.suspiciousSignIn,allowed
+2026-03-25T08:22:17Z,agarcia@acme.com,10.10.1.67,10.20.0.5,ws-agarcia-03,critical,Password Spray Attack Detected,identity.passwordSpray,blocked
+2026-03-25T09:01:55Z,bwilliams@acme.com,185.220.101.45,10.20.0.10,dc-prod-01,high,Authentication From Tor Exit Node,identity.suspiciousSignIn,blocked
+2026-03-25T09:15:30Z,mtanaka@acme.com,10.10.2.88,10.20.0.15,ws-mtanaka-02,medium,Multiple Failed Login Attempts,identity.passwordSpray,allowed
+2026-03-25T10:03:44Z,lchen@acme.com,10.10.3.12,192.168.50.22,ep-lchen-05,,Malware Detected - Trojan Dropper,endpoint.malwareDetection,quarantined
+2026-03-25T10:45:00Z,rpatel@acme.com,10.10.1.99,10.20.0.5,ws-rpatel-01,low,Unusual After-Hours Login,identity.suspiciousSignIn,allowed
+2026-03-25T11:30:12Z,skowalski@acme.com,10.10.2.34,10.20.0.20,ws-skowalski-04,critical,Ransomware Behavior Detected,endpoint.malwareDetection,isolated
+2026-03-25T12:00:05Z,dlee@acme.com,10.10.4.56,10.20.0.5,ws-dlee-06,medium,Suspicious PowerShell Execution,endpoint.suspiciousProcess,alerted
+2026-03-25T13:18:47Z,fmartinez@acme.com,10.10.1.77,10.20.0.8,ws-fmartinez-02,high,"Password Spray, Multiple Accounts Targeted",identity.passwordSpray,blocked
+2026-03-25T14:55:33Z,kthompson@acme.com,10.10.5.21,10.20.0.5,ws-kthompson-07,low,Brute Force Login Attempt Detected,identity.suspiciousSignIn,allowed

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vigilis - Pilot Metrics</title>
+<link rel="stylesheet" href="/static/vigilis.css?v=8">
+<style>
+.container{max-width:1280px;margin:1.5rem auto;padding:0 2rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.roi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.roi-card h2{color:var(--text);margin-bottom:.75rem;font-size:1rem;font-weight:700;text-transform:none;letter-spacing:0}
+.roi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1.5rem;text-align:center}
+.roi-val{font-size:2.2rem;font-weight:800}
+.roi-sub{font-size:.8rem;color:var(--dim)}
+</style>
+</head>
+<body>
+<script src="/static/vigilis.js?v=10"></script>
+<script>document.write(renderNav('metrics'));</script>
+<div class="container">
+<h1>Pilot Metrics</h1>
+<div class="toolbar">
+ <input type="date" id="startDate" title="Start date">
+ <span style="color:var(--dim);font-size:.8rem">to</span>
+ <input type="date" id="endDate" title="End date">
+ <button class="btn" onclick="load()">Apply</button>
+ <button class="btn" onclick="clearDates()">Clear Dates</button>
+ <div style="flex:1"></div>
+ <button class="btn" onclick="exportMetrics()">Export Metrics JSON</button>
+</div>
+<div id="roi"></div>
+<div id="summary-cards" class="cards"></div>
+<div id="dist-section"></div>
+<div id="readiness-section"></div>
+<div id="ttfd-section"></div>
+<div id="by-type-section"></div>
+<div id="webhooks-section"></div>
+</div>
+<script>
+let _lastData=null;
+function clearDates(){document.getElementById('startDate').value='';document.getElementById('endDate').value='';load()}
+function dateParams(){
+ const s=document.getElementById('startDate').value,e=document.getElementById('endDate').value;
+ let p='';
+ if(s)p+='&start='+encodeURIComponent(s+'T00:00:00');
+ if(e)p+='&end='+encodeURIComponent(e+'T23:59:59');
+ return p;
+}
+// Override simulate/reset to reload metrics instead of full page refresh
+simulate = async function(){await fetch('/api/v1/demo/simulate-pilot',AHP);toast('Pilot simulated','ok');load()};
+resetAll = async function(){await fetch('/api/v1/demo/reset',AHP);toast('Reset complete','ok');load()};
+function exportMetrics(){
+ if(!_lastData){toast('No data to export','');return}
+ const blob=new Blob([JSON.stringify(_lastData,null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+ a.download='vigilis-metrics-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+ toast('Downloaded','ok');
+}
+
+async function load(){
+ try{
+  const dp=dateParams();
+  const [sumR,ttfdR,btR,whR]=await Promise.all([
+   fetch('/api/v1/metrics/summary?_=1'+dp,AH),fetch('/api/v1/metrics/ttfd?_=1'+dp,AH),
+   fetch('/api/v1/metrics/by-alert-type?_=1'+dp,AH),fetch('/api/v1/webhooks/logs?limit=10',AH)
+  ]);
+  const sum=await sumR.json(),ttfd=await ttfdR.json(),bt=await btR.json(),wh=await whR.json();
+  _lastData={summary:sum,ttfd:ttfd,byAlertType:bt,recentWebhooks:wh};
+  renderRoi(sum,ttfd);renderSummary(sum);renderDistributions(sum);renderReadiness(sum);renderTtfd(ttfd);renderByType(bt);renderWebhooks(wh);
+ }catch(e){document.getElementById('roi').innerHTML='<div class="spinner" style="color:var(--red)">Failed to load metrics: '+e.message+'</div>'}
+}
+
+function sparkline(points,color,w,h){
+ if(!points||points.length<2)return '';
+ const max=Math.max(...points)||1;
+ const min=Math.min(...points);
+ const range=max-min||1;
+ const stepX=w/(points.length-1);
+ const coords=points.map((v,i)=>{
+  const x=Math.round(i*stepX);
+  const y=Math.round(h-((v-min)/range)*(h-4)-2);
+  return x+','+y;
+ }).join(' ');
+ return `<svg width="${w}" height="${h}" style="display:block;margin:4px auto 0"><polyline points="${coords}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function renderRoi(sum,ttfd){
+ const decided=sum.casesWithFirstDecision;
+ const total=sum.totalCases||1;
+ const pct=Math.round(decided/total*100);
+ const medTtfd=ttfd.medianTtfdSeconds;
+ const manualEst=900;
+ const improvement=medTtfd?Math.round(manualEst/medTtfd):0;
+ const timeSaved=sum.totalTimeSavedMinutes||0;
+ const stepsReplaced=sum.totalManualStepsReplaced||0;
+
+ // Generate sample sparkline data from available metrics (simulated daily trend)
+ const triageSpark=sparkline([20,35,pct*0.7,pct*0.85,pct*0.9,pct*0.95,pct],'var(--blue)',80,24);
+ const ttfdSpark=medTtfd?sparkline([900,600,300,200,medTtfd*1.5,medTtfd*1.2,medTtfd],'var(--blue)',80,24):'';
+ const speedSpark=sparkline([1,2,3,improvement*0.6,improvement*0.75,improvement*0.9,improvement],'var(--blue)',80,24);
+
+ document.getElementById('roi').innerHTML=sum.totalCases===0?'<div class="spinner">No data yet. Click <b>Try with Sample Data</b> in the nav bar.</div>':`<div class="roi-card">
+  <h2>ROI Summary</h2>
+  <div class="roi-grid">
+   <div><div class="roi-val" style="color:var(--text)">${pct}%</div><div class="roi-sub">Cases triaged (${decided}/${total})</div>${triageSpark}</div>
+   <div><div class="roi-val" style="color:var(--text)">${fmtSec(medTtfd)}</div><div class="roi-sub">Median TTFD (vs ~15m manual)</div>${ttfdSpark}</div>
+   <div><div class="roi-val" style="color:var(--text)">${improvement}x</div><div class="roi-sub">Faster than manual workflow</div>${speedSpark}</div>
+   <div><div class="roi-val" style="color:var(--text)">${timeSaved<60?timeSaved+'m':(timeSaved/60).toFixed(1)+'h'}</div><div class="roi-sub">Total analyst time saved</div></div>
+   <div><div class="roi-val" style="color:var(--text)">${stepsReplaced}</div><div class="roi-sub">Manual steps automated</div></div>
+  </div></div>`;
+}
+
+function renderSummary(s){
+ document.getElementById('summary-cards').innerHTML=`
+  <div class="metric-card"><div class="metric-val">${s.totalCases}</div><div class="metric-label">Total Cases</div></div>
+  <div class="metric-card"><div class="metric-val">${s.avgConfidenceScore}</div><div class="metric-label">Avg Confidence</div></div>
+  <div class="metric-card"><div class="metric-val">${s.casesWithFirstDecision}</div><div class="metric-label">Cases Triaged</div></div>
+  <div class="metric-card"><div class="metric-val">${s.casesOpenNoDecision}</div><div class="metric-label">Still Open</div></div>
+  <div class="metric-card"><div class="metric-val">${s.webhookDeliveryCount}</div><div class="metric-label">Webhook Deliveries</div></div>
+  <div class="metric-card"><div class="metric-val">${s.avgTimeSavedMinutes||0}m</div><div class="metric-label">Avg Time Saved / Case</div></div>`;
+}
+
+const SEV_COLORS={critical:'#991b1b',high:'#b45309',medium:'var(--blue)',low:'var(--dim)'};
+const CONF_COLORS={critical:'#991b1b',high:'#b45309',medium:'var(--blue)',low:'var(--dim)'};
+const DISP_COLORS={open:'var(--dim)',triaged:'var(--blue)',false_positive:'#9ca3af',escalated:'#991b1b',resolved:'#6b7280'};
+
+function barChart(data,colorMap,total){
+ if(!total)return '<div style="color:var(--dim);font-size:.8rem;padding:.5rem 0">No data</div>';
+ let html='';
+ const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+ for(const[label,count]of sorted){
+  const pct=Math.round(count/total*100);
+  const color=colorMap[label]||'var(--blue)';
+  html+=`<div class="bar-group">
+   <div class="bar-label"><span>${label.replace(/_/g,' ')}</span><span>${count} (${pct}%)</span></div>
+   <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div></div>`;
+ }
+ return html;
+}
+
+function renderDistributions(s){
+ if(s.totalCases===0){document.getElementById('dist-section').innerHTML='';return}
+ document.getElementById('dist-section').innerHTML=`<div class="dist-row">
+  <div class="card"><h2>Severity Distribution</h2>${barChart(s.casesBySeverity,SEV_COLORS,s.totalCases)}</div>
+  <div class="card"><h2>Confidence Levels</h2>${barChart(s.casesByConfidenceLabel,CONF_COLORS,s.totalCases)}</div>
+ </div>
+ <div class="dist-row">
+  <div class="card"><h2>Disposition Breakdown</h2>${barChart(s.dispositionCounts,DISP_COLORS,s.totalCases)}</div>
+  <div class="card"><h2>Cases by Alert Type</h2>${barChart(s.casesByAlertType,{},s.totalCases)}</div>
+ </div>`;
+}
+
+function renderReadiness(s){
+ if(s.totalCases===0){document.getElementById('readiness-section').innerHTML='';return}
+ const ready=s.casesReadyForAction||0;
+ const review=s.casesNeedingReview||0;
+ const total=ready+review||1;
+ const readyPct=Math.round(ready/total*100);
+ document.getElementById('readiness-section').innerHTML=`<div class="card"><h2>Case Readiness</h2>
+  <div class="readiness-row">
+   <div class="ready-badge ok"><div class="count">${ready}</div><div>Ready for Action<br><span style="font-size:.75rem;font-weight:400;opacity:.7">${readyPct}% of cases have all required context</span></div></div>
+   <div class="ready-badge warn"><div class="count">${review}</div><div>Needs Review<br><span style="font-size:.75rem;font-weight:400;opacity:.7">${100-readyPct}% require analyst attention</span></div></div>
+  </div></div>`;
+}
+
+function renderTtfd(t){
+ const el=document.getElementById('ttfd-section');
+ if(!t.casesWithTtfd){el.innerHTML='';return}
+ let rows='';
+ for(const[at,m]of Object.entries(t.ttfdByAlertType||{})){
+  rows+=`<tr><td><a class="type-link" href="/demo/ui/enrich?alertType=${encodeURIComponent(at)}">${at}</a></td><td>${m.count}</td><td>${fmtSec(m.avgSeconds)}</td><td>${fmtSec(m.medianSeconds)}</td></tr>`;
+ }
+ el.innerHTML=`<div class="card"><h2>Time to First Decision</h2>
+  <div class="cards" style="margin-bottom:1rem">
+   <div class="metric-card"><div class="metric-val">${fmtSec(t.averageTtfdSeconds)}</div><div class="metric-label">Average</div></div>
+   <div class="metric-card"><div class="metric-val">${fmtSec(t.medianTtfdSeconds)}</div><div class="metric-label">Median</div></div>
+   <div class="metric-card"><div class="metric-val">${fmtSec(t.minTtfdSeconds)}</div><div class="metric-label">Fastest</div></div>
+   <div class="metric-card"><div class="metric-val">${fmtSec(t.maxTtfdSeconds)}</div><div class="metric-label">Slowest</div></div>
+  </div>
+  <table><tr><th>Alert Type</th><th>Count</th><th>Avg</th><th>Median</th></tr>${rows}</table></div>`;
+}
+
+function renderByType(bt){
+ let rows='';
+ for(const[at,m]of Object.entries(bt.alertTypes||{})){
+  const disps=Object.entries(m.dispositions||{}).map(([k,v])=>k+':'+v).join(', ');
+  rows+=`<tr><td><a class="type-link" href="/demo/ui/enrich?alertType=${encodeURIComponent(at)}">${at}</a></td><td>${m.count}</td><td>${m.avgConfidenceScore}</td>
+   <td>${disps}</td><td>${fmtSec(m.avgTtfdSeconds)}</td><td>${m.webhookDeliveries}</td></tr>`;
+ }
+ document.getElementById('by-type-section').innerHTML=`<div class="card"><h2>By Alert Type</h2>
+  <table><tr><th>Type</th><th>Cases</th><th>Avg Conf</th><th>Dispositions</th><th>Avg TTFD</th><th>Webhooks</th></tr>${rows}</table></div>`;
+}
+
+function renderWebhooks(wh){
+ const el=document.getElementById('webhooks-section');
+ if(!wh.length){el.innerHTML='';return}
+ let rows='';
+ wh.forEach(w=>{
+  const st=w.status==='delivered'?'<span style="color:var(--green)">delivered</span>':'<span style="color:var(--red)">failed</span>';
+  rows+=`<tr><td style="font-family:var(--mono);font-size:.75rem">${w.caseId}</td><td>${w.target}</td><td>${st}</td><td>${w.deliveredAt||'-'}</td><td>${w.attemptNo}</td></tr>`;
+ });
+ el.innerHTML=`<div class="card"><h2>Recent Webhook Deliveries</h2>
+  <table><tr><th>Case ID</th><th>Target</th><th>Status</th><th>Delivered At</th><th>Attempt</th></tr>${rows}</table></div>`;
+}
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Production override for SOCAI
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile prod up -d
+#
+# Differences from base compose:
+# - backend port 8000 bound to 127.0.0.1 only (Caddy is the only public entry point)
+# - postgres port not exposed to host at all
+# - caddy service activated via --profile prod
+
+services:
+  postgres:
+    # Do not expose postgres publicly in prod
+    ports: []
+
+  backend:
+    # Bind backend only to loopback; Caddy connects via the docker network
+    ports:
+      - "127.0.0.1:8000:8000"
