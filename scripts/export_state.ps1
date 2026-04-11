@@ -5,7 +5,7 @@
 # items) is POSTed to Vigilis. The first run is a baseline (no POSTs).
 #
 # This exporter complements the event-stream exporters by giving Vigilis
-# a view of the host's STANDING CONFIGURATION — the "what exists"
+# a view of the host's STANDING CONFIGURATION -- the "what exists"
 # complement to "what happened".
 #
 # PRIVACY NOTE: This exporter ships user SIDs, password-set timestamps,
@@ -36,7 +36,7 @@ if (-not (Test-Path $StateDir)) {
 try {
     $acl = Get-Acl $StateDir
     $acl.SetAccessRuleProtection($true, $false)  # disable inheritance
-    # Clear existing rules — rebuild from scratch so old weak ACLs don't persist
+    # Clear existing rules -- rebuild from scratch so old weak ACLs don't persist
     $acl.Access | ForEach-Object { $acl.RemoveAccessRule($_) | Out-Null }
     $rules = @(
         New-Object System.Security.AccessControl.FileSystemAccessRule(
@@ -354,7 +354,7 @@ foreach ($categoryName in $categories.Keys) {
             $totalFailed++
             Write-Host "  [FAIL] $action $categoryName : $($_.Exception.Message)" -ForegroundColor Yellow
             if ($totalFailed -ge 5) {
-                Write-Host "  Too many failures — aborting this run." -ForegroundColor Red
+                Write-Host "  Too many failures -- aborting this run." -ForegroundColor Red
                 break
             }
         }

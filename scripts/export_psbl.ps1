@@ -209,7 +209,7 @@ Write-Host "[$(Get-Date -Format HH:mm:ss)] Sending $($toSend.Count) PSBL events 
 foreach ($item in $toSend) {
     $e = $item.Event
     $scriptText = $item.ScriptText
-    # Truncate script text to 2000 chars to avoid DB bloat — the first 2000
+    # Truncate script text to 2000 chars to avoid DB bloat -- the first 2000
     # characters are more than enough for pattern matching and investigation.
     $truncatedText = if ($scriptText.Length -gt 2000) { $scriptText.Substring(0, 2000) } else { $scriptText }
 
@@ -261,7 +261,7 @@ foreach ($item in $toSend) {
         $failed++
         Write-Host "  [FAIL] PSBL: $($_.Exception.Message)" -ForegroundColor Yellow
         if ($failed -ge 5) {
-            Write-Host "  Too many failures — aborting this run." -ForegroundColor Red
+            Write-Host "  Too many failures -- aborting this run." -ForegroundColor Red
             break
         }
     }

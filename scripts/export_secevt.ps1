@@ -6,16 +6,16 @@
 # auth/identity events that Sysmon doesn't see.
 #
 # EventID coverage:
-#   4624 — Successful logon           -> identity.logonSuccess (new, informational)
-#   4625 — Failed logon               -> identity.suspiciousSignIn (low)
-#   4672 — Special privileges assigned -> identity.privilegeElevation (medium)
-#   4688 — Process creation (native)   -> endpoint.suspiciousProcess (low)
-#   4697 — Service installed           -> endpoint.persistenceMechanism (medium)
-#   4698 — Scheduled task created      -> endpoint.persistenceMechanism (medium)
-#   4720 — User account created        -> identity.accountCreation (new, high)
-#   4728 — Added to global group       -> identity.privilegeElevation (high)
-#   4732 — Added to local group        -> identity.privilegeElevation (high)
-#   1102 — Audit log cleared           -> endpoint.defenseEvasion (critical)
+#   4624 -- Successful logon           -> identity.logonSuccess (new, informational)
+#   4625 -- Failed logon               -> identity.suspiciousSignIn (low)
+#   4672 -- Special privileges assigned -> identity.privilegeElevation (medium)
+#   4688 -- Process creation (native)   -> endpoint.suspiciousProcess (low)
+#   4697 -- Service installed           -> endpoint.persistenceMechanism (medium)
+#   4698 -- Scheduled task created      -> endpoint.persistenceMechanism (medium)
+#   4720 -- User account created        -> identity.accountCreation (new, high)
+#   4728 -- Added to global group       -> identity.privilegeElevation (high)
+#   4732 -- Added to local group        -> identity.privilegeElevation (high)
+#   1102 -- Audit log cleared           -> endpoint.defenseEvasion (critical)
 #
 # Schedule every 5 minutes via Task Scheduler.
 
@@ -62,7 +62,7 @@ $eventMap = @{
 $interestingLogonTypes = @(2, 3, 7, 10, 11)
 
 # Skip service accounts that flood 4624 (these aren't interesting for
-# behavioral baselines — they're constant background).
+# behavioral baselines -- they're constant background).
 $benignServiceAccounts = @(
     '^(NT AUTHORITY|ANONYMOUS LOGON|LOCAL SERVICE|NETWORK SERVICE)',
     '^SYSTEM$',
@@ -264,7 +264,7 @@ foreach ($item in $toSend) {
         1102 {
             $rawAlert._logCleared = $true
             $title = "AUDIT LOG CLEARED"
-            $description = "Windows Security Audit log was cleared — potential defense evasion"
+            $description = "Windows Security Audit log was cleared -- potential defense evasion"
         }
     }
 
@@ -300,7 +300,7 @@ foreach ($item in $toSend) {
         $failed++
         Write-Host "  [FAIL] EID $eid : $($_.Exception.Message)" -ForegroundColor Yellow
         if ($failed -ge 5) {
-            Write-Host "  Too many failures — aborting this run." -ForegroundColor Red
+            Write-Host "  Too many failures -- aborting this run." -ForegroundColor Red
             break
         }
     }

@@ -118,7 +118,7 @@ $benignDomainPatterns = @(
 
 # Skip benign file-create events by full directory prefix (EventID 11).
 # These paths are dominated by Windows Update, Microsoft Store, Defender
-# definitions, and error reporting — all of which are normal activity.
+# definitions, and error reporting -- all of which are normal activity.
 $benignFileCreatePathPatterns = @(
     '^C:\\Windows\\WinSxS\\',
     '^C:\\Windows\\SoftwareDistribution\\',
@@ -180,7 +180,7 @@ $filter = @{
     LogName   = "Microsoft-Windows-Sysmon/Operational"
     StartTime = $lastRun
     # Phase 2.3 expanded EID set: 10 (LSASS access), 17/18 (pipes),
-    # 19/20/21 (WMI persistence) — requires sysmonconfig.xml to enable them
+    # 19/20/21 (WMI persistence) -- requires sysmonconfig.xml to enable them
     Id        = @(1, 3, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22)
 }
 
@@ -260,7 +260,7 @@ foreach ($event in $events) {
         }
     } elseif ($eventId -eq 11) {
         # File create: filter by target file path and writer process.
-        # Before Phase 1 we had zero EID 11 filters — ~50% of cases were
+        # Before Phase 1 we had zero EID 11 filters -- ~50% of cases were
         # Microsoft Store / Windows Update file writes. Now we drop them.
         $targetFile = $eventData.TargetFilename
         $writerImage = $eventData.Image
@@ -303,7 +303,7 @@ foreach ($event in $events) {
 # ---- File-create aggregation ----
 # Group EventID 11 events by (writer_image, target_directory, user). If a
 # group has >3 events in the 5-min window, collapse them into ONE synthesized
-# mass_file_create alert. Mass-write is the actual ransomware signal — we
+# mass_file_create alert. Mass-write is the actual ransomware signal -- we
 # preserve it without flooding the case list with 20 separate alerts.
 $fileCreateGroups = @{}
 $nonFileCreate = @()
@@ -408,7 +408,7 @@ foreach ($item in $toSend) {
     $description = "Sysmon event $eventId on $hostname"
 
     # Synthesized mass_file_create event (Phase 1.2 aggregation).
-    # Skip the normal EID switch for these — they carry their own
+    # Skip the normal EID switch for these -- they carry their own
     # synthesized rawAlert fields and alertType.
     if ($isSynthesized -and $mapping.type -eq "endpoint.massFileCreate") {
         $rawAlert.process = $eventData.Image
@@ -420,7 +420,7 @@ foreach ($item in $toSend) {
         $dir = $eventData._fileCreateDirectory
         $title = "Mass file create: $count files in $dir"
         $description = "Process $($eventData.Image) wrote $count files to $dir (examples: $($eventData._fileCreateExamples))"
-        # Jump past the switch — assign a marker EID no case matches
+        # Jump past the switch -- assign a marker EID no case matches
         $eventId = -1
     }
 
@@ -496,9 +496,9 @@ foreach ($item in $toSend) {
             $title = "DNS query: $($eventData.QueryName)"
             $description = "Process $($eventData.Image) queried DNS for $($eventData.QueryName)"
         }
-        # ── Phase 2.3: new Sysmon EventIDs ──
+        # -- Phase 2.3: new Sysmon EventIDs --
         10 {
-            # Process Access — filtered by sysmonconfig.xml to LSASS-only.
+            # Process Access -- filtered by sysmonconfig.xml to LSASS-only.
             # Translator's event-ID fork will set _lsassAccess=True + T1003.001.
             $rawAlert.process = $eventData.SourceImage
             $rawAlert._targetImage = $eventData.TargetImage
