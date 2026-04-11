@@ -36,17 +36,21 @@ if (-not (Test-Path $StateDir)) {
 try {
     $acl = Get-Acl $StateDir
     $acl.SetAccessRuleProtection($true, $false)  # disable inheritance
-    # Clear existing rules -- rebuild from scratch so old weak ACLs don't persist
-    $acl.Access | ForEach-Object { $acl.RemoveAccessRule($_) | Out-Null }
-    $rules = @(
-        New-Object System.Security.AccessControl.FileSystemAccessRule(
-            "NT AUTHORITY\SYSTEM", "FullControl",
-            "ContainerInherit,ObjectInherit", "None", "Allow"),
-        New-Object System.Security.AccessControl.FileSystemAccessRule(
-            "BUILTIN\Administrators", "FullControl",
-            "ContainerInherit,ObjectInherit", "None", "Allow")
-    )
-    foreach ($r in $rules) { $acl.AddAccessRule($r) }
+    # Clear existing rules -- rebuild from scratch so old weak ACLs don't persist.
+    # Iterate a static copy; modifying the collection while iterating would
+    # corrupt the enumerator.
+    $existingRules = @($acl.Access)
+    foreach ($rule in $existingRules) {
+        [void]$acl.RemoveAccessRule($rule)
+    }
+    $sysRule = New-Object System.Security.AccessControl.FileSystemAccessRule(
+        "NT AUTHORITY\SYSTEM", "FullControl",
+        "ContainerInherit,ObjectInherit", "None", "Allow")
+    $adminRule = New-Object System.Security.AccessControl.FileSystemAccessRule(
+        "BUILTIN\Administrators", "FullControl",
+        "ContainerInherit,ObjectInherit", "None", "Allow")
+    [void]$acl.AddAccessRule($sysRule)
+    [void]$acl.AddAccessRule($adminRule)
     Set-Acl -Path $StateDir -AclObject $acl
 } catch {
     Write-Host "  Warning: could not set restrictive ACL on $StateDir ($($_.Exception.Message))" -ForegroundColor Yellow
