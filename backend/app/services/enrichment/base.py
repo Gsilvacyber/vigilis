@@ -951,11 +951,12 @@ def has_dns_tunnel_context_tiered(raw: dict[str, Any]) -> tuple[bool, str]:
     """Check DNS tunneling indicators with tier awareness.
 
     Returns (fired, tier) where tier is:
-      - "verified" if known tunneling tool process name OR DNS metrics from
-        source tool (high query rate, large TXT records) confirm tunneling
+      - "verified" if known tunneling tool process name match (atomic evidence)
+      - "observed" if DNS metrics from source tool (high query rate, large
+        TXT records, long subdomain labels) from NDR/DNS logs
       - "inferred" if only keyword matching triggered
     """
-    # VERIFIED path: known DNS tunneling tool process names
+    # VERIFIED path: known DNS tunneling tool process names (atomic evidence)
     f = raw.get("file") or {}
     if isinstance(f, dict):
         proc_name = (f.get("fileName") or "").strip().lower()
@@ -969,6 +970,7 @@ def has_dns_tunnel_context_tiered(raw: dict[str, Any]) -> tuple[bool, str]:
             return True, "verified"
 
     # OBSERVED path: DNS query metrics from source tool (NDR, DNS logs)
+    # These are heuristic thresholds, not atomic evidence — tagged "observed".
     # High query rate is a strong tunneling indicator
     qpm = raw.get("_dnsQueriesPerMinute") or raw.get("_dnsQueryRate") or 0
     try:
@@ -976,16 +978,16 @@ def has_dns_tunnel_context_tiered(raw: dict[str, Any]) -> tuple[bool, str]:
     except (ValueError, TypeError):
         qpm = 0
     if qpm >= 100:
-        return True, "verified"  # >100 queries/min to same domain = tunneling
+        return True, "observed"  # >100 queries/min to same domain suggests tunneling
 
-    # Large DNS payload (TXT record > 200 bytes strongly suggests tunneling)
+    # Large DNS payload (TXT record > 200 bytes suggests tunneling)
     payload_size = raw.get("_dnsPayloadSize") or raw.get("_dnsTxtSize") or 0
     try:
         payload_size = int(payload_size)
     except (ValueError, TypeError):
         payload_size = 0
     if payload_size >= 200:
-        return True, "verified"
+        return True, "observed"
 
     # Excessive subdomain length (encoded data in subdomain)
     qname = raw.get("_dnsQueryName") or raw.get("domain") or ""
@@ -993,7 +995,7 @@ def has_dns_tunnel_context_tiered(raw: dict[str, Any]) -> tuple[bool, str]:
         # Count the first label length
         first_label = qname.split(".")[0] if "." in qname else qname
         if len(first_label) >= 40:
-            return True, "verified"
+            return True, "observed"
 
     # INFERRED path: keyword fallback
     ctx = (raw.get("_additionalContext") or "").lower()
