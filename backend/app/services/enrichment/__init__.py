@@ -108,19 +108,37 @@ def _run_enrichment(
                 enrichment_failed = True
 
     # Post-extraction tier upgrade: for signals that have a tiered version,
-    # re-check structured fields and promote from "inferred" to "observed"
+    # re-check structured fields and promote from "inferred" to "observed"/"verified"
     # This avoids editing every Signal() call across all mappers.
     try:
         from backend.app.services.enrichment.base import (
             has_insider_threat_context_tiered,
             has_domain_admin_context_tiered,
             has_lateral_movement_context_tiered,
+            has_ad_attack_context_tiered,
+            has_data_exfil_context_tiered,
+            has_container_escape_context_tiered,
+            has_persistence_context_tiered,
+            has_dns_tunnel_context_tiered,
+            has_c2_beaconing_context_tiered,
         )
         _tier_upgrades = {
+            # Tier-aware signals from earlier refactor
             "insider_threat": has_insider_threat_context_tiered,
             "domain_admin_target": has_domain_admin_context_tiered,
             "domain_admin_context": has_domain_admin_context_tiered,
             "lateral_movement": has_lateral_movement_context_tiered,
+            # New Phase 5 tier-aware signals
+            "ad_attack": has_ad_attack_context_tiered,
+            "data_exfiltration": has_data_exfil_context_tiered,
+            "data_exfiltration_context": has_data_exfil_context_tiered,
+            "insider_data_exfil": has_data_exfil_context_tiered,
+            "container_escape": has_container_escape_context_tiered,
+            "persistence": has_persistence_context_tiered,
+            "persistence_mechanism": has_persistence_context_tiered,
+            "dns_tunnel": has_dns_tunnel_context_tiered,
+            "dns_tunnel_process": has_dns_tunnel_context_tiered,
+            "c2_beaconing": has_c2_beaconing_context_tiered,
         }
         for sig in signals:
             if sig.name in _tier_upgrades and sig.fired:
