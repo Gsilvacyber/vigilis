@@ -623,11 +623,43 @@ def is_ir_response(raw: dict[str, Any]) -> bool:
 
 def has_ransomware_context(raw: dict[str, Any]) -> bool:
     """Check if context indicates ransomware attack chain."""
+    fired, _ = has_ransomware_context_tiered(raw)
+    return fired
+
+
+def has_ransomware_context_tiered(raw: dict[str, Any]) -> tuple[bool, str]:
+    """Check ransomware indicators with tier awareness.
+
+    Returns (fired, tier) where tier is:
+      - "observed" if translator-enriched structured fields
+        (_shadowCopyDeletion, _logCleared, _defenderTampered, _lsassAccess)
+        or MITRE T1490 (Inhibit System Recovery) confirm ransomware behavior
+      - "inferred" if only keyword matching triggered
+    """
+    # OBSERVED path: translator-set structured fields from Sysmon events
+    if raw.get("_shadowCopyDeletion") is True:
+        return True, "observed"
+    if raw.get("_logCleared") is True and (
+        raw.get("_lsassAccess") is True
+        or raw.get("_defenderTampered") is True
+    ):
+        # Defense evasion + credential access = ransomware chain
+        return True, "observed"
+
+    # Also check MITRE technique IDs for T1490 (Inhibit System Recovery)
+    mitre = raw.get("mitre") or {}
+    if isinstance(mitre, dict):
+        techniques = set(mitre.get("techniques") or [])
+        if "T1490" in techniques:
+            return True, "observed"
+
+    # INFERRED path: keyword fallback
     ctx = (raw.get("_additionalContext") or "").lower()
     alert_name = (raw.get("_sourceAlertName") or "").lower()
     desc = (raw.get("description") or raw.get("_description") or "").lower()
-    combined = f"{ctx} {alert_name} {desc}"
-    return any(kw in combined for kw in [
+    cmdline = (raw.get("commandLine") or raw.get("_commandLine") or "").lower()
+    combined = f"{ctx} {alert_name} {desc} {cmdline}"
+    if any(kw in combined for kw in [
         "ransomware", "ransom", "encrypted files", "encryption",
         "mass file", "mass encryption", ".locked", "decrypt",
         "ransom note", "how_to_decrypt", "extortion",
@@ -638,7 +670,34 @@ def has_ransomware_context(raw: dict[str, Any]) -> bool:
         "lsass", "credential dumping", "pass-the-ticket",
         "psexec lateral", "smb scanning",
         "monero", "payment deadline", "data exfil claimed",
-    ])
+    ]):
+        return True, "inferred"
+
+    return False, "inferred"
+
+
+def has_shadow_copy_deletion_tiered(raw: dict[str, Any]) -> tuple[bool, str]:
+    """Check for shadow copy deletion with tier awareness.
+
+    Returns "observed" if the translator set _shadowCopyDeletion from a
+    Sysmon process-create event (vssadmin/wmic/bcdedit/wbadmin), or if
+    the source tool provided MITRE T1490 directly.
+    """
+    if raw.get("_shadowCopyDeletion") is True:
+        return True, "observed"
+
+    mitre = raw.get("mitre") or {}
+    if isinstance(mitre, dict) and "T1490" in (mitre.get("techniques") or []):
+        return True, "observed"
+
+    # Keyword fallback (matches the extractor's existing check)
+    ctx = (raw.get("_additionalContext") or "").lower()
+    desc = (raw.get("description") or raw.get("_description") or "").lower()
+    cmdline = (raw.get("commandLine") or "").lower()
+    combined = f"{ctx} {desc} {cmdline}"
+    if any(kw in combined for kw in ["vssadmin", "shadow", "delete shadows", "bcdedit"]):
+        return True, "inferred"
+    return False, "inferred"
 
 
 def has_c2_beaconing_context(raw: dict[str, Any]) -> bool:

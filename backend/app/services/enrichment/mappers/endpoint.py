@@ -80,10 +80,19 @@ def _is_server(raw: dict[str, Any]) -> bool:
 
 
 def _has_context_keywords(raw: dict[str, Any], keywords: list[str]) -> bool:
-    """Check if additional context or alert name contains any of the keywords."""
+    """Check if additional context, alert name, description, or command line
+    contains any of the keywords.
+
+    NOTE: For Sysmon-sourced events, the detection data lives in `commandLine`
+    and `process` rather than `_additionalContext`. We concatenate all of these
+    so keyword detection works regardless of source.
+    """
     ctx = (raw.get("_additionalContext") or "").lower()
     alert_name = (raw.get("_sourceAlertName") or "").lower()
-    combined = f"{ctx} {alert_name}"
+    desc = (raw.get("description") or raw.get("_description") or "").lower()
+    cmdline = (raw.get("commandLine") or raw.get("_commandLine") or "").lower()
+    process = (raw.get("process") or raw.get("_processName") or "").lower()
+    combined = f"{ctx} {alert_name} {desc} {cmdline} {process}"
     return any(kw in combined for kw in keywords)
 
 

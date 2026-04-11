@@ -80,6 +80,17 @@ def _run_enrichment(
             enrichment_notes=[f"No enrichment rules for {alert_type}"],
         ), []
 
+    # Sysmon translation: raw endpoint telemetry -> structured MITRE fields.
+    # Runs BEFORE the extractor so downstream tier upgrades can see the added
+    # fields. For non-Sysmon alerts this is a fast no-op.
+    try:
+        from backend.app.services.enrichment.sysmon_translator import translate_sysmon_event
+        _added = translate_sysmon_event(raw_alert)
+        if _added:
+            logger.debug("sysmon_translator: added %d structured fields", _added)
+    except Exception:
+        logger.debug("Sysmon translation skipped (non-fatal)", exc_info=True)
+
     # Run extractor with retry on failure.
     # WHY: A bad regex or unexpected field type in one extractor should not
     # silently return base score. We retry once (in case of transient issue),
@@ -121,6 +132,8 @@ def _run_enrichment(
             has_persistence_context_tiered,
             has_dns_tunnel_context_tiered,
             has_c2_beaconing_context_tiered,
+            has_ransomware_context_tiered,
+            has_shadow_copy_deletion_tiered,
         )
         _tier_upgrades = {
             # Tier-aware signals from earlier refactor
@@ -128,7 +141,7 @@ def _run_enrichment(
             "domain_admin_target": has_domain_admin_context_tiered,
             "domain_admin_context": has_domain_admin_context_tiered,
             "lateral_movement": has_lateral_movement_context_tiered,
-            # New Phase 5 tier-aware signals
+            # Phase 5 tier-aware signals
             "ad_attack": has_ad_attack_context_tiered,
             "data_exfiltration": has_data_exfil_context_tiered,
             "data_exfiltration_context": has_data_exfil_context_tiered,
@@ -139,6 +152,10 @@ def _run_enrichment(
             "dns_tunnel": has_dns_tunnel_context_tiered,
             "dns_tunnel_process": has_dns_tunnel_context_tiered,
             "c2_beaconing": has_c2_beaconing_context_tiered,
+            # Phase 6: Sysmon translator enrichment
+            "ransomware_chain": has_ransomware_context_tiered,
+            "ransomware_context": has_ransomware_context_tiered,
+            "shadow_copy_deletion": has_shadow_copy_deletion_tiered,
         }
         for sig in signals:
             if sig.name in _tier_upgrades and sig.fired:
