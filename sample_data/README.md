@@ -1,6 +1,6 @@
 # Sample SIEM Export Files
 
-These files are synthetic test fixtures for the SOCAI upload pipeline. They exercise the `alert_mapper.py` field-detection heuristics, CSV parsing, and normalizer edge cases.
+These files are synthetic test fixtures for the Vigilis upload pipeline. They exercise the `alert_mapper.py` field-detection heuristics, CSV parsing, and normalizer edge cases.
 
 ---
 

@@ -1,4 +1,4 @@
-# SOCAI API Reference
+# Vigilis API Reference
 
 ## Authentication
 

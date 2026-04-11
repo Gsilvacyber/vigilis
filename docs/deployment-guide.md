@@ -1,4 +1,4 @@
-# SOCAI Deployment Guide
+# Vigilis Deployment Guide
 
 ## Prerequisites
 
@@ -10,7 +10,7 @@
 ## Quick Start
 
 ```bash
-git clone <repository-url> && cd socaibuild
+git clone <repository-url> && cd vigilis
 docker compose up -d
 ```
 
@@ -29,7 +29,7 @@ curl http://localhost:8000/health
 |----------|---------|-------------|
 | `APP_ENV` | `local` | Environment mode: `local`, `staging`, `prod` |
 | `APP_PORT` | `8000` | HTTP server port |
-| `DATABASE_URL` | `postgresql+psycopg2://socai:socai@localhost:5432/socai` | PostgreSQL connection string |
+| `DATABASE_URL` | `postgresql+psycopg2://socai:socai@localhost:5432/vigilis` | PostgreSQL connection string |
 | `DEMO_API_KEY` | `socai-demo-key-do-not-use-in-production` | Primary API key (change in production) |
 | `APP_CREATE_TABLES` | `true` | Auto-create database tables on startup |
 | `WEBHOOK_DEFAULT_URL` | *(empty)* | Default webhook delivery URL for SOAR integration |
@@ -38,9 +38,9 @@ curl http://localhost:8000/health
 | `REDIS_URL` | *(empty)* | Redis connection URL for caching (optional) |
 | `VIRUSTOTAL_API_KEY` | *(empty)* | VirusTotal API key for threat intel enrichment |
 | `ABUSEIPDB_API_KEY` | *(empty)* | AbuseIPDB API key for IP reputation lookups |
-| `POSTGRES_USER` | `socai` | PostgreSQL user (Docker Compose) |
-| `POSTGRES_PASSWORD` | `socai` | PostgreSQL password (Docker Compose) |
-| `POSTGRES_DB` | `socai` | PostgreSQL database name (Docker Compose) |
+| `POSTGRES_USER` | `vigilis` | PostgreSQL user (Docker Compose) |
+| `POSTGRES_PASSWORD` | `vigilis` | PostgreSQL password (Docker Compose) |
+| `POSTGRES_DB` | `vigilis` | PostgreSQL database name (Docker Compose) |
 
 ## Production Checklist
 
@@ -56,7 +56,7 @@ curl http://localhost:8000/health
 4. **Enable TLS** — Place a reverse proxy (Caddy, Nginx, or Traefik) in front of the API:
    ```
    # Example Caddyfile
-   socai.example.com {
+   vigilis.example.com {
        reverse_proxy localhost:8000
    }
    ```
@@ -82,5 +82,5 @@ curl http://localhost:8000/health
 PostgreSQL data is stored in a Docker volume. Back up with:
 
 ```bash
-docker compose exec db pg_dump -U socai socai > backup_$(date +%Y%m%d).sql
+docker compose exec db pg_dump -U vigilis vigilis > backup_$(date +%Y%m%d).sql
 ```

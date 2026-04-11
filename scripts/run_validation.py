@@ -1,4 +1,4 @@
-"""Run SOCAI validation against the Advanced SIEM Dataset.
+"""Run Vigilis validation against the Advanced SIEM Dataset.
 
 Usage:
     python scripts/run_validation.py [--sample 500] [--full]
@@ -24,12 +24,12 @@ def print_header(title: str) -> None:
 
 
 def print_case_detail(c: CaseResult, idx: int) -> None:
-    diff = c.socai_score - c.dataset_risk_score
+    diff = c.vigilis_score - c.dataset_risk_score
     direction = "OVER" if diff > 0 else "UNDER"
     print(f"\n  [{idx}] Event: {c.event_id[:20]}...")
     print(f"      Type: {c.dataset_event_type}/{c.dataset_action} -> {c.mapped_alert_type}")
-    print(f"      Dataset risk: {c.dataset_risk_score:.1f}  |  SOCAI score: {c.socai_score}  |  Delta: {diff:+.1f} ({direction})")
-    print(f"      Label: {c.socai_label}  |  Severity: {c.socai_severity}")
+    print(f"      Dataset risk: {c.dataset_risk_score:.1f}  |  Vigilis score: {c.vigilis_score}  |  Delta: {diff:+.1f} ({direction})")
+    print(f"      Label: {c.vigilis_label}  |  Severity: {c.vigilis_severity}")
     print(f"      Signals fired: {len(c.signals_fired)}/{c.signals_total} - {', '.join(c.signals_fired[:5])}")
     print(f"      Playbooks: {c.playbook_count}  |  Actions: {c.action_count}  |  Explanations: {c.explanation_count}")
     print(f"      Ready: {'YES' if c.ready_for_action else 'NO'}  Missing: {c.missing_context}")
@@ -53,14 +53,14 @@ def main() -> None:
     report = run_validation(rows, sample_size=sample_size)
 
     # --- Core metrics ---
-    print_header("SOCAI VALIDATION REPORT")
+    print_header("VIGILIS VALIDATION REPORT")
     print(f"  Dataset rows sampled:  {report.total_dataset_rows}")
-    print(f"  Mapped to SOCAI:       {report.mapped_rows}")
+    print(f"  Mapped to Vigilis:       {report.mapped_rows}")
     print(f"  Skipped (unmappable):  {report.skipped_rows}")
     print(f"  Errors:                {report.errors}")
 
     print_header("SCORE CALIBRATION")
-    print(f"  SOCAI mean score:      {report.socai_mean_score:.1f}")
+    print(f"  Vigilis mean score:      {report.vigilis_mean_score:.1f}")
     print(f"  Dataset mean risk:     {report.dataset_mean_risk:.1f}")
     print(f"  Mean Absolute Error:   {report.mean_absolute_error:.1f}")
     print(f"  Pearson Correlation:   {report.score_correlation:.3f}")
@@ -78,7 +78,7 @@ def main() -> None:
     print_header("BY ALERT TYPE")
     for atype, stats in sorted(report.by_alert_type.items()):
         print(f"\n  {atype} ({stats['count']} cases)")
-        print(f"    SOCAI mean: {stats['socaiMean']}  Dataset mean: {stats['datasetMean']}  MAE: {stats['mae']}")
+        print(f"    Vigilis mean: {stats['vigilisMean']}  Dataset mean: {stats['datasetMean']}  MAE: {stats['mae']}")
         print(f"    Signals avg: {stats['signalsFiredAvg']}  Ready: {stats.get('readyPct', 0)}%  Zero-signal: {stats.get('zeroSignalPct', 0)}%")
 
     # --- By severity ---
@@ -87,7 +87,7 @@ def main() -> None:
         if sev in report.by_severity:
             stats = report.by_severity[sev]
             in_pct = round(100 * stats["inRange"] / stats["count"]) if stats["count"] else 0
-            print(f"  {sev:>10}: {stats['count']:>4} cases  mean={stats['socaiMean']:>5}  expected={stats['expectedRange']}  in-range={in_pct}%  ready={stats.get('readyPct', 0)}%")
+            print(f"  {sev:>10}: {stats['count']:>4} cases  mean={stats['vigilisMean']:>5}  expected={stats['expectedRange']}  in-range={in_pct}%  ready={stats.get('readyPct', 0)}%")
 
     # --- By signal count ---
     print_header("BY SIGNAL COUNT")
@@ -96,7 +96,7 @@ def main() -> None:
             stats = report.by_signal_count[bucket]
             if stats["count"] == 0:
                 continue
-            print(f"  {bucket:>3} signals: {stats['count']:>4} cases  mean={stats['socaiMean']:>5}  ready={stats['readyPct']}%")
+            print(f"  {bucket:>3} signals: {stats['count']:>4} cases  mean={stats['vigilisMean']:>5}  ready={stats['readyPct']}%")
 
     # --- By readiness ---
     print_header("BY READINESS")
@@ -106,7 +106,7 @@ def main() -> None:
             if stats["count"] == 0:
                 continue
             tag = "READY" if label == "ready" else "NEEDS REVIEW"
-            print(f"  {tag:>14}: {stats['count']:>4} cases  mean_score={stats['socaiMean']:>5}  signal_avg={stats['signalAvg']}")
+            print(f"  {tag:>14}: {stats['count']:>4} cases  mean_score={stats['vigilisMean']:>5}  signal_avg={stats['signalAvg']}")
 
     # --- High-score + disagreements ---
     print_header(f"HIGH-SCORE CASES (>= 75) - ({len(report.high_score_cases)})")
@@ -144,7 +144,7 @@ def main() -> None:
     print(f"  Errors:           {report.errors}")
 
     # --- Demo/Sales summary ---
-    print_header("WHAT SOCAI CAN CREDIBLY CLAIM (Demo/Sales)")
+    print_header("WHAT VIGILIS CAN CREDIBLY CLAIM (Demo/Sales)")
     print()
     print(f"  Tested against {report.total_dataset_rows} synthetic SIEM events")
     print(f"  from darkknight25/Advanced_SIEM_Dataset (100k rows)")
@@ -182,7 +182,7 @@ def main() -> None:
         "errors": report.errors,
         "correlation": round(report.score_correlation, 4),
         "mae": round(report.mean_absolute_error, 1),
-        "socaiMean": round(report.socai_mean_score, 1),
+        "vigilisMean": round(report.vigilis_mean_score, 1),
         "datasetMean": round(report.dataset_mean_risk, 1),
         "byAlertType": report.by_alert_type,
         "bySeverity": report.by_severity,

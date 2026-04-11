@@ -1,10 +1,10 @@
-"""Auto-maps common SIEM export fields into SOCAI's rawAlert schema.
+"""Auto-maps common SIEM export fields into Vigilis's rawAlert schema.
 
 Handles:
 - Splunk-style exports (src_ip, dest_ip, user, action, severity, etc.)
 - Microsoft Sentinel / Defender (UserPrincipalName, IPAddress, DeviceName, etc.)
 - Generic CSV with column-name heuristics
-- Already-conforming SOCAI rawAlert JSON (pass-through)
+- Already-conforming Vigilis rawAlert JSON (pass-through)
 """
 from __future__ import annotations
 
@@ -819,9 +819,9 @@ def map_row_to_raw_alert(
 ) -> tuple[str, dict[str, Any]]:
     """Convert an arbitrary SIEM row into (alertType, rawAlert).
 
-    Returns a tuple of (detected_or_overridden alert type, SOCAI rawAlert dict).
+    Returns a tuple of (detected_or_overridden alert type, Vigilis rawAlert dict).
     """
-    if _looks_like_socai_format(row):
+    if _looks_like_vigilis_format(row):
         at = alert_type_override or row.get("alertType") or "identity.suspiciousSignIn"
         return at, row
 
@@ -1494,8 +1494,8 @@ def _enrich_network_context(raw: dict[str, Any], row: dict[str, Any]) -> None:
         raw["network"] = net
 
 
-def _looks_like_socai_format(row: dict[str, Any]) -> bool:
-    """Check if the row already has SOCAI rawAlert structure."""
+def _looks_like_vigilis_format(row: dict[str, Any]) -> bool:
+    """Check if the row already has Vigilis rawAlert structure."""
     return "identity" in row and isinstance(row.get("identity"), dict)
 
 

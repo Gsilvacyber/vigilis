@@ -1,4 +1,4 @@
-# SOCAI — Tech Context
+# Vigilis — Tech Context
 
 ## Stack
 - **Python 3.11+**

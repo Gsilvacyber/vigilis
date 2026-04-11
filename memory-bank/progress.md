@@ -1,4 +1,4 @@
-# SOCAI — Progress & Roadmap
+# Vigilis — Progress & Roadmap
 
 ## Overall Progress Score: 100/100
 

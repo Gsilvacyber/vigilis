@@ -1,4 +1,4 @@
-# Production override for SOCAI
+# Production override for Vigilis
 #
 # Usage:
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile prod up -d

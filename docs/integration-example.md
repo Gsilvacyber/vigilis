@@ -1,6 +1,6 @@
-# SOCAI Integration Example
+# Vigilis Integration Example
 
-Copy-paste-friendly integration guide. Connect your alert pipeline to SOCAI in under 1 day.
+Copy-paste-friendly integration guide. Connect your alert pipeline to Vigilis in under 1 day.
 
 ## Requirements
 
@@ -17,7 +17,7 @@ Copy-paste-friendly integration guide. Connect your alert pipeline to SOCAI in u
 ## Step 1: Send a raw alert
 
 ```bash
-curl -X POST http://your-socai-host:8000/api/v1/demo/enrich-raw \
+curl -X POST http://your-vigilis-host:8000/api/v1/demo/enrich-raw \
   -H "Content-Type: application/json" \
   -d '{
     "alertType": "identity.suspiciousSignIn",
@@ -120,7 +120,7 @@ Response (trimmed for clarity):
 Register your SOAR endpoint:
 
 ```bash
-curl -X POST http://your-socai-host:8000/api/v1/config/webhooks \
+curl -X POST http://your-vigilis-host:8000/api/v1/config/webhooks \
   -H "Content-Type: application/json" \
   -d '{"name": "Acme SOAR", "url": "https://soar.acme.com/api/ingest", "enabled": true}'
 ```
@@ -128,7 +128,7 @@ curl -X POST http://your-socai-host:8000/api/v1/config/webhooks \
 ## Step 4: Deliver case to SOAR
 
 ```bash
-curl -X POST http://your-socai-host:8000/api/v1/cases/{caseId}/deliver-webhook \
+curl -X POST http://your-vigilis-host:8000/api/v1/cases/{caseId}/deliver-webhook \
   -H "Content-Type: application/json" \
   -d '{"webhookUrl": "https://soar.acme.com/api/ingest"}'
 ```
@@ -138,7 +138,7 @@ The webhook payload is the full `case.v0.2` JSON — your SOAR receives a fully 
 ## Step 5: Export for external systems
 
 ```bash
-curl http://your-socai-host:8000/api/v1/cases/{caseId}/export
+curl http://your-vigilis-host:8000/api/v1/cases/{caseId}/export
 ```
 
 Returns:
@@ -157,7 +157,7 @@ Returns:
 ## Integration Architecture
 
 ```
-Your Alert Source          SOCAI                      Your SOAR/Ticketing
+Your Alert Source          Vigilis                      Your SOAR/Ticketing
 (SIEM, EDR, IdP)    ┌──────────────────┐
        │             │  Normalize        │
   raw JSON ────────> │  Enrich (rules)   │ ────── webhook ────> Create ticket
@@ -185,11 +185,11 @@ Your Alert Source          SOCAI                      Your SOAR/Ticketing
 | `cloud.secretStoreAccessAnomaly` | Cloud (Azure, AWS) | New app accessing secrets |
 | `network.impossibleGeoAccess` | Network/IdP | Multi-country simultaneous auth |
 
-## What SOCAI Replaces
+## What Vigilis Replaces
 
-For each alert, SOCAI eliminates 4-5 manual analyst steps:
+For each alert, Vigilis eliminates 4-5 manual analyst steps:
 
-| Manual Step | SOCAI Equivalent |
+| Manual Step | Vigilis Equivalent |
 |-------------|-----------------|
 | Correlate logs across tools | Automatic signal extraction |
 | Check IP reputation | Built-in anomalous IP detection |

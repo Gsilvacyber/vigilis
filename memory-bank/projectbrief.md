@@ -1,4 +1,4 @@
-# SOCAI — Project Brief
+# Vigilis — Project Brief
 
 ## What
 Alert-to-Case Enrichment Pack — a deterministic, rule-based engine that ingests raw security alerts (10 types), enriches them into canonical `case.v0.2` payloads with confidence scoring, recommended playbooks, recommended actions, and impact summaries. Designed for SOC/MDR pilot demonstrations.

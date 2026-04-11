@@ -1,6 +1,6 @@
-"""Map rows from darkknight25/Advanced_SIEM_Dataset to SOCAI raw alert format.
+"""Map rows from darkknight25/Advanced_SIEM_Dataset to Vigilis raw alert format.
 
-The dataset has event_type + action. We map to SOCAI's 10 alert types.
+The dataset has event_type + action. We map to Vigilis's 10 alert types.
 Unmappable event types (ai, iot) are skipped.
 """
 from __future__ import annotations
@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-# event_type + action -> SOCAI alert type
+# event_type + action -> Vigilis alert type
 _TYPE_MAP: dict[tuple[str, str], str] = {
     # auth
     ("auth", "failed"): "identity.suspiciousSignIn",
@@ -66,12 +66,12 @@ _IDS_KEYWORD_MAP: list[tuple[str, str]] = [
     ("sql injection", "cloud.secretStoreAccessAnomaly"),
     ("xss", "cloud.secretStoreAccessAnomaly"),
     ("command injection", "endpoint.suspiciousProcess"),
-    # skip: dns tunnel, port scan, ddos, man-in-the-middle (no good SOCAI type match)
+    # skip: dns tunnel, port scan, ddos, man-in-the-middle (no good Vigilis type match)
 ]
 
 
 def resolve_alert_type(row: dict[str, Any]) -> Optional[str]:
-    """Map a dataset row to a SOCAI alert type. Returns None if unmappable."""
+    """Map a dataset row to a Vigilis alert type. Returns None if unmappable."""
     et = row["event_type"]
     action = row.get("action") or ""
 
@@ -93,7 +93,7 @@ def resolve_alert_type(row: dict[str, Any]) -> Optional[str]:
 
 
 def _sev_map(sev: str) -> str:
-    """Map dataset severity to SOCAI severity."""
+    """Map dataset severity to Vigilis severity."""
     return {
         "emergency": "critical",
         "critical": "critical",
@@ -105,7 +105,7 @@ def _sev_map(sev: str) -> str:
 
 
 def row_to_raw_alert(row: dict[str, Any]) -> Optional[dict[str, Any]]:
-    """Convert a dataset row into a SOCAI-compatible raw alert dict.
+    """Convert a dataset row into a Vigilis-compatible raw alert dict.
 
     Returns None if the row cannot be mapped.
     """

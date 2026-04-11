@@ -1,4 +1,4 @@
-# SOCAI — System Patterns
+# Vigilis — System Patterns
 
 ## Architecture
 
@@ -78,7 +78,7 @@ Each miner populates structured fields from arbitrary SIEM rows:
 - `_enrich_network_context` — **bytesSent**, protocol
 
 ### Supported Event Type Mappings
-| Source Event Type | SOCAI Alert Type |
+| Source Event Type | Vigilis Alert Type |
 |---|---|
 | login_failure, login_success, account_lockout | identity.suspiciousSignIn |
 | password_spray, credential_stuffing | identity.passwordSpray |

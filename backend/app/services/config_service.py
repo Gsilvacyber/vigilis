@@ -5,7 +5,10 @@ import json
 from pathlib import Path
 from typing import Any
 
-_CONFIG_PATH = Path("socai_config.json")
+# Backward-compat: prefer vigilis_config.json, fall back to legacy socai_config.json
+_CONFIG_PATH_NEW = Path("vigilis_config.json")
+_CONFIG_PATH_LEGACY = Path("socai_config.json")
+_CONFIG_PATH = _CONFIG_PATH_NEW if _CONFIG_PATH_NEW.exists() or not _CONFIG_PATH_LEGACY.exists() else _CONFIG_PATH_LEGACY
 
 _TENANT_DEFAULT: dict[str, Any] = {
     "mode": "automated",

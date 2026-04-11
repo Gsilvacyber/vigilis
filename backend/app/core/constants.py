@@ -1,5 +1,5 @@
 """
-Centralized constants for the SOCAI enrichment engine.
+Centralized constants for the Vigilis enrichment engine.
 
 All magic numbers, thresholds, and mappings that were previously
 scattered across services are collected here for easy tuning.

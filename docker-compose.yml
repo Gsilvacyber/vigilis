@@ -1,4 +1,4 @@
-# SOCAI docker-compose
+# Vigilis docker-compose
 #
 # Local dev (default):
 #   docker compose up -d

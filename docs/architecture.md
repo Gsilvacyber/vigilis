@@ -1,8 +1,8 @@
-# SOCAI Architecture Overview
+# Vigilis Architecture Overview
 
 ## System Overview
 
-SOCAI (Security Operations Case AI) is a security alert triage and enrichment platform built with:
+Vigilis (Security Operations Case AI) is a security alert triage and enrichment platform built with:
 
 - **FastAPI** — async Python web framework serving REST API and WebSocket feeds
 - **PostgreSQL** — primary data store for cases, incidents, audit logs, and configuration

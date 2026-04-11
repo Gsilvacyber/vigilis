@@ -1,7 +1,7 @@
-# SOCAI — Product Context
+# Vigilis — Product Context
 
 ## Why This Exists
-SOC/MDR teams spend excessive time on manual alert triage — correlating logs, checking threat intel, assessing severity, and documenting decisions. SOCAI demonstrates measurable reduction in time-to-first-decision (TTFD) through automated enrichment.
+SOC/MDR teams spend excessive time on manual alert triage — correlating logs, checking threat intel, assessing severity, and documenting decisions. Vigilis demonstrates measurable reduction in time-to-first-decision (TTFD) through automated enrichment.
 
 ## Target Audience
 - SOC managers evaluating automation tooling

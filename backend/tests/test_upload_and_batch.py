@@ -53,7 +53,7 @@ class TestAlertMapper:
         assert parse_severity({"risk_level": "info"}) == "low"
         assert parse_severity({}) == "medium"
 
-    def test_socai_format_passthrough(self):
+    def test_vigilis_format_passthrough(self):
         from backend.app.services.alert_mapper import map_row_to_raw_alert
         raw = {"identity": {"identityType": "user", "upn": "x@y.com"}, "ips": []}
         alert_type, result = map_row_to_raw_alert(raw)

@@ -1,4 +1,4 @@
-"""Simple load test for SOCAI API performance baseline."""
+"""Simple load test for Vigilis API performance baseline."""
 import time
 import json
 import statistics
@@ -38,7 +38,7 @@ def upload_batch(alerts: list[dict]) -> tuple[float, int]:
 
 
 def run_load_test():
-    print("=== SOCAI Load Test ===\n")
+    print("=== Vigilis Load Test ===\n")
 
     # Reset first
     httpx.post(f"{BASE_URL}/api/v1/demo/reset", headers=HEADERS)

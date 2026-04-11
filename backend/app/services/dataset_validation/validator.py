@@ -1,4 +1,4 @@
-"""Validation engine: run SOCAI enrichment against dataset rows and measure accuracy."""
+"""Validation engine: run Vigilis enrichment against dataset rows and measure accuracy."""
 from __future__ import annotations
 
 import statistics
@@ -19,9 +19,9 @@ class CaseResult:
     mapped_alert_type: str
     dataset_risk_score: float
     dataset_confidence: float
-    socai_score: int
-    socai_label: str
-    socai_severity: str
+    vigilis_score: int
+    vigilis_label: str
+    vigilis_severity: str
     signals_fired: list[str]
     signals_total: int
     playbook_count: int
@@ -43,7 +43,7 @@ class ValidationReport:
     # Aggregates (computed after run)
     score_correlation: float = 0.0
     mean_absolute_error: float = 0.0
-    socai_mean_score: float = 0.0
+    vigilis_mean_score: float = 0.0
     dataset_mean_risk: float = 0.0
     by_alert_type: dict[str, dict[str, Any]] = field(default_factory=dict)
     by_severity: dict[str, dict[str, Any]] = field(default_factory=dict)
@@ -56,18 +56,18 @@ class ValidationReport:
         if not self.results:
             return
 
-        socai_scores = [r.socai_score for r in self.results]
+        vigilis_scores = [r.vigilis_score for r in self.results]
         ds_scores = [r.dataset_risk_score for r in self.results]
 
-        self.socai_mean_score = statistics.mean(socai_scores)
+        self.vigilis_mean_score = statistics.mean(vigilis_scores)
         self.dataset_mean_risk = statistics.mean(ds_scores)
 
-        diffs = [abs(s - d) for s, d in zip(socai_scores, ds_scores)]
+        diffs = [abs(s - d) for s, d in zip(vigilis_scores, ds_scores)]
         self.mean_absolute_error = statistics.mean(diffs)
 
-        if len(socai_scores) >= 2:
+        if len(vigilis_scores) >= 2:
             try:
-                self.score_correlation = statistics.correlation(socai_scores, ds_scores)
+                self.score_correlation = statistics.correlation(vigilis_scores, ds_scores)
             except statistics.StatisticsError:
                 self.score_correlation = 0.0
         else:
@@ -79,11 +79,11 @@ class ValidationReport:
             by_type[r.mapped_alert_type].append(r)
 
         for atype, cases in by_type.items():
-            ss = [c.socai_score for c in cases]
+            ss = [c.vigilis_score for c in cases]
             ds = [c.dataset_risk_score for c in cases]
             self.by_alert_type[atype] = {
                 "count": len(cases),
-                "socaiMean": round(statistics.mean(ss), 1),
+                "vigilisMean": round(statistics.mean(ss), 1),
                 "datasetMean": round(statistics.mean(ds), 1),
                 "mae": round(statistics.mean([abs(a - b) for a, b in zip(ss, ds)]), 1),
                 "signalsFiredAvg": round(statistics.mean([len(c.signals_fired) for c in cases]), 1),
@@ -94,13 +94,13 @@ class ValidationReport:
         # By severity
         by_sev: dict[str, list[CaseResult]] = defaultdict(list)
         for r in self.results:
-            by_sev[r.socai_severity].append(r)
+            by_sev[r.vigilis_severity].append(r)
 
         for sev, cases in by_sev.items():
-            ss = [c.socai_score for c in cases]
+            ss = [c.vigilis_score for c in cases]
             self.by_severity[sev] = {
                 "count": len(cases),
-                "socaiMean": round(statistics.mean(ss), 1),
+                "vigilisMean": round(statistics.mean(ss), 1),
                 "expectedRange": _expected_range(sev),
                 "inRange": sum(1 for s in ss if _in_expected_range(s, sev)),
             }
@@ -113,13 +113,13 @@ class ValidationReport:
             buckets[key].append(r)
         for bucket, cases in buckets.items():
             if not cases:
-                self.by_signal_count[bucket] = {"count": 0, "socaiMean": 0, "readyPct": 0}
+                self.by_signal_count[bucket] = {"count": 0, "vigilisMean": 0, "readyPct": 0}
                 continue
-            ss = [c.socai_score for c in cases]
+            ss = [c.vigilis_score for c in cases]
             ready = sum(1 for c in cases if c.ready_for_action)
             self.by_signal_count[bucket] = {
                 "count": len(cases),
-                "socaiMean": round(statistics.mean(ss), 1),
+                "vigilisMean": round(statistics.mean(ss), 1),
                 "readyPct": round(100 * ready / len(cases), 1),
             }
 
@@ -127,13 +127,13 @@ class ValidationReport:
         for label, pred in [("ready", True), ("needsReview", False)]:
             cases = [r for r in self.results if r.ready_for_action == pred]
             if not cases:
-                self.by_readiness[label] = {"count": 0, "socaiMean": 0, "signalAvg": 0}
+                self.by_readiness[label] = {"count": 0, "vigilisMean": 0, "signalAvg": 0}
                 continue
-            ss = [c.socai_score for c in cases]
+            ss = [c.vigilis_score for c in cases]
             sigs = [len(c.signals_fired) for c in cases]
             self.by_readiness[label] = {
                 "count": len(cases),
-                "socaiMean": round(statistics.mean(ss), 1),
+                "vigilisMean": round(statistics.mean(ss), 1),
                 "signalAvg": round(statistics.mean(sigs), 1),
             }
 
@@ -153,15 +153,15 @@ class ValidationReport:
 
         # High-score cases needing manual review
         self.high_score_cases = sorted(
-            [r for r in self.results if r.socai_score >= 75],
-            key=lambda r: r.socai_score,
+            [r for r in self.results if r.vigilis_score >= 75],
+            key=lambda r: r.vigilis_score,
             reverse=True,
         )
 
-        # Significant disagreements (SOCAI vs dataset differ by >30 points)
+        # Significant disagreements (Vigilis vs dataset differ by >30 points)
         self.disagreements = sorted(
-            [r for r in self.results if abs(r.socai_score - r.dataset_risk_score) > 30],
-            key=lambda r: abs(r.socai_score - r.dataset_risk_score),
+            [r for r in self.results if abs(r.vigilis_score - r.dataset_risk_score) > 30],
+            key=lambda r: abs(r.vigilis_score - r.dataset_risk_score),
             reverse=True,
         )
 
@@ -182,7 +182,7 @@ def _in_expected_range(score: int, sev: str) -> bool:
 
 
 def validate_row(adapted: dict[str, Any]) -> CaseResult:
-    """Run a single adapted row through SOCAI enrichment and return the result."""
+    """Run a single adapted row through Vigilis enrichment and return the result."""
     alert_type = adapted["alertType"]
     severity = adapted["severity"]
     raw_alert = adapted["rawAlert"]
@@ -216,9 +216,9 @@ def validate_row(adapted: dict[str, Any]) -> CaseResult:
             mapped_alert_type=alert_type,
             dataset_risk_score=ds.get("datasetRiskScore") or 0,
             dataset_confidence=ds.get("datasetConfidence") or 0,
-            socai_score=debug.result.confidence_score,
-            socai_label=debug.result.confidence_label,
-            socai_severity=severity,
+            vigilis_score=debug.result.confidence_score,
+            vigilis_label=debug.result.confidence_label,
+            vigilis_severity=severity,
             signals_fired=fired,
             signals_total=len(debug.all_signals),
             playbook_count=len(debug.result.recommended_playbook),
@@ -235,9 +235,9 @@ def validate_row(adapted: dict[str, Any]) -> CaseResult:
             mapped_alert_type=alert_type,
             dataset_risk_score=ds.get("datasetRiskScore") or 0,
             dataset_confidence=ds.get("datasetConfidence") or 0,
-            socai_score=0,
-            socai_label="error",
-            socai_severity=severity,
+            vigilis_score=0,
+            vigilis_label="error",
+            vigilis_severity=severity,
             signals_fired=[],
             signals_total=0,
             playbook_count=0,

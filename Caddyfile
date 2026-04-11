@@ -1,4 +1,4 @@
-# Caddyfile for SOCAI production deployment
+# Caddyfile for Vigilis production deployment
 # 1. Replace "your-domain.example.com" with your actual domain
 # 2. Replace email with your real contact (for Let's Encrypt)
 # 3. Run: docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile prod up -d

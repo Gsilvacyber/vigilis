@@ -1,4 +1,4 @@
-# SOCAI — Active Context
+# Vigilis — Active Context
 
 ## Last Completed: Vigilis 5-Phase Enrichment Engine Upgrade
 **Date**: April 2, 2026

@@ -92,9 +92,9 @@ class TestDatasetAdapter:
 class TestEnrichmentAccuracy:
     def test_all_cases_produce_scores(self, validation_report):
         for r in validation_report.results:
-            assert r.socai_score >= 0
-            assert r.socai_score <= 100
-            assert r.socai_label in ("low", "medium", "high", "critical")
+            assert r.vigilis_score >= 0
+            assert r.vigilis_score <= 100
+            assert r.vigilis_label in ("low", "medium", "high", "critical")
 
     def test_all_cases_produce_playbooks(self, validation_report):
         for r in validation_report.results:
@@ -139,8 +139,8 @@ class TestScoreCalibration:
         """Higher severities should generally produce higher scores."""
         by_sev = validation_report.by_severity
         if "critical" in by_sev and "low" in by_sev:
-            assert by_sev["critical"]["socaiMean"] > by_sev["low"]["socaiMean"], (
-                f"Critical ({by_sev['critical']['socaiMean']}) should score higher than low ({by_sev['low']['socaiMean']})"
+            assert by_sev["critical"]["vigilisMean"] > by_sev["low"]["vigilisMean"], (
+                f"Critical ({by_sev['critical']['vigilisMean']}) should score higher than low ({by_sev['low']['vigilisMean']})"
             )
 
     def test_high_score_cases_mostly_have_signals(self, validation_report):

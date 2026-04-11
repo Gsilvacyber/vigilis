@@ -23,7 +23,7 @@ def check(name, passed):
 
 def main():
     print("=" * 75)
-    print("QA AUDIT - VIGILIS/SOCAI PLATFORM")
+    print("QA AUDIT - VIGILIS PLATFORM")
     print("=" * 75)
 
     # TEST 1: Unit tests
