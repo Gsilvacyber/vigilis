@@ -231,10 +231,15 @@ _MITRE_PATTERNS: list[tuple[re.Pattern, str, str, str | None]] = [
      "_processInjection"),
 
     # ── T1548.002: UAC Bypass (Phase 2.4) ────────────────────────────────
-    # Known auto-elevated Windows binaries abused for UAC bypass. None of
-    # these should appear in a legitimate command line outside SysPrep.
-    (re.compile(r"\b(?:fodhelper|eventvwr|computerdefaults|sdclt|compmgmtlauncher|slui|wsreset)\.exe\b", re.I),
-     "T1548.002", "Known UAC bypass binary invocation",
+    # Tightened: require the auto-elevated binary to be invoked as a command-
+    # line argument (e.g., `powershell -Command fodhelper.exe ...`) or in
+    # combination with registry manipulation, NOT just a bare name match.
+    # Otherwise every IT admin opening Event Viewer would trip this.
+    (re.compile(r"(?:powershell|cmd|wscript|cscript|rundll32|mshta)\S*\s+.*\b(?:fodhelper|computerdefaults|sdclt|compmgmtlauncher|wsreset)\.exe\b", re.I),
+     "T1548.002", "UAC bypass binary invoked from script interpreter",
+     "_uacBypass"),
+    (re.compile(r"\bHKCU\\\\Software\\\\Classes\\\\ms-settings\\\\Shell\\\\Open\\\\command\b", re.I),
+     "T1548.002", "UAC bypass via HKCU ms-settings hijack",
      "_uacBypass"),
 
     # ── T1219: Remote Access Tools (Phase 2.4) ───────────────────────────
@@ -250,14 +255,20 @@ _MITRE_PATTERNS: list[tuple[re.Pattern, str, str, str | None]] = [
      "_processInjection"),
 
     # ── T1027.004: Compile After Delivery (Phase 4.4) ────────────────────
-    # PowerShell Add-Type + CSharp source = compile-on-target payload
-    (re.compile(r"\bAdd-Type\s+-TypeDefinition\s+['\"][^'\"]*using\s+System", re.I),
-     "T1027.004", "PowerShell Add-Type compile-in-place",
+    # PowerShell Add-Type + CSharp source with dangerous imports = compile
+    # attack payload on target. Legitimate modules (PSWindowsUpdate, PowerCLI)
+    # use Add-Type with plain .NET types — we require suspicious imports.
+    (re.compile(r"\bAdd-Type\s+-TypeDefinition\s+.*(?:DllImport|kernel32|ntdll|advapi32|Marshal\.AllocHGlobal)", re.I),
+     "T1027.004", "PowerShell Add-Type with native DLL import",
      "_encodedCommand"),
 
     # ── T1570: Lateral Tool Transfer - admin share copy (Phase 4.4) ──────
-    (re.compile(r"\b(?:copy|xcopy|robocopy|Copy-Item)\s+.*\\\\[^\\]+\\(?:C|ADMIN|IPC)\$", re.I),
-     "T1570", "File copy to/from admin share (lateral tool transfer)",
+    # Tightened: require writable target (C$/ADMIN$) AND a non-standard
+    # destination path. Bare `robocopy \\server\C$\...` fires on WSUS/SCCM/
+    # PDQ Deploy, so we also require a suspicious subpath (\Temp, \Users,
+    # \Windows\Tasks) to reduce FPs.
+    (re.compile(r"\b(?:copy|xcopy|robocopy|Copy-Item)\s+.*\\\\[^\\]+\\(?:C|ADMIN)\$\\(?:Temp|Users|Windows\\Tasks|PerfLogs)\\", re.I),
+     "T1570", "File copy to admin share with suspicious destination path",
      "_lateralMovementPipe"),
 
     # ── T1113: Screen Capture (Phase 4.4) ────────────────────────────────

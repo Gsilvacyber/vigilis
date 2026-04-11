@@ -559,7 +559,19 @@ def check_state_drift(
 
     # ── Unusual service path ─────────────────────────────────────────────
     if category == "service":
-        svc_path = str(raw_alert.get("_servicePath") or details.get("pathName") if isinstance(details, dict) else details_str).lower()
+        # Fix: operator precedence bug (flagged in audit).
+        # Previously: `str(X or Y if cond else Z)` — parsed as `str(X or (Y if cond else Z))`
+        # which returned 'None' as a string when both X and Y were None.
+        svc_path = ""
+        direct = raw_alert.get("_servicePath")
+        if direct:
+            svc_path = str(direct).lower()
+        elif isinstance(details, dict):
+            p = details.get("pathName")
+            if p:
+                svc_path = str(p).lower()
+        elif details_str:
+            svc_path = details_str
         if svc_path:
             safe_prefixes = (
                 "c:\\windows\\",
@@ -584,14 +596,12 @@ def check_state_drift(
     # ── Userland autorun (attacker persistence) ──────────────────────────
     if category == "autorun":
         autorun_target = details_str
-        # Any autorun pointing to %APPDATA% / %TEMP% / %USERPROFILE% is suspicious
+        # Any autorun pointing to %APPDATA% / %TEMP% / %USERPROFILE% is suspicious.
+        # All registry-sourced paths use Windows backslashes — only those variants.
         userland_patterns = (
             "appdata\\local",
             "appdata\\roaming",
-            "appdata/local",
-            "appdata/roaming",
             "\\temp\\",
-            "/temp/",
             "\\users\\public\\",
             "%appdata%",
             "%temp%",
@@ -636,7 +646,7 @@ def check_state_drift(
     if category == "local_user" and "admin" in item.lower():
         signals.append(Signal(
             name="privilege_escalation_drift",
-            weight=W.get("_privilegeEscalation", 18),
+            weight=W.get("privilege_escalation_drift", 18),
             fired=True,
             label=f"New local user in admin group: {item}",
             tier="verified",

@@ -215,6 +215,7 @@ W: dict[str, int] = {
     "userland_autorun": 22,        # verified — new autorun in %APPDATA%
     "script_scheduled_task": 20,   # verified — task running powershell/cmd
     "state_drift": 8,              # observed — base for any drift event
+    "privilege_escalation_drift": 18,  # verified — new admin user via snapshot
 
     # ── Cross-alert intelligence (Phase 3) ──────────────────────────────
     "_multiVectorAttack": 18,
@@ -311,6 +312,7 @@ SIGNAL_TIERS: dict[str, str] = {
     "userland_autorun": "verified",
     "script_scheduled_task": "verified",
     "state_drift": "observed",
+    "privilege_escalation_drift": "verified",
 
     # Observed — reads pre-populated field from source tool
     "anomalous_ip": "observed",

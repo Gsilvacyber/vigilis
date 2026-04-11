@@ -8,6 +8,12 @@
 # a view of the host's STANDING CONFIGURATION — the "what exists"
 # complement to "what happened".
 #
+# PRIVACY NOTE: This exporter ships user SIDs, password-set timestamps,
+# and last-logon times in the `local_user` category. These are PII and
+# are POSTed over plain HTTP to the Vigilis URL. ONLY use on a trusted
+# LAN (which this lab setup is), or switch Vigilis to HTTPS before
+# deploying to a production network.
+#
 # Schedule hourly via Task Scheduler.
 
 param(
@@ -20,26 +26,30 @@ param(
 
 $ErrorActionPreference = "Continue"
 
-# Ensure state directory exists with restrictive ACL
+# Ensure state directory exists with restrictive ACL.
+# Apply ACL on EVERY run (not just first creation) in case someone modified
+# the permissions after an earlier run or if the directory already existed
+# when the script was first deployed.
 if (-not (Test-Path $StateDir)) {
     New-Item -Path $StateDir -ItemType Directory -Force | Out-Null
-    # Restrict ACL: SYSTEM + Administrators only
-    try {
-        $acl = Get-Acl $StateDir
-        $acl.SetAccessRuleProtection($true, $false)  # disable inheritance
-        $rules = @(
-            New-Object System.Security.AccessControl.FileSystemAccessRule(
-                "NT AUTHORITY\SYSTEM", "FullControl",
-                "ContainerInherit,ObjectInherit", "None", "Allow"),
-            New-Object System.Security.AccessControl.FileSystemAccessRule(
-                "BUILTIN\Administrators", "FullControl",
-                "ContainerInherit,ObjectInherit", "None", "Allow")
-        )
-        foreach ($r in $rules) { $acl.AddAccessRule($r) }
-        Set-Acl -Path $StateDir -AclObject $acl
-    } catch {
-        Write-Host "  Warning: could not set restrictive ACL on $StateDir" -ForegroundColor Yellow
-    }
+}
+try {
+    $acl = Get-Acl $StateDir
+    $acl.SetAccessRuleProtection($true, $false)  # disable inheritance
+    # Clear existing rules — rebuild from scratch so old weak ACLs don't persist
+    $acl.Access | ForEach-Object { $acl.RemoveAccessRule($_) | Out-Null }
+    $rules = @(
+        New-Object System.Security.AccessControl.FileSystemAccessRule(
+            "NT AUTHORITY\SYSTEM", "FullControl",
+            "ContainerInherit,ObjectInherit", "None", "Allow"),
+        New-Object System.Security.AccessControl.FileSystemAccessRule(
+            "BUILTIN\Administrators", "FullControl",
+            "ContainerInherit,ObjectInherit", "None", "Allow")
+    )
+    foreach ($r in $rules) { $acl.AddAccessRule($r) }
+    Set-Acl -Path $StateDir -AclObject $acl
+} catch {
+    Write-Host "  Warning: could not set restrictive ACL on $StateDir ($($_.Exception.Message))" -ForegroundColor Yellow
 }
 
 $hostname = $env:COMPUTERNAME.ToLower()
