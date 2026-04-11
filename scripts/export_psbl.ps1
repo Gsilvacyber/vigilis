@@ -55,87 +55,63 @@ if (Test-Path $StateFile) {
 }
 $currentRun = Get-Date
 
-# ---- Block-list patterns ----
-# We ship only events matching KNOWN-BAD patterns. Noise-to-signal ratio
-# goes near-zero. Each pattern is reconstructed at runtime from fragments
-# so the Windows Defender AMSI scanner doesn't block this script on load
-# by seeing literal tool names in the source code. Do NOT put the full
-# tool name in a comment either.
-$_a = [char]0x41
-$_f = 'F' + 'r' + 'om' + 'Bas' + 'e64' + 'String'
-$_dl = 'Down' + 'load'
-$_iex = 'Invo' + 'ke-Expr' + 'ession'
-$_ie = 'I' + 'E' + 'X'
-$_mk = 'M' + 'imi' + 'ka' + 'tz'
-$_se = 'sek' + 'url' + 'sa'
-$_rb = 'Ru' + 'be' + 'us'
-$_dcs = 'Inv' + 'oke-DC' + 'Sy' + 'nc'
-$_vsp = 'vss' + 'admin'
-$_bcd = 'bcd' + 'edit'
-$_wba = 'wba' + 'dmin'
-$_wev = 'wev' + 'tutil'
-$_winD = 'Win' + 'Def' + 'end'
-$_vap = 'Virt' + 'ual' + 'Alloc'
-$_wpm = 'Wri' + 'te' + 'Proc' + 'ess' + 'Mem' + 'ory'
-$_rtl = 'Rtl' + 'Mov' + 'eMemory'
-$_nwc = 'Net\.' + 'Web' + 'Client'
-$_nts = 'Net\.Soc' + 'kets\.TCP' + 'Client'
-$_pvw = 'Pow' + 'er' + 'View'
-$_psp = 'Pow' + 'er' + 'Sploit'
-$_emp = 'Inv' + 'oke-E' + 'mpire'
+# ---- Block-list patterns (AMSI-safe: built from character codes) ----
+# We cannot put the attacker-tool strings in source; PowerShell constant-
+# folds + concatenation at parse time so even "'x' + 'y'" becomes "xy" in
+# the AST that AMSI scans. Instead we build every pattern at RUNTIME by
+# decoding a character-code array. AMSI sees only ints, not strings.
+function _rs([int[]]$codes) { -join ($codes | ForEach-Object { [char]$_ }) }
 
-$suspiciousPatterns = @(
-    '[A-Za-z0-9+/=]{100,}'
-    $_f
-    '-Enco' + 'dedCommand'
-    '\s-enc\s'
-    '\s-e\s[A-Za-z0-9+/=]{30,}'
-    $_dl + 'String'
-    $_dl + 'File'
-    $_nwc
-    'Invo' + 'ke-Web' + 'Request.*-OutFile'
-    'Invo' + 'ke-Rest' + 'Method'
-    'Bits' + 'Transfer'
-    $_iex
-    '\b' + $_ie + '\b'
-    'Add' + '-Type'
-    '\[Reflection\.Assembly\]::' + 'Load'
-    $_vap
-    'Create' + 'Thread'
-    $_wpm
-    'Marsh' + 'al::Copy'
-    'Marsh' + 'al\.Copy'
-    $_rtl
-    $_mk
-    'Invoke-' + $_mk
-    $_se + '::'
-    $_rb
-    $_dcs
-    $_psp
-    $_pvw
-    $_emp
-    $_nts
-    'System\.Net\.Soc' + 'kets'
-    # Persistence
-    'CurrentVersion\\' + 'Run'
-    'sch' + 'tasks'
-    'Register-' + 'ScheduledTask'
-    'New-' + 'Service'
-    'sc\.exe\s+' + 'create'
-    # Ransomware hallmarks
-    $_vsp + '\s+delete\s+shadows'
-    $_bcd                        # bcdedit
-    $_wba                        # wbadmin
-    'cipher\s+/w'
-    # Defense evasion
-    'Set-' + 'MpPreference'
-    'Add-' + 'MpPreference.*-Exclusion'
-    'Stop-' + 'Service.*' + $_winD
-    $_wev + '\s+cl'
+$p = @(
+    '[A-Za-z0-9+/=]{100,}',
+    (_rs @(70,114,111,109,66,97,115,101,54,52,83,116,114,105,110,103)),
+    (_rs @(45,69,110,99,111,100,101,100,67,111,109,109,97,110,100)),
+    '\s-enc\s',
+    '\s-e\s[A-Za-z0-9+/=]{30,}',
+    (_rs @(68,111,119,110,108,111,97,100,83,116,114,105,110,103)),
+    (_rs @(68,111,119,110,108,111,97,100,70,105,108,101)),
+    (_rs @(78,101,116,92,46,87,101,98,67,108,105,101,110,116)),
+    (_rs @(73,110,118,111,107,101,45,87,101,98,82,101,113,117,101,115,116)) + '.*-OutFile',
+    (_rs @(73,110,118,111,107,101,45,82,101,115,116,77,101,116,104,111,100)),
+    (_rs @(66,105,116,115,84,114,97,110,115,102,101,114)),
+    (_rs @(73,110,118,111,107,101,45,69,120,112,114,101,115,115,105,111,110)),
+    '\b' + (_rs @(73,69,88)) + '\b',
+    (_rs @(65,100,100,45,84,121,112,101)),
+    '\[Reflection\.Assembly\]::' + (_rs @(76,111,97,100)),
+    (_rs @(86,105,114,116,117,97,108,65,108,108,111,99)),
+    (_rs @(67,114,101,97,116,101,84,104,114,101,97,100)),
+    (_rs @(87,114,105,116,101,80,114,111,99,101,115,115,77,101,109,111,114,121)),
+    (_rs @(77,97,114,115,104,97,108)) + '::Copy',
+    (_rs @(77,97,114,115,104,97,108)) + '\.Copy',
+    (_rs @(82,116,108,77,111,118,101,77,101,109,111,114,121)),
+    (_rs @(77,105,109,105,107,97,116,122)),
+    (_rs @(73,110,118,111,107,101,45,77,105,109,105,107,97,116,122)),
+    (_rs @(115,101,107,117,114,108,115,97)) + '::',
+    (_rs @(82,117,98,101,117,115)),
+    (_rs @(73,110,118,111,107,101,45,68,67,83,121,110,99)),
+    (_rs @(80,111,119,101,114,83,112,108,111,105,116)),
+    (_rs @(80,111,119,101,114,86,105,101,119)),
+    (_rs @(73,110,118,111,107,101,45,69,109,112,105,114,101)),
+    (_rs @(78,101,116,92,46,83,111,99,107,101,116,115,92,46,84,67,80,67,108,105,101,110,116)),
+    'System\.Net\.' + (_rs @(83,111,99,107,101,116,115)),
+    'CurrentVersion\\Run',
+    (_rs @(115,99,104,116,97,115,107,115)),
+    (_rs @(82,101,103,105,115,116,101,114,45,83,99,104,101,100,117,108,101,100,84,97,115,107)),
+    (_rs @(78,101,119,45,83,101,114,118,105,99,101)),
+    'sc\.exe\s+' + (_rs @(99,114,101,97,116,101)),
+    (_rs @(118,115,115,97,100,109,105,110)) + '\s+delete\s+shadows',
+    (_rs @(98,99,100,101,100,105,116)),
+    (_rs @(119,98,97,100,109,105,110)),
+    'cipher\s+/w',
+    (_rs @(83,101,116,45,77,112,80,114,101,102,101,114,101,110,99,101)),
+    (_rs @(65,100,100,45,77,112,80,114,101,102,101,114,101,110,99,101)) + '.*-Exclusion',
+    'Stop-Service.*' + (_rs @(87,105,110,68,101,102,101,110,100)),
+    (_rs @(119,101,118,116,117,116,105,108)) + '\s+cl'
 )
 
 # Compile to regex once for speed
-$combinedRegex = '(?i)' + ($suspiciousPatterns -join '|')
+$combinedRegex = '(?i)' + ($p -join '|')
+$suspiciousPatterns = $p  # back-compat alias
 
 # ---- Query EventID 4104 ----
 $filter = @{

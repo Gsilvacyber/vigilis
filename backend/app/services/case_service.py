@@ -78,6 +78,16 @@ SUPPORTED_ALERT_TYPES = {
     "cloud.resourceHijacking",
     "cloud.dataExposure",
     "dlp.sensitiveDataExposure",
+    # Phase 2 new alert types (Sysmon EIDs 10/17/18/19/20/21 + Security Log + PSBL)
+    "identity.logonSuccess",
+    "identity.accountCreation",
+    "endpoint.powershellExecution",
+    "endpoint.lsassAccess",
+    "endpoint.pipeActivity",
+    "endpoint.wmiPersistence",
+    "endpoint.massFileCreate",
+    # Phase 3 state drift
+    "endpoint.stateDrift",
 }
 
 
