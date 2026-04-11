@@ -212,6 +212,14 @@ def _extract_pairs(
         for ip in external_ips[:3]:
             pairs.append(("ip_domain", "ip", ip, "domain", domain))
 
+    # 7. Phase 3: state drift relationships (host↔service, host↔task, etc.)
+    # Only populated when _stateCategory is set (i.e., from endpoint.stateDrift)
+    if raw_alert.get("_stateCategory"):
+        try:
+            pairs.extend(_extract_state_drift_pairs(raw_alert))
+        except Exception:
+            pass
+
     return pairs
 
 
@@ -494,6 +502,202 @@ def check_process_relationships(
         _log.debug("Process relationship check failed (non-fatal)", exc_info=True)
 
     return signals
+
+
+# ── Phase 3: State Drift Detection ───────────────────────────────────────
+# Inspects endpoint.stateDrift events (from export_state.ps1) and fires
+# verified-tier signals when new configuration items appear in suspicious
+# locations. This is the persistence detection layer that complements the
+# event stream with a picture of the host's standing configuration.
+
+def check_state_drift(
+    raw_alert: dict[str, Any],
+    event_time: datetime,
+    tenant_id: str | None = None,
+) -> list[Signal]:
+    """Inspect state drift events and fire signals on suspicious additions.
+
+    Only runs when alertType is `endpoint.stateDrift` and the event carries
+    `_stateCategory` / `_driftAction` fields. Returns verified-tier signals
+    for items in sensitive locations or running suspicious commands.
+
+    Signals produced:
+      - unusual_service_path: service binary outside standard paths (weight 20)
+      - userland_autorun: autorun in C:\\Users\\*\\AppData\\* (weight 22)
+      - script_scheduled_task: task runs powershell/cmd directly (weight 20)
+      - state_drift: base weight 8 (always fires for any drift)
+    """
+    signals: list[Signal] = []
+
+    category = str(raw_alert.get("_stateCategory") or "").lower()
+    action = str(raw_alert.get("_driftAction") or "").lower()
+
+    if not category or action != "added":
+        # Only fire signals on additions. Modifications and removals can
+        # be useful later but often legitimate.
+        return signals
+
+    from backend.app.services.enrichment.weights import W
+
+    # Base signal — every drift fires a low-weight observed signal
+    signals.append(Signal(
+        name="state_drift",
+        weight=W.get("state_drift", 8),
+        fired=True,
+        label=f"State drift detected: {action} {category} '{raw_alert.get('_driftItem', 'unknown')}'",
+        tier="observed",
+    ))
+
+    item = str(raw_alert.get("_driftItem") or "")
+    details = raw_alert.get("_driftDetails") or {}
+    # Details may come as either a dict or a string
+    details_str = ""
+    if isinstance(details, dict):
+        details_str = " ".join(str(v) for v in details.values() if v).lower()
+    elif isinstance(details, str):
+        details_str = details.lower()
+
+    # ── Unusual service path ─────────────────────────────────────────────
+    if category == "service":
+        svc_path = str(raw_alert.get("_servicePath") or details.get("pathName") if isinstance(details, dict) else details_str).lower()
+        if svc_path:
+            safe_prefixes = (
+                "c:\\windows\\",
+                "c:\\program files\\",
+                "c:\\program files (x86)\\",
+                "c:/windows/",
+                "c:/program files/",
+                "%systemroot%",
+                "%programfiles%",
+            )
+            in_safe_path = any(svc_path.startswith(p) for p in safe_prefixes)
+            if not in_safe_path:
+                signals.append(Signal(
+                    name="unusual_service_path",
+                    weight=W.get("unusual_service_path", 20),
+                    fired=True,
+                    label=f"New service '{item}' points to non-standard path: {svc_path}",
+                    tier="verified",
+                ))
+                raw_alert["_unusualServicePath"] = True
+
+    # ── Userland autorun (attacker persistence) ──────────────────────────
+    if category == "autorun":
+        autorun_target = details_str
+        # Any autorun pointing to %APPDATA% / %TEMP% / %USERPROFILE% is suspicious
+        userland_patterns = (
+            "appdata\\local",
+            "appdata\\roaming",
+            "appdata/local",
+            "appdata/roaming",
+            "\\temp\\",
+            "/temp/",
+            "\\users\\public\\",
+            "%appdata%",
+            "%temp%",
+            "%userprofile%",
+        )
+        if any(p in autorun_target for p in userland_patterns):
+            signals.append(Signal(
+                name="userland_autorun",
+                weight=W.get("userland_autorun", 22),
+                fired=True,
+                label=f"New autorun in userland path: {item} -> {autorun_target[:100]}",
+                tier="verified",
+            ))
+            raw_alert["_userlandAutorun"] = True
+
+    # ── Scheduled task running a shell/script interpreter ────────────────
+    if category == "scheduled_task":
+        task_cmd = details_str
+        shell_patterns = (
+            "powershell.exe",
+            "powershell ",
+            "pwsh.exe",
+            "cmd.exe",
+            "cmd ",
+            "wscript.exe",
+            "cscript.exe",
+            "mshta.exe",
+            "rundll32.exe",
+            "regsvr32.exe",
+        )
+        if any(p in task_cmd for p in shell_patterns):
+            signals.append(Signal(
+                name="script_scheduled_task",
+                weight=W.get("script_scheduled_task", 20),
+                fired=True,
+                label=f"New scheduled task '{item}' runs shell/script: {task_cmd[:100]}",
+                tier="verified",
+            ))
+            raw_alert["_scriptScheduledTask"] = True
+
+    # ── Local user added to Administrators group ─────────────────────────
+    if category == "local_user" and "admin" in item.lower():
+        signals.append(Signal(
+            name="privilege_escalation_drift",
+            weight=W.get("_privilegeEscalation", 18),
+            fired=True,
+            label=f"New local user in admin group: {item}",
+            tier="verified",
+        ))
+        raw_alert["_privilegeEscalation"] = True
+
+    return signals
+
+
+# Phase 3: extended entity graph extraction for stateDrift events.
+# Wire into _extract_pairs so state snapshot drift populates new rel types.
+_STATE_DRIFT_RELATIONSHIP_MAP = {
+    "service": "host_service",
+    "scheduled_task": "host_scheduled_task",
+    "autorun": "host_autorun",
+    "local_user": "host_local_user",
+    "installed_program": "host_installed_program",
+    "listening_port": "host_listening_port",
+}
+
+
+def _extract_state_drift_pairs(
+    raw_alert: dict[str, Any],
+) -> list[tuple[str, str, str, str, str]]:
+    """Extract state-drift entity relationships when alertType is stateDrift.
+
+    Returns (relationship_type, a_type, a_value, b_type, b_value) tuples.
+    These feed into `extract_and_store_relationships` so the graph learns
+    which services/tasks/autoruns exist on which hosts.
+    """
+    pairs: list[tuple[str, str, str, str, str]] = []
+
+    category = str(raw_alert.get("_stateCategory") or "").lower()
+    item = str(raw_alert.get("_driftItem") or "")
+    if not category or not item:
+        return pairs
+
+    rel_type = _STATE_DRIFT_RELATIONSHIP_MAP.get(category)
+    if not rel_type:
+        return pairs
+
+    device = raw_alert.get("device") or {}
+    hostname = ""
+    if isinstance(device, dict):
+        hostname = (device.get("hostname") or "").strip().lower()
+    elif hasattr(device, "hostname"):
+        hostname = (getattr(device, "hostname", "") or "").strip().lower()
+
+    if hostname and item:
+        # The "b" entity is the drift item — normalize category for the type
+        b_type = {
+            "service": "service",
+            "scheduled_task": "task",
+            "autorun": "autorun",
+            "local_user": "user",
+            "installed_program": "program",
+            "listening_port": "port",
+        }.get(category, "item")
+        pairs.append((rel_type, "host", hostname, b_type, item))
+
+    return pairs
 
 
 # ── Utility ──────────────────────────────────────────────────────────────

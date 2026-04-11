@@ -24,6 +24,10 @@ _log = logging.getLogger(__name__)
 _FEODO_URL = "https://feodotracker.abuse.ch/downloads/ipblocklist.csv"
 _URLHAUS_URL = "https://urlhaus.abuse.ch/downloads/csv_recent/"
 _THREATFOX_URL = "https://threatfox.abuse.ch/export/csv/recent/"
+# Phase 4.1: MalwareBazaar recent SHA256 hash dump (CSV, plain text)
+_MALWAREBAZAAR_URL = "https://bazaar.abuse.ch/export/csv/recent/"
+# Phase 4.1: URLhaus SHA256 hash feed (plain text, one hash per line)
+_URLHAUS_HASHES_URL = "https://urlhaus.abuse.ch/downloads/sha256/"
 
 
 async def update_feeds_loop(interval_hours: int = 24):
@@ -45,6 +49,8 @@ def _run_feed_update():
     total += _download_feodo_tracker()
     total += _download_urlhaus()
     total += _download_threatfox()
+    total += _download_malwarebazaar()     # Phase 4.1
+    total += _download_urlhaus_hashes()    # Phase 4.1
     _log.info("Feed update complete: %d IOCs ingested", total)
 
 
@@ -229,6 +235,101 @@ def _download_threatfox() -> int:
 
     except Exception:
         _log.exception("ThreatFox download failed")
+        return 0
+
+
+def _download_malwarebazaar() -> int:
+    """Phase 4.1: MalwareBazaar recent SHA256 malware hashes.
+
+    MalwareBazaar exports a daily CSV of recently-submitted malware samples
+    with SHA256 hashes, signatures, and tags. Commercial use is explicitly
+    allowed on the abuse.ch free feeds. ~thousands of hashes per run.
+    """
+    try:
+        resp = httpx.get(_MALWAREBAZAAR_URL, timeout=60, follow_redirects=True)
+        if resp.status_code != 200:
+            _log.warning("MalwareBazaar returned %d", resp.status_code)
+            return 0
+
+        from backend.app.core.db import get_session
+
+        count = 0
+        with get_session() as session:
+            reader = csv.reader(io.StringIO(resp.text))
+            for row in reader:
+                if not row or row[0].startswith("#") or row[0].startswith('"first'):
+                    continue
+                # MalwareBazaar CSV columns:
+                # first_seen_utc, sha256_hash, md5_hash, sha1_hash, reporter,
+                # file_name, file_type_guess, mime_type, signature, clamav, ...
+                try:
+                    if len(row) < 9:
+                        continue
+                    sha256 = row[1].strip().strip('"').lower()
+                    signature = row[8].strip().strip('"') if len(row) > 8 else ""
+                    file_type = row[6].strip().strip('"') if len(row) > 6 else ""
+                    # Validate SHA256 (64 hex chars)
+                    if len(sha256) == 64 and all(c in "0123456789abcdef" for c in sha256):
+                        _upsert_ioc(
+                            session, "hash", sha256, "malwarebazaar",
+                            threat_type=file_type or "malware",
+                            malware=signature,
+                            confidence=0.90,
+                        )
+                        count += 1
+                except (IndexError, ValueError):
+                    continue
+                # Respect MaxEventsPerRun cap — MalwareBazaar feed is large
+                if count >= 5000:
+                    break
+            session.commit()
+
+        _log.info("MalwareBazaar: %d malware hashes ingested", count)
+        return count
+
+    except Exception:
+        _log.exception("MalwareBazaar download failed")
+        return 0
+
+
+def _download_urlhaus_hashes() -> int:
+    """Phase 4.1: URLhaus SHA256 hashes of hosted malware.
+
+    URLhaus publishes a plain-text list of SHA256 hashes of payloads hosted
+    on its tracked URLs. Complements MalwareBazaar with different sampling.
+    Format: one SHA256 per line, comments start with '#'.
+    """
+    try:
+        resp = httpx.get(_URLHAUS_HASHES_URL, timeout=60, follow_redirects=True)
+        if resp.status_code != 200:
+            _log.warning("URLhaus hashes returned %d", resp.status_code)
+            return 0
+
+        from backend.app.core.db import get_session
+
+        count = 0
+        with get_session() as session:
+            for line in resp.text.splitlines():
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                sha = line.lower()
+                if len(sha) == 64 and all(c in "0123456789abcdef" for c in sha):
+                    _upsert_ioc(
+                        session, "hash", sha, "urlhaus_hashes",
+                        threat_type="malware_distribution",
+                        confidence=0.85,
+                    )
+                    count += 1
+                if count >= 5000:
+                    break
+            session.commit()
+
+        _log.info("URLhaus hashes: %d malware hashes ingested", count)
+        return count
+
+    except Exception:
+        _log.exception("URLhaus hashes download failed")
         return 0
 
 

@@ -221,6 +221,54 @@ _MITRE_PATTERNS: list[tuple[re.Pattern, str, str, str | None]] = [
     # ── T1078.002: Valid Accounts - Domain Accounts (runas /netonly) ─────
     (re.compile(r"\brunas(?:\.exe)?\s+.*(?:/netonly|/profile)", re.I),
      "T1078.002", "runas with alternate credentials", None),
+
+    # ── T1134: Process Injection APIs (Phase 2.4) ────────────────────────
+    # These Win32 API calls are extremely rare in legitimate software but
+    # are required for classic injection techniques: CreateRemoteThread,
+    # DLL injection, APC injection, reflective injection.
+    (re.compile(r"\b(?:CreateRemoteThread|WriteProcessMemory|VirtualAllocEx|QueueUserAPC|NtMapViewOfSection|RtlCreateUserThread)\b", re.I),
+     "T1134", "Process injection API call",
+     "_processInjection"),
+
+    # ── T1548.002: UAC Bypass (Phase 2.4) ────────────────────────────────
+    # Known auto-elevated Windows binaries abused for UAC bypass. None of
+    # these should appear in a legitimate command line outside SysPrep.
+    (re.compile(r"\b(?:fodhelper|eventvwr|computerdefaults|sdclt|compmgmtlauncher|slui|wsreset)\.exe\b", re.I),
+     "T1548.002", "Known UAC bypass binary invocation",
+     "_uacBypass"),
+
+    # ── T1219: Remote Access Tools (Phase 2.4) ───────────────────────────
+    # RATs widely abused for persistence. Often legitimate on IT endpoints —
+    # fire as inferred signal only (no structured field).
+    (re.compile(r"\b(?:anydesk|teamviewer|splashtop|supremo|connectwisecontrol|screenconnect|logmein|remoteutilities|atera|syncro|ninjaone)\.exe\b", re.I),
+     "T1219", "Remote access tool installation",
+     "_remoteAccessTool"),
+
+    # ── T1055 subvariants: SetWindowsHookEx / SetThreadContext (Phase 4.4)
+    (re.compile(r"\b(?:SetWindowsHookEx|SetThreadContext|NtQueueApcThread|NtUnmapViewOfSection)\b", re.I),
+     "T1055", "Process injection via hook/context manipulation",
+     "_processInjection"),
+
+    # ── T1027.004: Compile After Delivery (Phase 4.4) ────────────────────
+    # PowerShell Add-Type + CSharp source = compile-on-target payload
+    (re.compile(r"\bAdd-Type\s+-TypeDefinition\s+['\"][^'\"]*using\s+System", re.I),
+     "T1027.004", "PowerShell Add-Type compile-in-place",
+     "_encodedCommand"),
+
+    # ── T1570: Lateral Tool Transfer - admin share copy (Phase 4.4) ──────
+    (re.compile(r"\b(?:copy|xcopy|robocopy|Copy-Item)\s+.*\\\\[^\\]+\\(?:C|ADMIN|IPC)\$", re.I),
+     "T1570", "File copy to/from admin share (lateral tool transfer)",
+     "_lateralMovementPipe"),
+
+    # ── T1113: Screen Capture (Phase 4.4) ────────────────────────────────
+    # Win32 GDI / .NET calls used by malware to capture screens
+    (re.compile(r"\b(?:BitBlt|Graphics\.CopyFromScreen|GetDC\s*\(|CreateCompatibleBitmap)\b", re.I),
+     "T1113", "Screen capture API call", None),
+
+    # ── T1087.001: Local Account Discovery (Phase 4.4) ───────────────────
+    # `net user` without /domain is local account enumeration
+    (re.compile(r"\bnet(?:1)?(?:\.exe)?\s+user\s*(?!.*\/domain)(?!\s+\S+\s+\S+\s+/add)(?:\s|$)", re.I),
+     "T1087.001", "Local account enumeration via net user", None),
 ]
 
 
@@ -255,9 +303,13 @@ _SUSPICIOUS_PARENT_CHILD: list[tuple[re.Pattern, re.Pattern, str, str]] = [
 # ---------------------------------------------------------------------------
 
 def _is_sysmon_source(raw_alert: dict[str, Any]) -> bool:
-    """Check if this alert came from a Sysmon feed."""
-    # The case_service wraps raw_alert before passing to enrichment, but the
-    # source field isn't always in raw_alert itself. Check multiple locations.
+    """Check if this alert came from a Sysmon, Windows Event Log, or PowerShell feed.
+
+    As of Phase 2 the translator also runs on Windows Security Event Log events
+    (export_secevt.ps1) and PowerShell Script Block Log events (export_psbl.ps1),
+    because those also carry structured command-line data the MITRE patterns
+    and event-ID fork logic can enrich.
+    """
     source_name = str(
         raw_alert.get("_sourceName")
         or raw_alert.get("sourceName")
@@ -268,16 +320,122 @@ def _is_sysmon_source(raw_alert: dict[str, Any]) -> bool:
         or raw_alert.get("_sourceSiem")
         or ""
     ).lower()
-    # Also check for Sysmon-specific field markers
-    has_sysmon_markers = bool(
+    # Field markers that indicate endpoint telemetry source
+    has_endpoint_markers = bool(
         raw_alert.get("_sysmonEventId")
+        or raw_alert.get("_sourceEventId")
+        or raw_alert.get("_winEventId")
         or (raw_alert.get("process") and raw_alert.get("commandLine"))
     )
+    accepted_source_keywords = ("sysmon", "windowseventlog", "windows event log",
+                                "powershell", "security-auditing")
     return (
-        "sysmon" in source_name
-        or "sysmon" in source_tool
-        or has_sysmon_markers
+        any(kw in source_name for kw in accepted_source_keywords)
+        or any(kw in source_tool for kw in accepted_source_keywords)
+        or has_endpoint_markers
     )
+
+
+# ---------------------------------------------------------------------------
+# Event-ID fork: direct detection based on the numeric EventID carried by
+# the source tool. Runs after the regex pattern pass. This lets us detect
+# events that have no command-line text (e.g., Windows Security Event Log
+# 4720 account creation, Sysmon EID 10 LSASS access, EIDs 19/20/21 WMI
+# persistence) by matching on their EventID alone.
+# ---------------------------------------------------------------------------
+
+def _translate_by_sysmon_event_id(raw_alert: dict[str, Any]) -> tuple[int, set[str]]:
+    """Inspect `_sourceEventId` / `_sysmonEventId` and set fields directly.
+
+    Returns (fields_added, techniques_found_set).
+    """
+    added = 0
+    techniques: set[str] = set()
+
+    # Pull the event ID from multiple possible field names
+    eid_raw = (
+        raw_alert.get("_sourceEventId")
+        or raw_alert.get("_sysmonEventId")
+        or raw_alert.get("_winEventId")
+    )
+    try:
+        eid = int(eid_raw) if eid_raw is not None else None
+    except (ValueError, TypeError):
+        eid = None
+
+    if eid is None:
+        return 0, techniques
+
+    # ── Sysmon EID 10: Process Access (primarily LSASS) ──────────────────
+    if eid == 10:
+        target = str(raw_alert.get("_targetImage") or raw_alert.get("TargetImage") or "").lower()
+        if "lsass.exe" in target:
+            if raw_alert.get("_lsassAccess") is not True:
+                raw_alert["_lsassAccess"] = True
+                added += 1
+            techniques.add("T1003.001")
+            _log.debug("sysmon_translator: EID 10 → _lsassAccess (T1003.001)")
+
+    # ── Sysmon EIDs 17/18: Named Pipe Create/Connect ─────────────────────
+    elif eid in (17, 18):
+        pipe = str(raw_alert.get("_pipeName") or raw_alert.get("PipeName") or "")
+        if pipe:
+            if raw_alert.get("_namedPipeActivity") is not True:
+                raw_alert["_namedPipeActivity"] = True
+                added += 1
+            # Known lateral movement / C2 pipe patterns
+            lm_pipes = ["psexesvc", "paexec", "remcom", "csexec", "atexec",
+                        "crackmapexec", "mojo", "admin$", "ipc$"]
+            pipe_lower = pipe.lower()
+            if any(p in pipe_lower for p in lm_pipes):
+                if raw_alert.get("_lateralMovementPipe") is not True:
+                    raw_alert["_lateralMovementPipe"] = True
+                    added += 1
+                techniques.add("T1570")
+                techniques.add("T1021.002")
+
+    # ── Sysmon EIDs 19/20/21: WMI Event Filter/Consumer/Binding ─────────
+    elif eid in (19, 20, 21):
+        # These events are extremely rare legitimately. Fire immediately.
+        if raw_alert.get("_wmiPersistence") is not True:
+            raw_alert["_wmiPersistence"] = True
+            added += 1
+        techniques.add("T1546.003")
+        _log.debug("sysmon_translator: EID %d → _wmiPersistence (T1546.003)", eid)
+
+    # ── Windows Security Event 1102: Audit Log Cleared ──────────────────
+    elif eid == 1102:
+        if raw_alert.get("_logCleared") is not True:
+            raw_alert["_logCleared"] = True
+            added += 1
+        techniques.add("T1070.001")
+
+    # ── Windows Security Event 4720: User Account Created ───────────────
+    elif eid == 4720:
+        if raw_alert.get("_accountCreated") is not True:
+            raw_alert["_accountCreated"] = True
+            added += 1
+        techniques.add("T1136.001")
+
+    # ── Windows Security Events 4728/4732: Added to Privileged Group ────
+    elif eid in (4728, 4732):
+        target_group = str(raw_alert.get("_targetGroup") or raw_alert.get("TargetGroupName") or "").lower()
+        privileged_groups = ("administrators", "domain admins", "enterprise admins",
+                             "schema admins", "backup operators", "account operators")
+        if any(g in target_group for g in privileged_groups):
+            if raw_alert.get("_privilegeEscalation") is not True:
+                raw_alert["_privilegeEscalation"] = True
+                added += 1
+            techniques.add("T1098")
+
+    # ── Windows Security Event 4672: Special Privileges Assigned ────────
+    elif eid == 4672:
+        if raw_alert.get("_privilegeEscalation") is not True:
+            raw_alert["_privilegeEscalation"] = True
+            added += 1
+        # Not a full technique hit (4672 can be noisy) — no MITRE add
+
+    return added, techniques
 
 
 def translate_sysmon_event(raw_alert: dict[str, Any]) -> int:
@@ -363,6 +521,13 @@ def translate_sysmon_event(raw_alert: dict[str, Any]) -> int:
                 if raw_alert.get("_lolbinAbuse") is not True:
                     raw_alert["_lolbinAbuse"] = True
                     added += 1
+
+    # ── Event-ID fork (Phase 2.4): detect events that have no command line ──
+    # e.g. Windows Security Event Log 4720 (account created),
+    # Sysmon EID 10 (process access / LSASS), EIDs 19/20/21 (WMI persistence).
+    _eid_added, _eid_techniques = _translate_by_sysmon_event_id(raw_alert)
+    added += _eid_added
+    techniques_found |= _eid_techniques
 
     # ── Write MITRE technique fields if we found any ─────────────────────
     if techniques_found:

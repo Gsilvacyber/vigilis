@@ -310,6 +310,46 @@ _ALERT_TYPE_KEYWORDS: dict[str, list[str]] = {
         "ssn detected", "social security",
         "classified document", "restricted data",
     ],
+    # ── Phase 2 new alert types ──────────────────────────────────────────
+    "identity.logonSuccess": [
+        "logon success", "successful logon", "4624",
+        "interactive logon", "remote interactive logon", "rdp logon",
+        "network logon",
+    ],
+    "identity.accountCreation": [
+        "account created", "new account", "4720",
+        "user account created", "local user created", "new-localuser",
+        "net user /add",
+    ],
+    "endpoint.powershellExecution": [
+        "powershell script block", "powershell 4104", "script block logging",
+        "script block", "obfuscated powershell", "encoded powershell",
+        "powershell download cradle", "iex download", "invoke-expression download",
+    ],
+    "endpoint.lsassAccess": [
+        "lsass access", "lsass dump", "lsass memory", "credential dumping",
+        "sekurlsa", "mimikatz sekurlsa", "procdump lsass",
+        "comsvcs minidump", "sysmon 10",
+    ],
+    "endpoint.pipeActivity": [
+        "named pipe", "pipe created", "pipe connected",
+        "psexesvc", "paexec pipe", "crackmapexec pipe",
+        "sysmon 17", "sysmon 18", "mojo pipe",
+    ],
+    "endpoint.wmiPersistence": [
+        "wmi event filter", "wmi event consumer", "wmi binding",
+        "wmi persistence", "wmi subscription", "permanent wmi",
+        "sysmon 19", "sysmon 20", "sysmon 21",
+    ],
+    "endpoint.massFileCreate": [
+        "mass file create", "mass file write", "bulk file creation",
+        "multiple files written", "file create storm", "ransomware encryption",
+    ],
+    "endpoint.stateDrift": [
+        "state drift", "configuration drift", "autorun added",
+        "new scheduled task", "new service", "new installed program",
+        "state snapshot", "baseline drift",
+    ],
 }
 
 # Fields whose *values* are the strongest classification signal.

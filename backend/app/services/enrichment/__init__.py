@@ -349,6 +349,18 @@ def _run_enrichment(
     except Exception:
         logger.debug("Process relationship check skipped (non-fatal)", exc_info=True)
 
+    # Phase 3: State drift signal check — only for endpoint.stateDrift events
+    if alert_type == "endpoint.stateDrift":
+        try:
+            from backend.app.services.enrichment.entity_graph import check_state_drift
+            drift_signals = check_state_drift(raw_alert, event_time, tenant_id)
+            existing_names = {s.name for s in signals}
+            for ds in drift_signals:
+                if ds.name not in existing_names:
+                    signals.append(ds)
+        except Exception:
+            logger.debug("State drift check skipped (non-fatal)", exc_info=True)
+
     # Asset criticality and user risk (Phase 2)
     asset_weight, asset_tier = compute_asset_criticality(raw_alert)
     user_weight, user_risk_tier = compute_user_risk(raw_alert)

@@ -35,9 +35,18 @@ $currentRun = Get-Date
 $eventMap = @{
     1  = @{ type = "endpoint.suspiciousProcess";     severity = "medium" }
     3  = @{ type = "network.commandAndControl";      severity = "medium" }
+    # Phase 2.3: EID 10 process access (filter to LSASS only in Sysmon config)
+    10 = @{ type = "endpoint.lsassAccess";           severity = "high"   }
     11 = @{ type = "endpoint.malwareDetection";      severity = "low"    }
     12 = @{ type = "endpoint.persistenceMechanism";  severity = "medium" }
     13 = @{ type = "endpoint.persistenceMechanism";  severity = "medium" }
+    # Phase 2.3: EIDs 17/18 pipe create/connect (lateral movement C2)
+    17 = @{ type = "endpoint.pipeActivity";          severity = "medium" }
+    18 = @{ type = "endpoint.pipeActivity";          severity = "medium" }
+    # Phase 2.3: EIDs 19/20/21 WMI persistence
+    19 = @{ type = "endpoint.wmiPersistence";        severity = "high"   }
+    20 = @{ type = "endpoint.wmiPersistence";        severity = "high"   }
+    21 = @{ type = "endpoint.wmiPersistence";        severity = "high"   }
     22 = @{ type = "network.dnsAnomaly";             severity = "low"    }
 }
 
@@ -107,11 +116,72 @@ $benignDomainPatterns = @(
     '^wpad$'
 )
 
+# Skip benign file-create events by full directory prefix (EventID 11).
+# These paths are dominated by Windows Update, Microsoft Store, Defender
+# definitions, and error reporting — all of which are normal activity.
+$benignFileCreatePathPatterns = @(
+    '^C:\\Windows\\WinSxS\\',
+    '^C:\\Windows\\SoftwareDistribution\\',
+    '^C:\\Windows\\Installer\\',
+    '^C:\\Windows\\servicing\\LCU\\',
+    '^C:\\Windows\\System32\\DriverStore\\',
+    '^C:\\Windows\\System32\\config\\',
+    '^C:\\Windows\\Logs\\',
+    '^C:\\Windows\\Prefetch\\',
+    '^C:\\Windows\\Temp\\[^\\]+\.tmp$',
+    '^C:\\Program Files\\WindowsApps\\',
+    '^C:\\Program Files\\WindowsPowerShell\\Modules\\PackageManagement\\',
+    '^C:\\Program Files \(x86\)\\Microsoft\\EdgeUpdate\\',
+    '^C:\\ProgramData\\Microsoft\\Windows Defender\\Definition Updates\\',
+    '^C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\',
+    '^C:\\ProgramData\\Microsoft\\Windows Defender\\Scans\\',
+    '^C:\\ProgramData\\Microsoft\\Windows\\WER\\',
+    '^C:\\ProgramData\\Microsoft\\Windows\\AppRepository\\',
+    '^C:\\ProgramData\\Microsoft\\Diagnosis\\',
+    '^C:\\Users\\[^\\]+\\AppData\\Local\\Microsoft\\Edge\\User Data\\',
+    '^C:\\Users\\[^\\]+\\AppData\\Local\\Microsoft\\OneDrive\\',
+    '^C:\\Users\\[^\\]+\\AppData\\Local\\Microsoft\\Windows\\INetCache\\',
+    '^C:\\Users\\[^\\]+\\AppData\\Local\\Microsoft\\Windows\\WebCache\\',
+    '^C:\\Users\\[^\\]+\\AppData\\Local\\Packages\\',
+    '^C:\\Users\\[^\\]+\\AppData\\Local\\ConnectedDevicesPlatform\\',
+    '^C:\\Users\\[^\\]+\\AppData\\Local\\Microsoft\\Teams\\'
+)
+
+# Skip file-create events written by these benign "churn" processes.
+# These processes legitimately write thousands of files daily; we only want
+# to see OTHER processes writing files (user downloads, shells, malware).
+$benignFileCreateWriters = @(
+    '\\svchost\.exe$',
+    '\\TiWorker\.exe$',
+    '\\TrustedInstaller\.exe$',
+    '\\MsMpEng\.exe$',
+    '\\MpCmdRun\.exe$',
+    '\\MoUsoCoreWorker\.exe$',
+    '\\SearchIndexer\.exe$',
+    '\\OneDrive\.exe$',
+    '\\msedge\.exe$',
+    '\\CompatTelRunner\.exe$',
+    '\\DismHost\.exe$',
+    '\\taskhostw\.exe$',
+    '\\RuntimeBroker\.exe$',
+    '\\smartscreen\.exe$',
+    '\\SgrmBroker\.exe$',
+    '\\explorer\.exe$',
+    '\\ShellExperienceHost\.exe$',
+    '\\backgroundTaskHost\.exe$',
+    '\\wsqmcons\.exe$',
+    '\\SIHClient\.exe$',
+    '\\WerFault\.exe$',
+    '\\WerFaultSecure\.exe$'
+)
+
 # ---- Query Sysmon events ----
 $filter = @{
     LogName   = "Microsoft-Windows-Sysmon/Operational"
     StartTime = $lastRun
-    Id        = @(1, 3, 11, 12, 13, 22)
+    # Phase 2.3 expanded EID set: 10 (LSASS access), 17/18 (pipes),
+    # 19/20/21 (WMI persistence) — requires sysmonconfig.xml to enable them
+    Id        = @(1, 3, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22)
 }
 
 $events = @()
@@ -141,7 +211,13 @@ $upn = "$($env:USERNAME.ToLower())@$($env:USERDOMAIN.ToLower()).local"
 $sent = 0
 $failed = 0
 $skipped = 0
+$skippedFilePath = 0
+$skippedFileWriter = 0
+$skippedProcDup = 0
 $filteredEvents = @()
+
+# Track process-create events seen this run to dedup (image|commandLine|user)
+$procCreateSeen = @{}
 
 foreach ($event in $events) {
     $mapping = $eventMap[[int]$event.Id]
@@ -157,10 +233,21 @@ foreach ($event in $events) {
     $skip = $false
 
     if ($eventId -eq 1) {
+        # Process create: skip benign writers first
         $image = $eventData.Image
         if ($image) {
             foreach ($pattern in $benignProcessPatterns) {
                 if ($image -match $pattern) { $skip = $true; break }
+            }
+        }
+        # Dedup: same (image + commandLine + user) within the 5-min window
+        if (-not $skip) {
+            $dedupKey = "$($eventData.Image)|$($eventData.CommandLine)|$($eventData.User)"
+            if ($procCreateSeen.ContainsKey($dedupKey)) {
+                $skip = $true
+                $skippedProcDup++
+            } else {
+                $procCreateSeen[$dedupKey] = $true
             }
         }
     } elseif ($eventId -eq 3) {
@@ -169,6 +256,30 @@ foreach ($event in $events) {
         else {
             foreach ($pattern in $privateIpPatterns) {
                 if ($dstIp -match $pattern) { $skip = $true; break }
+            }
+        }
+    } elseif ($eventId -eq 11) {
+        # File create: filter by target file path and writer process.
+        # Before Phase 1 we had zero EID 11 filters — ~50% of cases were
+        # Microsoft Store / Windows Update file writes. Now we drop them.
+        $targetFile = $eventData.TargetFilename
+        $writerImage = $eventData.Image
+        if ($targetFile) {
+            foreach ($pattern in $benignFileCreatePathPatterns) {
+                if ($targetFile -match $pattern) {
+                    $skip = $true
+                    $skippedFilePath++
+                    break
+                }
+            }
+        }
+        if (-not $skip -and $writerImage) {
+            foreach ($pattern in $benignFileCreateWriters) {
+                if ($writerImage -match $pattern) {
+                    $skip = $true
+                    $skippedFileWriter++
+                    break
+                }
             }
         }
     } elseif ($eventId -eq 22) {
@@ -189,14 +300,92 @@ foreach ($event in $events) {
     $filteredEvents += @{ Event = $event; Data = $eventData; Mapping = $mapping }
 }
 
+# ---- File-create aggregation ----
+# Group EventID 11 events by (writer_image, target_directory, user). If a
+# group has >3 events in the 5-min window, collapse them into ONE synthesized
+# mass_file_create alert. Mass-write is the actual ransomware signal — we
+# preserve it without flooding the case list with 20 separate alerts.
+$fileCreateGroups = @{}
+$nonFileCreate = @()
+$skippedFileAggregated = 0
+
+foreach ($item in $filteredEvents) {
+    $e = $item.Event
+    if ([int]$e.Id -ne 11) {
+        $nonFileCreate += $item
+        continue
+    }
+    $d = $item.Data
+    $dir = ""
+    if ($d.TargetFilename) {
+        try { $dir = [System.IO.Path]::GetDirectoryName($d.TargetFilename) } catch { $dir = "" }
+    }
+    $groupKey = "$($d.Image)|$dir|$($d.User)"
+    if (-not $fileCreateGroups.ContainsKey($groupKey)) {
+        $fileCreateGroups[$groupKey] = @()
+    }
+    $fileCreateGroups[$groupKey] += $item
+}
+
+$collapsedEvents = @()
+foreach ($groupKey in $fileCreateGroups.Keys) {
+    $group = $fileCreateGroups[$groupKey]
+    if ($group.Count -gt 3) {
+        # Collapse into one synthesized mass_file_create event
+        $first = $group[0]
+        $d = $first.Data
+        $dir = ""
+        if ($d.TargetFilename) {
+            try { $dir = [System.IO.Path]::GetDirectoryName($d.TargetFilename) } catch { $dir = "" }
+        }
+        $filenames = @()
+        $extensions = @{}
+        foreach ($g in $group) {
+            if ($g.Data.TargetFilename) {
+                try {
+                    $fn = [System.IO.Path]::GetFileName($g.Data.TargetFilename)
+                    if ($filenames.Count -lt 5) { $filenames += $fn }
+                    $ext = [System.IO.Path]::GetExtension($fn)
+                    if ($ext) { $extensions[$ext] = $true }
+                } catch {}
+            }
+        }
+        # Synthesize a new event record with special mapping
+        $syntheticMapping = @{ type = "endpoint.massFileCreate"; severity = "medium" }
+        $syntheticData = @{
+            Image = $d.Image
+            TargetFilename = $d.TargetFilename
+            User = $d.User
+            _fileCreateCount = $group.Count
+            _fileCreateDirectory = $dir
+            _fileCreateExamples = ($filenames -join ", ")
+            _fileCreateExtensions = (($extensions.Keys) -join ", ")
+        }
+        $collapsedEvents += @{
+            Event = $first.Event  # use first event's timestamp/RecordId
+            Data = $syntheticData
+            Mapping = $syntheticMapping
+            IsSynthesized = $true
+        }
+        $skippedFileAggregated += ($group.Count - 1)
+    } else {
+        # Keep as individual events
+        foreach ($g in $group) { $collapsedEvents += $g }
+    }
+}
+
+$filteredEvents = $nonFileCreate + $collapsedEvents
+
 if ($filteredEvents.Count -eq 0) {
     Write-Host "[$(Get-Date -Format HH:mm:ss)] All $($events.Count) events filtered as noise" -ForegroundColor Gray
+    Write-Host "  skipped: path=$skippedFilePath writer=$skippedFileWriter aggregated=$skippedFileAggregated procDup=$skippedProcDup" -ForegroundColor Gray
     $currentRun.ToString("o") | Set-Content $StateFile
     exit 0
 }
 
 $toSend = $filteredEvents | Select-Object -First $MaxEventsPerRun
 Write-Host "[$(Get-Date -Format HH:mm:ss)] Sending $($toSend.Count) events (filtered $skipped, capped at $MaxEventsPerRun)" -ForegroundColor Cyan
+Write-Host "  noise-reduction counts: path=$skippedFilePath writer=$skippedFileWriter aggregated=$skippedFileAggregated procDup=$skippedProcDup" -ForegroundColor Gray
 
 # ---- POST each event to Vigilis ----
 foreach ($item in $toSend) {
@@ -204,6 +393,8 @@ foreach ($item in $toSend) {
     $eventData = $item.Data
     $mapping = $item.Mapping
     $eventId = [int]$event.Id
+    $isSynthesized = $false
+    if ($item.ContainsKey("IsSynthesized")) { $isSynthesized = $item.IsSynthesized }
 
     $eventUser = $eventData.User
     $identityUpn = if ($eventUser) { $eventUser.ToLower() } else { $upn }
@@ -215,6 +406,23 @@ foreach ($item in $toSend) {
 
     $title = "Sysmon event $eventId"
     $description = "Sysmon event $eventId on $hostname"
+
+    # Synthesized mass_file_create event (Phase 1.2 aggregation).
+    # Skip the normal EID switch for these — they carry their own
+    # synthesized rawAlert fields and alertType.
+    if ($isSynthesized -and $mapping.type -eq "endpoint.massFileCreate") {
+        $rawAlert.process = $eventData.Image
+        $rawAlert._fileCreateCount = $eventData._fileCreateCount
+        $rawAlert._fileCreateDirectory = $eventData._fileCreateDirectory
+        $rawAlert._fileCreateExamples = $eventData._fileCreateExamples
+        $rawAlert._fileCreateExtensions = $eventData._fileCreateExtensions
+        $count = $eventData._fileCreateCount
+        $dir = $eventData._fileCreateDirectory
+        $title = "Mass file create: $count files in $dir"
+        $description = "Process $($eventData.Image) wrote $count files to $dir (examples: $($eventData._fileCreateExamples))"
+        # Jump past the switch — assign a marker EID no case matches
+        $eventId = -1
+    }
 
     switch ($eventId) {
         1 {
@@ -287,6 +495,39 @@ foreach ($item in $toSend) {
             $rawAlert._dnsQueryResults = $eventData.QueryResults
             $title = "DNS query: $($eventData.QueryName)"
             $description = "Process $($eventData.Image) queried DNS for $($eventData.QueryName)"
+        }
+        # ── Phase 2.3: new Sysmon EventIDs ──
+        10 {
+            # Process Access — filtered by sysmonconfig.xml to LSASS-only.
+            # Translator's event-ID fork will set _lsassAccess=True + T1003.001.
+            $rawAlert.process = $eventData.SourceImage
+            $rawAlert._targetImage = $eventData.TargetImage
+            $rawAlert._grantedAccess = $eventData.GrantedAccess
+            $rawAlert._sysmonEventId = 10
+            $title = "Process access: $(Split-Path $eventData.SourceImage -Leaf) -> $(Split-Path $eventData.TargetImage -Leaf)"
+            $description = "Source $($eventData.SourceImage) accessed target $($eventData.TargetImage) (rights=$($eventData.GrantedAccess))"
+        }
+        { $_ -in 17, 18 } {
+            # Pipe Create (17) or Pipe Connected (18)
+            $rawAlert.process = $eventData.Image
+            $rawAlert._pipeName = $eventData.PipeName
+            $rawAlert._sysmonEventId = $eventId
+            $action = if ($eventId -eq 17) { "created" } else { "connected to" }
+            $title = "Named pipe $action`: $($eventData.PipeName)"
+            $description = "Process $($eventData.Image) $action named pipe $($eventData.PipeName)"
+        }
+        { $_ -in 19, 20, 21 } {
+            # WMI Event Filter (19), Consumer (20), FilterToConsumerBinding (21)
+            $rawAlert.process = $eventData.User
+            $rawAlert._wmiOperation = $eventData.Operation
+            $rawAlert._wmiNamespace = $eventData.EventNamespace
+            $rawAlert._wmiFilter = $eventData.Filter
+            $rawAlert._wmiConsumer = $eventData.Consumer
+            $rawAlert._wmiName = $eventData.Name
+            $rawAlert._sysmonEventId = $eventId
+            $kind = @{19="Filter";20="Consumer";21="Binding"}[$eventId]
+            $title = "WMI ${kind}: $($eventData.Name)"
+            $description = "WMI persistence event ID $eventId ($kind) detected"
         }
     }
 

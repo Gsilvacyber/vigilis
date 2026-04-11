@@ -196,6 +196,26 @@ W: dict[str, int] = {
     "rare_process_on_server": 20,
     "known_tool_on_dc": 25,
 
+    # ── Phase 2 new signals (Sysmon EID 10/17/18/19/20/21 + Security Log) ─
+    "lsass_access": 22,            # verified — Sysmon EID 10 targeting LSASS
+    "wmi_persistence": 22,         # verified — Sysmon EID 19/20/21 (never legit)
+    "lateral_movement_pipe": 18,   # verified — PsExec / admin share pipes
+    "process_injection": 20,       # verified — T1134 API calls
+    "uac_bypass": 18,              # observed — known UAC bypass binaries
+    "remote_access_tool": 12,      # inferred — RATs (legitimate use possible)
+    "mass_file_create": 15,        # observed — Phase 1.2 aggregation
+    "named_pipe_activity": 8,      # observed — Sysmon EID 17/18 base
+    "encoded_command": 18,         # inferred/observed — PS encoded command
+    "download_cradle": 18,         # verified — T1105 download cradle
+    "lolbin_abuse": 15,            # inferred — LOLBin with network args
+    "account_creation": 18,        # observed — Security EID 4720
+
+    # ── Phase 3 state-drift signals ──────────────────────────────────────
+    "unusual_service_path": 20,    # verified — service outside C:\Windows
+    "userland_autorun": 22,        # verified — new autorun in %APPDATA%
+    "script_scheduled_task": 20,   # verified — task running powershell/cmd
+    "state_drift": 8,              # observed — base for any drift event
+
     # ── Cross-alert intelligence (Phase 3) ──────────────────────────────
     "_multiVectorAttack": 18,
     "_crossAlertCorroboration": 12,
@@ -273,6 +293,24 @@ SIGNAL_TIERS: dict[str, str] = {
     "process_on_new_host": "verified",
     "rare_process_on_server": "verified",
     "known_tool_on_dc": "verified",
+    # Phase 2 new signals
+    "lsass_access": "verified",
+    "wmi_persistence": "verified",
+    "lateral_movement_pipe": "verified",
+    "process_injection": "verified",
+    "uac_bypass": "observed",
+    "remote_access_tool": "inferred",
+    "mass_file_create": "observed",
+    "named_pipe_activity": "observed",
+    "encoded_command": "observed",
+    "download_cradle": "verified",
+    "lolbin_abuse": "inferred",
+    "account_creation": "observed",
+    # Phase 3 state-drift signals
+    "unusual_service_path": "verified",
+    "userland_autorun": "verified",
+    "script_scheduled_task": "verified",
+    "state_drift": "observed",
 
     # Observed — reads pre-populated field from source tool
     "anomalous_ip": "observed",

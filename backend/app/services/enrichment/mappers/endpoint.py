@@ -478,6 +478,170 @@ def extract_defense_evasion(
     ]
 
 
+# ---------------------------------------------------------------------------
+# Phase 2 new alert type extractors (stubs — real signals come from translator)
+# ---------------------------------------------------------------------------
+# These extractors are minimal because the Phase 2 data sources (PowerShell
+# Script Block Logging, Sysmon EID 10/17-21, Windows Security Event Log) all
+# land their detection in structured fields (`_lsassAccess`, `_wmiPersistence`,
+# `_namedPipeActivity`, `_accountCreated`, etc.) via `sysmon_translator`.
+# The extractors below just fire base signals that read those fields — the
+# tier-aware helpers in base.py do the real work.
+
+def extract_powershell_execution(
+    raw: dict[str, Any], severity: str, event_time: datetime
+) -> list[Signal]:
+    """PowerShell Script Block Logging (EventID 4104) events.
+
+    All the detection happens in sysmon_translator via the 62 MITRE patterns
+    that match command line text. The command line field is populated with
+    `ScriptBlockText[:2000]` by the PSBL exporter.
+    """
+    _action_w, _action_desc = get_action_status_weight(raw)
+    return [
+        Signal("encoded_command", W.get("encoded_command", 18),
+               raw.get("_encodedCommand") is True,
+               "PowerShell encoded/obfuscated command detected"),
+        Signal("download_cradle", W.get("download_cradle", 18),
+               raw.get("_downloadCradle") is True,
+               "PowerShell download-and-execute cradle"),
+        Signal("lolbin_abuse", W.get("lolbin_abuse", 15),
+               raw.get("_lolbinAbuse") is True,
+               "LOLBin abuse detected in PowerShell"),
+        Signal("process_injection", W["process_injection"],
+               raw.get("_processInjection") is True,
+               "Process injection API calls detected"),
+        Signal("ransomware_chain", W["ransomware_chain"],
+               has_ransomware_context(raw),
+               "Ransomware attack chain indicators"),
+        Signal("action_status", _action_w, _action_w != 0,
+               _action_desc or "Action status scoring"),
+        Signal("after_hours", W["after_hours"], is_after_hours(event_time),
+               "PowerShell executed outside business hours"),
+    ]
+
+
+def extract_lsass_access(
+    raw: dict[str, Any], severity: str, event_time: datetime
+) -> list[Signal]:
+    """Sysmon EID 10 events targeting LSASS — the credential dumping signal.
+
+    The translator's event-ID fork sets `_lsassAccess=True` and MITRE T1003.001.
+    The ransomware/AD attack tier-aware helpers in base.py read this field.
+    """
+    return [
+        Signal("lsass_access", W["lsass_access"],
+               raw.get("_lsassAccess") is True,
+               "Process accessing LSASS memory — credential dumping indicator"),
+        Signal("ransomware_chain", W["ransomware_chain"],
+               has_ransomware_context(raw),
+               "LSASS access combined with ransomware indicators"),
+        Signal("ad_attack", W["ad_attack"], has_ad_attack_context(raw),
+               "AD attack context with LSASS access"),
+        Signal("privileged_user", W["privileged_user"], is_privileged_identity(raw),
+               "LSASS access under privileged account"),
+        Signal("server_target", W["server_target"], _is_server(raw),
+               "LSASS access on server — higher blast radius"),
+    ]
+
+
+def extract_pipe_activity(
+    raw: dict[str, Any], severity: str, event_time: datetime
+) -> list[Signal]:
+    """Sysmon EIDs 17/18 — named pipe create/connect events.
+
+    Translator sets `_namedPipeActivity=True` and optionally `_lateralMovementPipe=True`
+    when the pipe name matches PsExec/Impacket patterns.
+    """
+    return [
+        Signal("named_pipe_activity", W["named_pipe_activity"],
+               raw.get("_namedPipeActivity") is True,
+               "Named pipe activity detected"),
+        Signal("lateral_movement_pipe", W["lateral_movement_pipe"],
+               raw.get("_lateralMovementPipe") is True,
+               "Named pipe matches known lateral movement tool pattern"),
+        Signal("known_attack_tool", W["known_attack_tool"],
+               _has_known_attack_tool(raw),
+               "Known attack tool in pipe context"),
+        Signal("after_hours", W["after_hours"], is_after_hours(event_time),
+               "Pipe activity outside business hours"),
+    ]
+
+
+def extract_wmi_persistence(
+    raw: dict[str, Any], severity: str, event_time: datetime
+) -> list[Signal]:
+    """Sysmon EIDs 19/20/21 — WMI Event Filter/Consumer/Binding.
+
+    WMI permanent event subscriptions are the primary MITRE T1546.003
+    persistence technique. Legitimate use is extremely rare — fire hard.
+    """
+    return [
+        Signal("wmi_persistence", W["wmi_persistence"],
+               raw.get("_wmiPersistence") is True,
+               "WMI permanent event subscription — persistence mechanism"),
+        Signal("persistence_mechanism", W["persistence_mechanism"],
+               has_persistence_context(raw),
+               "Persistence mechanism context"),
+        Signal("privileged_user", W["privileged_user"], is_privileged_identity(raw),
+               "WMI persistence under privileged account"),
+        Signal("after_hours", W["after_hours"], is_after_hours(event_time),
+               "WMI persistence created outside business hours"),
+    ]
+
+
+def extract_mass_file_create(
+    raw: dict[str, Any], severity: str, event_time: datetime
+) -> list[Signal]:
+    """Phase 1.2 aggregated mass_file_create events.
+
+    Fires when the export script collapsed 3+ file-create events from the same
+    (process, directory, user) into a single synthesized alert. This is the
+    ransomware mass-encryption signal.
+    """
+    file_count = int(raw.get("_fileCreateCount") or 0)
+    return [
+        Signal("mass_file_create", W["mass_file_create"],
+               file_count > 3,
+               f"Mass file create detected: {file_count} files written"),
+        Signal("shadow_copy_deletion", W["shadow_copy_deletion"],
+               raw.get("_shadowCopyDeletion") is True,
+               "Shadow copy deletion combined with mass file create"),
+        Signal("ransomware_chain", W["ransomware_chain"],
+               has_ransomware_context(raw),
+               "Ransomware chain indicators"),
+        Signal("after_hours", W["after_hours"], is_after_hours(event_time),
+               "Mass file create outside business hours"),
+    ]
+
+
+def extract_state_drift(
+    raw: dict[str, Any], severity: str, event_time: datetime
+) -> list[Signal]:
+    """Phase 3 state drift events.
+
+    Real signals come from `check_state_drift()` in entity_graph.py, which
+    inspects the structured `_stateCategory` / `_driftAction` fields set by
+    the state snapshot exporter and fires verified-tier signals like
+    `unusual_service_path`, `userland_autorun`, `script_scheduled_task`.
+    """
+    return [
+        Signal("state_drift", W["state_drift"],
+               bool(raw.get("_stateCategory")),
+               f"State drift: {raw.get('_stateCategory','unknown')} "
+               f"{raw.get('_driftAction','changed')}"),
+        Signal("unusual_service_path", W["unusual_service_path"],
+               raw.get("_unusualServicePath") is True,
+               "Service executable in non-standard path"),
+        Signal("userland_autorun", W["userland_autorun"],
+               raw.get("_userlandAutorun") is True,
+               "Autorun entry points to userland AppData path"),
+        Signal("script_scheduled_task", W["script_scheduled_task"],
+               raw.get("_scriptScheduledTask") is True,
+               "Scheduled task runs shell/script interpreter"),
+    ]
+
+
 ENDPOINT_EXTRACTORS = {
     "endpoint.malwareDetection": extract_malware_detection,
     "endpoint.suspiciousProcess": extract_suspicious_process,
@@ -486,4 +650,12 @@ ENDPOINT_EXTRACTORS = {
     "endpoint.credentialDumping": extract_credential_dumping,
     "endpoint.persistenceMechanism": extract_persistence_mechanism,
     "endpoint.defenseEvasion": extract_defense_evasion,
+    # Phase 2 new types
+    "endpoint.powershellExecution": extract_powershell_execution,
+    "endpoint.lsassAccess": extract_lsass_access,
+    "endpoint.pipeActivity": extract_pipe_activity,
+    "endpoint.wmiPersistence": extract_wmi_persistence,
+    "endpoint.massFileCreate": extract_mass_file_create,
+    # Phase 3 state drift
+    "endpoint.stateDrift": extract_state_drift,
 }

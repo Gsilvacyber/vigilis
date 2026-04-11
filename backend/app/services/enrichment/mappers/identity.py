@@ -461,3 +461,55 @@ IDENTITY_EXTRACTORS = {
     "identity.dormantAccountLogin": extract_dormant_account_login,
     "identity.serviceAccountAbuse": extract_service_account_abuse,
 }
+
+
+def extract_logon_success(
+    raw: dict[str, Any], severity: str, event_time: datetime
+) -> list[Signal]:
+    """Windows Security Event 4624 — successful logon.
+
+    Most 4624s are benign noise. We emit minimal signals so the case is
+    captured (feeding the entity graph for user↔host behavioral baseline)
+    but rely on severity=informational to keep it off the case list.
+    The real value is the entity graph learning from these events.
+    """
+    return [
+        Signal("after_hours", W["after_hours"], is_after_hours(event_time),
+               "Successful logon outside business hours"),
+        Signal("anomalous_ip", W["anomalous_ip"], has_anomalous_ip(raw),
+               "Logon from anomalous source IP"),
+        Signal("privileged_user", W["privileged_user"], is_privileged_identity(raw),
+               "Successful logon by privileged account"),
+        Signal("repeat_offender", W.get("repeat_offender", 10),
+               has_insider_threat_context(raw),
+               "Logon combined with insider threat context"),
+    ]
+
+
+def extract_account_creation(
+    raw: dict[str, Any], severity: str, event_time: datetime
+) -> list[Signal]:
+    """Windows Security Event 4720 — user account created.
+
+    Translator sets `_accountCreated=True` and MITRE T1136.001 for this event.
+    New account creation is a persistence technique — fire hard.
+    """
+    return [
+        Signal("account_creation", W.get("account_creation", 18),
+               raw.get("_accountCreated") is True,
+               "New user account created"),
+        Signal("after_hours", W["after_hours"], is_after_hours(event_time),
+               "Account created outside business hours"),
+        Signal("privileged_user", W["privileged_user"], is_privileged_identity(raw),
+               "Account creation initiated by privileged user"),
+        Signal("insider_threat", W["insider_threat"], has_insider_threat_context(raw),
+               "Account creation with insider threat context"),
+        Signal("persistence_mechanism", W.get("persistence_mechanism", 15),
+               has_persistence_context(raw),
+               "Account creation as persistence technique"),
+    ]
+
+
+# Register the Phase 2 extractors (must be after function definitions)
+IDENTITY_EXTRACTORS["identity.logonSuccess"] = extract_logon_success
+IDENTITY_EXTRACTORS["identity.accountCreation"] = extract_account_creation

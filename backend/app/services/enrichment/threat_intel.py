@@ -223,6 +223,8 @@ _TAG_TO_SIGNAL: dict[str, str] = {
     "localdb_feodo_tracker": "known_malicious_ip",
     "localdb_urlhaus": "known_malicious_domain",
     "localdb_threatfox": "known_malicious_ip",
+    "localdb_malwarebazaar": "known_bad_hash",        # Phase 4.1
+    "localdb_urlhaus_hashes": "known_bad_hash",        # Phase 4.1
     # WHOIS/RDAP tags
     "domain_age_critical": "recently_registered_domain",   # < 7 days old
     "domain_age_suspicious": "recently_registered_domain", # < 30 days old

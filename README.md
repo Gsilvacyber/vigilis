@@ -119,16 +119,75 @@ curl -X POST http://localhost:8000/api/v1/cases \
 
 ---
 
-## Live endpoint telemetry (Sysmon)
+## Live endpoint telemetry
 
-To feed real endpoint events into Vigilis from a Windows host:
+Vigilis ships with six PowerShell exporters that feed real Windows endpoint
+events into the pipeline. Each exporter is a separate script with its own
+state file — failures in one don't cascade.
 
-1. Install Sysmon with the SwiftOnSecurity config
-2. Copy `scripts/export_sysmon.ps1` to `C:\Tools\SysmonExport\` on the target host
-3. Schedule it via Task Scheduler to run every 5 minutes
-4. Events flow into Vigilis automatically, building the entity graph baseline
+| Exporter | Source | Cadence | What it captures |
+|---|---|---|---|
+| `export_sysmon.ps1` | Sysmon Operational log | every 5 min | Process create, network, file create, registry, DNS, LSASS access, named pipes, WMI persistence (EIDs 1, 3, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22) |
+| `export_secevt.ps1` | Windows Security Event Log | every 5 min | Logon (4624/4625), privilege (4672), process (4688), service install (4697), scheduled task (4698), account create (4720), group add (4728/4732), log clear (1102) |
+| `export_psbl.ps1` | PowerShell Operational log | every 5 min | Script Block Logging (EventID 4104) — captures decoded PowerShell source code matched against 62 MITRE patterns |
+| `export_state.ps1` | Host state snapshots | hourly | Services, scheduled tasks, local users, autoruns (~15 registry keys), installed programs — diffed against previous snapshot to emit only drift events |
 
-See `scripts/export_sysmon.ps1` for the full exporter.
+### Setup
+
+1. **Install Sysmon** with the SwiftOnSecurity config:
+   ```powershell
+   C:\Tools\Sysmon\Sysmon64.exe -accepteula -i C:\Tools\Sysmon\sysmonconfig.xml
+   ```
+2. **Enable PowerShell Script Block Logging** (for `export_psbl.ps1`):
+   ```powershell
+   New-Item -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging -Force
+   New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging -Name EnableScriptBlockLogging -Value 1 -PropertyType DWord -Force
+   ```
+3. **Copy exporters** to `C:\Tools\SysmonExport\` on the target host
+4. **Register scheduled tasks** (one per exporter) to run every 5 minutes
+   (hourly for `export_state.ps1`) with `SYSTEM` account, `Highest` run level
+5. Events flow into Vigilis automatically, building the entity graph baseline
+
+### Noise reduction (Phase 1)
+
+`export_sysmon.ps1` applies aggressive filtering to keep signal-to-noise high:
+- EventID 11 file-create events from `C:\Windows\WinSxS\`, Microsoft Store,
+  Windows Update, Defender definitions, and Microsoft Edge user data are dropped
+- Benign writer processes (`svchost`, `TiWorker`, `TrustedInstaller`, `MsMpEng`,
+  `MoUsoCoreWorker`, `OneDrive`, `msedge`) are excluded
+- File-create events from the same `(process, directory, user)` within a 5-minute
+  window are aggregated into a single `endpoint.massFileCreate` alert
+- Repeated process-create events with identical command lines are deduplicated
+
+### Threat intel providers
+
+Vigilis ships with 5 active providers + 2 optional (require API keys):
+
+| Provider | Setup | Free tier limit |
+|---|---|---|
+| **LocalDBProvider** | Always active | Zero API calls — queries local IOC database |
+| **OTXProvider** | Set `OTX_API_KEY` in `.env` | Free — get key at [otx.alienvault.com](https://otx.alienvault.com) |
+| **GreyNoiseProvider** | Optional `GREYNOISE_API_KEY` | Community: 25 req/week; free API: 500 req/day |
+| **WHOISProvider** | Always active | RDAP (no key) |
+| **ip-api.com** | Always active | 45 req/min |
+| **VirusTotalProvider** | Set `VIRUSTOTAL_API_KEY` in `.env` | Free: 4 req/min, 500 req/day |
+| **AbuseIPDBProvider** | Set `ABUSEIPDB_API_KEY` in `.env` | Free: 1000 req/day |
+
+### Local IOC database
+
+On startup, Vigilis downloads 5 free IOC feeds from abuse.ch into a local
+Postgres table. Every IP/domain/hash in an incoming alert is checked against
+this table — zero API calls, sub-millisecond lookups:
+
+| Feed | IOC type | Count |
+|---|---|---|
+| Feodo Tracker | Botnet C2 IPs | ~300 |
+| URLhaus | Malicious domains | ~1000 |
+| ThreatFox | Mixed IOCs (IPs, domains, hashes) | ~2000 |
+| MalwareBazaar | Malware SHA256 hashes | ~5000 |
+| URLhaus hashes | Hosted payload SHA256 hashes | ~5000 |
+
+Feeds auto-update every 24 hours via a background task.
 
 ---
 
