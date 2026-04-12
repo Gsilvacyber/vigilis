@@ -148,6 +148,24 @@ def create_case(session: Session, req: CreateCaseRequest) -> CaseV0_2:
             _log.info("Case deduplicated: existing %s matches source %s", existing.caseId, req.source.sourceAlertId)
             return existing
 
+    # Preserve the raw alert + original alert_type + severity in the audit
+    # JSON so the re-enrichment endpoint can re-run enrichment cleanly.
+    # Zero-migration approach: audit is already a JSON column.
+    _audit_dict = case.audit.model_dump()
+    if req.rawAlert:
+        try:
+            _audit_dict["_rawAlertPreserved"] = dict(req.rawAlert)
+        except (TypeError, ValueError):
+            # Best effort — if the raw alert can't be coerced to a dict,
+            # fall back to model_dump on pydantic shapes
+            _audit_dict["_rawAlertPreserved"] = (
+                req.rawAlert.model_dump()
+                if hasattr(req.rawAlert, "model_dump")
+                else {}
+            )
+    _audit_dict["_originalAlertType"] = req.alertType
+    _audit_dict["_originalSeverity"] = severity
+
     case_row = CaseRow(
         tenant_id=tenant_row.id,
         schema_version=case.schemaVersion,
@@ -165,7 +183,7 @@ def create_case(session: Session, req: CreateCaseRequest) -> CaseV0_2:
         recommended_playbook=case.recommendedPlaybook,
         recommended_actions=case.recommendedActions,
         outputs=case.outputs.model_dump(),
-        audit=case.audit.model_dump(),
+        audit=_audit_dict,
         bulk_target=case.bulkTarget.model_dump(),
         disposition_status=case.disposition.status,
         disposition_set_by=case.disposition.setBy,
@@ -643,3 +661,156 @@ def update_disposition(
         _log.debug("Audit log for disposition update failed (non-fatal)")
 
     return result
+
+
+def reenrich_case(
+    session: Session,
+    case_id: UUID,
+    set_by: str | None = None,
+) -> dict[str, Any]:
+    """Re-run enrichment on an existing case, updating score/signals in place.
+
+    Used to apply signal logic changes (e.g. the Day 6 repeat_offender fix)
+    to the historical case backlog without waiting for natural turnover.
+
+    Preserves (never modifies):
+      - disposition_status, disposition_set_by, disposition_set_at, disposition_notes
+      - time_to_first_decision_ms, created_at, event_time, ingested_time
+      - The entity graph (skips `extract_and_store_relationships` to avoid
+        double-counting existing relationships)
+
+    Updates:
+      - confidence_score, confidence_label
+      - enrichment dict (rewrites the `confidence` sub-dict)
+      - recommended_playbook, recommended_actions
+      - enriched_time, updated_at
+      - CaseConfidenceSignal rows (DELETE + INSERT)
+
+    Returns a dict with success flag + old/new score + delta.
+    """
+    case_row = session.exec(
+        select(CaseRow).where(CaseRow.id == case_id)
+    ).first()
+    if case_row is None:
+        return {"success": False, "error": "not_found"}
+
+    old_score = case_row.confidence_score
+    audit = dict(case_row.audit or {})
+
+    # Reconstruct the raw_alert. Prefer the preserved copy (new cases via
+    # the audit[_rawAlertPreserved] stash). Fall back to a best-effort merge
+    # of entities + enrichment dicts for historical cases that predate the
+    # preservation.
+    raw_alert: dict[str, Any]
+    if "_rawAlertPreserved" in audit and isinstance(audit["_rawAlertPreserved"], dict):
+        raw_alert = dict(audit["_rawAlertPreserved"])
+    else:
+        raw_alert = {}
+        if isinstance(case_row.entities, dict):
+            raw_alert.update(case_row.entities)
+        if isinstance(case_row.enrichment, dict):
+            for k, v in case_row.enrichment.items():
+                raw_alert.setdefault(k, v)
+
+    alert_type = audit.get("_originalAlertType") or case_row.alert_type
+    severity = audit.get("_originalSeverity") or case_row.severity
+
+    # Look up the tenant_id string (the enrichment pipeline takes the string
+    # form, not the UUID)
+    tenant = session.exec(
+        select(TenantRow).where(TenantRow.id == case_row.tenant_id)
+    ).first()
+    tenant_id_str = tenant.tenant_id if tenant else None
+
+    try:
+        from backend.app.services.enrichment import _run_enrichment
+        enrich_result, _signals = _run_enrichment(
+            alert_type=alert_type,
+            severity=severity,
+            raw_alert=raw_alert,
+            event_time=case_row.event_time,
+            tenant_id=tenant_id_str,
+        )
+    except Exception as e:  # noqa: BLE001
+        _log.warning("Re-enrichment failed for case %s: %s", case_id, e)
+        return {
+            "success": False,
+            "error": str(e),
+            "caseId": str(case_id),
+            "oldScore": old_score,
+        }
+
+    new_score = enrich_result.confidence_score
+    new_label = enrich_result.confidence_label
+
+    # Update mutable case fields — PRESERVE disposition state
+    now = _utc_now()
+    case_row.confidence_score = new_score
+    case_row.confidence_label = new_label
+    case_row.recommended_playbook = enrich_result.recommended_playbook
+    case_row.recommended_actions = enrich_result.recommended_actions
+    case_row.enriched_time = now
+    case_row.updated_at = now
+
+    # Rebuild the enrichment dict's confidence sub-field so the new
+    # explanation is visible via GET /api/v1/cases/{id}
+    if isinstance(case_row.enrichment, dict):
+        _new_enrichment = dict(case_row.enrichment)
+        _new_enrichment["confidence"] = {
+            "score": new_score,
+            "label": new_label,
+            "explanation": enrich_result.confidence_explanation,
+        }
+        _new_enrichment["reenrichedAt"] = now.isoformat()
+        case_row.enrichment = _new_enrichment
+
+    # Delete old signal rows and insert new ones
+    old_sigs = session.exec(
+        select(CaseConfidenceSignal).where(
+            CaseConfidenceSignal.case_id == case_row.id
+        )
+    ).all()
+    for s in old_sigs:
+        session.delete(s)
+    # Flush the deletes before inserting to avoid primary-key conflicts
+    session.flush()
+    for expl in enrich_result.confidence_explanation:
+        sig_name = expl.get("signal", "") if isinstance(expl, dict) else ""
+        if not sig_name or sig_name.startswith("_"):
+            continue  # skip internal markers like _score_breakdown
+        session.add(CaseConfidenceSignal(
+            case_id=case_row.id,
+            signal=sig_name,
+            weight=int(expl.get("weight", 0)) if isinstance(expl, dict) else 0,
+            label=expl.get("label") if isinstance(expl, dict) else None,
+            tier=expl.get("tier") if isinstance(expl, dict) else None,
+        ))
+
+    session.commit()
+
+    # Audit log — captures old/new score for recovery + accountability
+    try:
+        from backend.app.core.audit import log_audit
+        log_audit(
+            session,
+            tenant_id=tenant_id_str or "unknown",
+            actor=set_by or "admin:re-enrich",
+            action="case.re_enriched",
+            resource_type="case",
+            resource_id=str(case_row.id),
+            details={
+                "oldScore": old_score,
+                "newScore": new_score,
+                "delta": new_score - old_score,
+            },
+        )
+    except Exception:
+        _log.debug("Audit log for re-enrich failed (non-fatal)")
+
+    return {
+        "success": True,
+        "caseId": str(case_row.id),
+        "oldScore": old_score,
+        "newScore": new_score,
+        "delta": new_score - old_score,
+    }

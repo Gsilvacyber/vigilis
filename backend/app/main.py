@@ -122,6 +122,49 @@ def create_app() -> FastAPI:
                 result["entity_graph"] = graph_stats
         except Exception:
             pass
+        # Exporter heartbeat summary (Days 1-3 observability)
+        try:
+            from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+            from sqlmodel import select as _select
+            from backend.app.core.db import get_session as _get_session
+            from backend.app.db.models import AuditEvent as _Audit
+            now = _dt.now(_tz.utc)
+            cutoff = now - _td(days=1)
+            with _get_session() as _s:
+                rows = _s.exec(
+                    _select(_Audit)
+                    .where(_Audit.action == "exporter_heartbeat")
+                    .where(_Audit.timestamp >= cutoff)
+                ).all()
+            latest: dict[tuple[str, str], _Audit] = {}
+            for row in rows:
+                det = row.details or {}
+                k = (str(det.get("exporter") or ""), str(det.get("hostname") or ""))
+                if not k[0] or not k[1]:
+                    continue
+                prev = latest.get(k)
+                if prev is None or row.timestamp > prev.timestamp:
+                    latest[k] = row
+            if latest:
+                fresh = stale = 0
+                for row in latest.values():
+                    ts = row.timestamp
+                    if ts.tzinfo is None:
+                        ts = ts.replace(tzinfo=_tz.utc)
+                    age = int((now - ts).total_seconds())
+                    if age < 600:
+                        fresh += 1
+                    else:
+                        stale += 1
+                result["exporters"] = {
+                    "total": len(latest),
+                    "fresh": fresh,
+                    "stale": stale,
+                }
+                if stale > 0:
+                    result["status"] = "degraded"
+        except Exception:
+            pass  # Heartbeat tracking is optional
         return result
 
     @application.get("/metrics", include_in_schema=False)

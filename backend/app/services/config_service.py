@@ -19,6 +19,10 @@ _TENANT_DEFAULT: dict[str, Any] = {
             "enabled": True,
         },
     ],
+    # Day 5 Lite: per-tenant denylist of signal names to suppress during scoring.
+    # Empty list = every signal fires normally (default behavior). Admins add
+    # names to opt out of specific detections (e.g. "after_hours" for 24/7 SOCs).
+    "disabledSignals": [],
 }
 
 
@@ -63,5 +67,21 @@ def update_config(tenant_id: str, patch: dict[str, Any]) -> dict[str, Any]:
     config = get_config(tenant_id)
     if "mode" in patch:
         config["mode"] = patch["mode"]
+    if "disabledSignals" in patch:
+        # Normalize: coerce to list, dedupe, strip empties, sort for stable
+        # JSON output (so the file doesn't churn on re-saves with same content).
+        raw = patch["disabledSignals"] or []
+        config["disabledSignals"] = sorted({
+            s for s in raw if isinstance(s, str) and s.strip()
+        })
     save_config(tenant_id, config)
     return config
+
+
+def get_disabled_signals(tenant_id: str = "demo-tenant") -> set[str]:
+    """Return the set of signal names that should be suppressed for this tenant.
+
+    Returns an empty set when nothing is configured — which means the normal
+    default-allow behavior (every signal fires).
+    """
+    return set(get_config(tenant_id).get("disabledSignals") or [])

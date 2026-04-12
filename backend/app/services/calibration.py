@@ -20,9 +20,8 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
-from uuid import UUID
 
-from sqlmodel import Session, select, func
+from sqlmodel import Session, select
 
 from backend.app.db.models import (
     Case as CaseRow,
@@ -178,8 +177,13 @@ def get_weight_adjustments(
     Returns a dict of signal_name -> multiplier (0.3 to 1.3).
     Signals not in the dict should use their default weight (1.0x).
     """
+    from backend.app.core.metrics import (
+        calibration_adjusted_signals,
+        calibration_runs_total,
+    )
     from backend.app.services.enrichment.weights import W
 
+    calibration_runs_total.inc()
     effectiveness = compute_signal_effectiveness(session, tenant_id, window_days)
 
     adjustments: dict[str, float] = {}
@@ -194,6 +198,7 @@ def get_weight_adjustments(
                 eff.false_positives, eff.fp_rate * 100,
             )
 
+    calibration_adjusted_signals.set(len(adjustments))
     return adjustments
 
 

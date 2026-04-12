@@ -6,6 +6,7 @@ from backend.app.api.v1.endpoints.calibration_report import router as calibratio
 from backend.app.api.v1.endpoints.cases import router as cases_router
 from backend.app.api.v1.endpoints.config import router as config_router
 from backend.app.api.v1.endpoints.demo import router as demo_router
+from backend.app.api.v1.endpoints.exporter_health import router as exporter_health_router
 from backend.app.api.v1.endpoints.incidents import router as incidents_router
 from backend.app.api.v1.endpoints.jobs import router as jobs_router
 from backend.app.api.v1.endpoints.ingest import router as ingest_router
@@ -22,6 +23,7 @@ api_router_v1.include_router(calibration_report_router, tags=["calibration"])
 api_router_v1.include_router(cases_router, tags=["cases"])
 api_router_v1.include_router(config_router, tags=["config"])
 api_router_v1.include_router(demo_router, tags=["demo"])
+api_router_v1.include_router(exporter_health_router, tags=["exporter"])
 api_router_v1.include_router(incidents_router, tags=["incidents"])
 api_router_v1.include_router(jobs_router, tags=["jobs"])
 api_router_v1.include_router(ingest_router, tags=["ingest"])

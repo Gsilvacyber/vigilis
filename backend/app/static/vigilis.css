@@ -103,6 +103,124 @@ nav .spacer { flex: 1; }
   border-color: var(--accent);
   background: var(--accent-bg);
 }
+
+/* ── Three-Pillar Nav: primary pillars, sub-nav, settings gear ─ */
+nav.pillar-nav { position: relative; }
+nav.pillar-nav a { font-weight: 500; font-size: .9rem; padding: .4rem .9rem; }
+nav.pillar-nav a.active {
+  color: var(--blue);
+  background: var(--accent-bg);
+  font-weight: 600;
+}
+
+/* Sub-tab bar — rendered directly below the main nav on pillar pages */
+.subnav {
+  display: flex;
+  gap: 0;
+  padding: 0 2rem;
+  background: rgba(255,255,255,.92);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 50px;
+  z-index: 99;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.subnav a {
+  padding: .7rem 1.1rem;
+  color: var(--dim);
+  text-decoration: none;
+  font-size: .82rem;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+}
+.subnav a:hover { color: var(--text); }
+.subnav a.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+  font-weight: 600;
+}
+
+/* Settings gear + dropdown (far right of nav) */
+.settings-gear {
+  background: none;
+  border: none;
+  color: var(--dim);
+  cursor: pointer;
+  padding: .3rem .55rem;
+  font-size: 1.05rem;
+  border-radius: var(--radius);
+  transition: color .15s, background .15s;
+}
+.settings-gear:hover { color: var(--text); background: var(--accent-bg); }
+.settings-dropdown {
+  position: absolute;
+  right: 1.25rem;
+  top: 44px;
+  background: var(--card, #fff);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 14px rgba(0,0,0,.09);
+  min-width: 160px;
+  z-index: 150;
+  display: none;
+  padding: .25rem 0;
+}
+.settings-dropdown.open { display: block; }
+.settings-dropdown a {
+  display: block;
+  padding: .55rem 1rem;
+  color: var(--text);
+  text-decoration: none;
+  font-size: .85rem;
+  border-radius: 0;
+  background: transparent;
+}
+.settings-dropdown a:hover {
+  background: var(--accent-bg);
+  color: var(--blue);
+}
+
+/* Responsive: pillar nav + subnav at tablet/mobile widths */
+@media (max-width: 768px) {
+  nav.pillar-nav { padding: .6rem 1rem; gap: .5rem; }
+  nav.pillar-nav a { padding: .35rem .6rem; font-size: .82rem; }
+  .subnav { padding: 0 1rem; overflow-x: auto; scrollbar-width: thin; }
+  .subnav a { flex-shrink: 0; padding: .6rem .9rem; }
+  .settings-dropdown { right: .5rem; }
+}
+
+/* ── Sortable table headers (Day 4/5 polish) ─────────────── */
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color .15s;
+}
+th.sortable:hover { color: var(--blue); }
+th.sort-asc::after  { content: ' \25B2'; color: var(--blue); font-size: .7rem; }
+th.sort-desc::after { content: ' \25BC'; color: var(--blue); font-size: .7rem; }
+
+/* ── Per-tier <details> grouping in signal catalog ──────── */
+details > summary.tier-summary {
+  cursor: pointer;
+  padding: .6rem 0;
+  font-size: .85rem;
+  font-weight: 700;
+  list-style: none;
+  user-select: none;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  border-bottom: 1px solid var(--border);
+  margin-top: .5rem;
+}
+details > summary.tier-summary::-webkit-details-marker { display: none; }
+details > summary.tier-summary::before { content: '\25BC  '; color: var(--dim); font-size: .7rem; }
+details:not([open]) > summary.tier-summary::before { content: '\25B6  '; }
+summary.tier-verified { color: var(--green); }
+summary.tier-inferred { color: var(--blue); }
+summary.tier-observed { color: var(--dim); }
 /* ── Toast ────────────────────────────────────────────── */
 @keyframes toastIn {
   from { opacity: 0; transform: translateX(calc(100% + 2rem)); }

@@ -14,11 +14,39 @@ import asyncio
 import csv
 import io
 import logging
+import time
 from datetime import datetime, timezone
 
 import httpx
 
+from backend.app.core.metrics import feed_age_seconds, feed_ingestion_total
+
 _log = logging.getLogger(__name__)
+
+# Track last successful fetch time per feed so `feed_age_seconds` can be
+# computed on demand (the gauge is a snapshot — we poll it fresh each time).
+_last_fetch: dict[str, float] = {}
+
+
+def _mark_fetch_success(feed_name: str) -> None:
+    _last_fetch[feed_name] = time.time()
+    feed_ingestion_total.labels(feed=feed_name, status="success").inc()
+    feed_age_seconds.labels(feed=feed_name).set(0)
+
+
+def _mark_fetch_failure(feed_name: str) -> None:
+    feed_ingestion_total.labels(feed=feed_name, status="failure").inc()
+
+
+def update_feed_age_gauges() -> None:
+    """Recompute feed age gauges from last-fetch timestamps.
+
+    Called before returning from /metrics so the gauge reflects the
+    current wall-clock age rather than stale values.
+    """
+    now = time.time()
+    for feed_name, ts in _last_fetch.items():
+        feed_age_seconds.labels(feed=feed_name).set(now - ts)
 
 # Feed URLs (all abuse.ch — free, commercial-use allowed)
 _FEODO_URL = "https://feodotracker.abuse.ch/downloads/ipblocklist.csv"
@@ -92,6 +120,7 @@ def _download_feodo_tracker() -> int:
         resp = httpx.get(_FEODO_URL, timeout=30, follow_redirects=True)
         if resp.status_code != 200:
             _log.warning("Feodo Tracker returned %d", resp.status_code)
+            _mark_fetch_failure("feodo_tracker")
             return 0
 
         from backend.app.core.db import get_session
@@ -115,10 +144,12 @@ def _download_feodo_tracker() -> int:
             session.commit()
 
         _log.info("Feodo Tracker: %d botnet C2 IPs ingested", count)
+        _mark_fetch_success("feodo_tracker")
         return count
 
     except Exception:
         _log.exception("Feodo Tracker download failed")
+        _mark_fetch_failure("feodo_tracker")
         return 0
 
 
@@ -128,6 +159,7 @@ def _download_urlhaus() -> int:
         resp = httpx.get(_URLHAUS_URL, timeout=30, follow_redirects=True)
         if resp.status_code != 200:
             _log.warning("URLhaus returned %d", resp.status_code)
+            _mark_fetch_failure("urlhaus")
             return 0
 
         from backend.app.core.db import get_session
@@ -162,10 +194,12 @@ def _download_urlhaus() -> int:
             session.commit()
 
         _log.info("URLhaus: %d malicious domains ingested", count)
+        _mark_fetch_success("urlhaus")
         return count
 
     except Exception:
         _log.exception("URLhaus download failed")
+        _mark_fetch_failure("urlhaus")
         return 0
 
 
@@ -175,6 +209,7 @@ def _download_threatfox() -> int:
         resp = httpx.get(_THREATFOX_URL, timeout=30, follow_redirects=True)
         if resp.status_code != 200:
             _log.warning("ThreatFox returned %d", resp.status_code)
+            _mark_fetch_failure("threatfox")
             return 0
 
         from backend.app.core.db import get_session
@@ -231,10 +266,12 @@ def _download_threatfox() -> int:
             session.commit()
 
         _log.info("ThreatFox: %d IOCs ingested", count)
+        _mark_fetch_success("threatfox")
         return count
 
     except Exception:
         _log.exception("ThreatFox download failed")
+        _mark_fetch_failure("threatfox")
         return 0
 
 
@@ -249,6 +286,7 @@ def _download_malwarebazaar() -> int:
         resp = httpx.get(_MALWAREBAZAAR_URL, timeout=60, follow_redirects=True)
         if resp.status_code != 200:
             _log.warning("MalwareBazaar returned %d", resp.status_code)
+            _mark_fetch_failure("malwarebazaar")
             return 0
 
         from backend.app.core.db import get_session
@@ -285,10 +323,12 @@ def _download_malwarebazaar() -> int:
             session.commit()
 
         _log.info("MalwareBazaar: %d malware hashes ingested", count)
+        _mark_fetch_success("malwarebazaar")
         return count
 
     except Exception:
         _log.exception("MalwareBazaar download failed")
+        _mark_fetch_failure("malwarebazaar")
         return 0
 
 
@@ -303,6 +343,7 @@ def _download_urlhaus_hashes() -> int:
         resp = httpx.get(_URLHAUS_HASHES_URL, timeout=60, follow_redirects=True)
         if resp.status_code != 200:
             _log.warning("URLhaus hashes returned %d", resp.status_code)
+            _mark_fetch_failure("urlhaus_hashes")
             return 0
 
         from backend.app.core.db import get_session
@@ -326,10 +367,12 @@ def _download_urlhaus_hashes() -> int:
             session.commit()
 
         _log.info("URLhaus hashes: %d malware hashes ingested", count)
+        _mark_fetch_success("urlhaus_hashes")
         return count
 
     except Exception:
         _log.exception("URLhaus hashes download failed")
+        _mark_fetch_failure("urlhaus_hashes")
         return 0
 
 

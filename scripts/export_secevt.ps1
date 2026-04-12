@@ -308,3 +308,23 @@ foreach ($item in $toSend) {
 
 $currentRun.ToString("o") | Set-Content $StateFile
 Write-Host "[$(Get-Date -Format HH:mm:ss)] Security Log done: sent=$sent failed=$failed skipped=$skipped total=$($events.Count)" -ForegroundColor Green
+
+# ---- Heartbeat POST (Days 1-3 observability) ----
+$heartbeatBody = @{
+    exporter        = "secevt"
+    hostname        = $env:COMPUTERNAME.ToLower()
+    events_sent     = $sent
+    events_filtered = $skipped
+    last_run        = (Get-Date).ToUniversalTime().ToString("o")
+} | ConvertTo-Json -Compress
+
+try {
+    $null = Invoke-RestMethod -Uri "$VigilisUrl/api/v1/exporter/heartbeat" `
+        -Method POST `
+        -Headers @{ "X-API-Key" = $ApiKey; "Content-Type" = "application/json" } `
+        -Body $heartbeatBody `
+        -TimeoutSec 10 `
+        -ErrorAction Stop
+} catch {
+    Write-Host "  [HB] Heartbeat POST failed: $($_.Exception.Message)" -ForegroundColor Yellow
+}

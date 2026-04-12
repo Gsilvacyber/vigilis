@@ -58,3 +58,8 @@ def ui_jobs() -> HTMLResponse:
 @ui_router.get("/admin", response_class=HTMLResponse)
 def ui_admin() -> HTMLResponse:
     return HTMLResponse((_STATIC / "admin.html").read_text(encoding="utf-8"))
+
+
+@ui_router.get("/calibration", response_class=HTMLResponse)
+def ui_calibration() -> HTMLResponse:
+    return HTMLResponse((_STATIC / "calibration.html").read_text(encoding="utf-8"))

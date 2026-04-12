@@ -18,32 +18,151 @@ const VIGILIS_NAV_LOGO = `<svg width="28" height="28" viewBox="0 0 100 100" fill
   <polygon points="50,38 61,44 61,56 50,62 39,56 39,44" fill="url(#hex-grad)" opacity="0.9"/>
 </svg>`;
 
+// ── Three-Pillar Nav (Nav IA redesign) ─────────────────
+// 4 primary pillars grouped by user workflow. Daily triage loop, the
+// enrichment value prop, and the weekly tuning loop get equal billing.
+// Setup/ops tools (Admin, Jobs, API Docs) live in the gear dropdown so
+// they don't clutter the primary nav.
 const VIGILIS_NAV_LINKS = [
-  { href: '/demo/ui/enrich', label: 'Enrich', key: 'enrich' },
-  { href: '/demo/ui/cases', label: 'Cases', key: 'cases' },
-  { href: '/demo/ui/incidents', label: 'Incidents', key: 'incidents' },
-  { href: '/demo/ui/rules', label: 'Rules', key: 'rules' },
-  { href: '/demo/ui/metrics', label: 'Metrics', key: 'metrics' },
-  { href: '/demo/ui/upload', label: 'Upload', key: 'upload' },
-  { href: '/demo/ui/jobs', label: 'Jobs', key: 'jobs' },
-  { href: '/demo/ui/admin', label: 'Admin', key: 'admin' },
+  { href: '/demo/ui/',            label: 'Home',       key: 'home' },
+  { href: '/demo/ui/cases',       label: 'Triage',     key: 'triage' },
+  { href: '/demo/ui/enrich',      label: 'Enrichment', key: 'enrichment' },
+  { href: '/demo/ui/calibration', label: 'Tuning',     key: 'tuning' },
 ];
+
+// Settings dropdown — gear icon, far right of nav bar
+const VIGILIS_SETTINGS_LINKS = [
+  { href: '/demo/ui/admin', label: 'Admin' },
+  { href: '/demo/ui/jobs',  label: 'Jobs' },
+  { href: '/docs',          label: 'API Docs' },
+];
+
+// Sub-nav map: pillar key → sub-tab list. Rendered below the main nav
+// on pages whose pillar has multiple sub-sections.
+const VIGILIS_SUBNAV = {
+  triage: [
+    { href: '/demo/ui/cases',     label: 'Cases',     key: 'cases' },
+    { href: '/demo/ui/incidents', label: 'Incidents', key: 'incidents' },
+  ],
+  enrichment: [
+    { href: '/demo/ui/enrich', label: 'Workbench',   key: 'workbench' },
+    { href: '/demo/ui/upload', label: 'Upload Data', key: 'upload' },
+  ],
+  tuning: [
+    { href: '/demo/ui/calibration', label: 'Calibration', key: 'calibration' },
+    { href: '/demo/ui/rules',       label: 'Rules',       key: 'rules' },
+    { href: '/demo/ui/metrics',     label: 'Metrics',     key: 'metrics' },
+  ],
+};
 
 /**
  * Render the shared nav bar.
- * @param {string} activePage - key of the active page (enrich, cases, incidents, metrics, upload, home)
+ * @param {string} activePillar - key of the active pillar (home, triage, enrichment, tuning)
+ * @param {string} [activeSubtab] - key of the active sub-tab within the pillar
  */
-function renderNav(activePage) {
-  const links = VIGILIS_NAV_LINKS.map(l =>
-    `<a href="${l.href}"${l.key === activePage ? ' class="active"' : ''}>${l.label}</a>`
+function renderNav(activePillar, activeSubtab) {
+  const pillars = VIGILIS_NAV_LINKS.map(l =>
+    `<a href="${l.href}"${l.key === activePillar ? ' class="active"' : ''}>${l.label}</a>`
   ).join('\n ');
 
-  return `<nav>
+  const settingsItems = VIGILIS_SETTINGS_LINKS.map(l =>
+    `<a href="${l.href}">${l.label}</a>`
+  ).join('\n  ');
+
+  // Sub-nav bar (only rendered when the active pillar has sub-tabs)
+  let subnav = '';
+  const subtabs = VIGILIS_SUBNAV[activePillar];
+  if (subtabs) {
+    const subLinks = subtabs.map(t =>
+      `<a href="${t.href}"${t.key === activeSubtab ? ' class="active"' : ''}>${t.label}</a>`
+    ).join('\n  ');
+    subnav = `<div class="subnav">\n  ${subLinks}\n </div>`;
+  }
+
+  return `<nav class="pillar-nav">
  <a class="brand" href="/demo/ui/">${VIGILIS_NAV_LOGO} Vigilis</a>
- ${links}
+ ${pillars}
  <div class="spacer"></div>
+ <button class="settings-gear" onclick="toggleSettingsDropdown(event)" title="Settings" aria-label="Settings">⚙</button>
+ <div class="settings-dropdown" id="settingsDropdown">
+  ${settingsItems}
+ </div>
 </nav>
+${subnav}
 <div class="toast" id="toast"></div>`;
+}
+
+function toggleSettingsDropdown(e) {
+  if (e) { e.stopPropagation(); }
+  const dd = document.getElementById('settingsDropdown');
+  if (!dd) return;
+  dd.classList.toggle('open');
+}
+
+// Close the settings dropdown on outside click or Esc
+document.addEventListener('click', (e) => {
+  const dd = document.getElementById('settingsDropdown');
+  if (!dd || !dd.classList.contains('open')) return;
+  if (!e.target.closest('.settings-gear') && !e.target.closest('.settings-dropdown')) {
+    dd.classList.remove('open');
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const dd = document.getElementById('settingsDropdown');
+    if (dd) dd.classList.remove('open');
+  }
+});
+
+/* ── Generic table sort helper ─────────────────────────
+   Wire up with: <th class="sortable" onclick="sortTable(this.closest('table'), 2, 'number')">
+   Toggles asc/desc on repeat clicks, renders a ▲/▼ arrow on the active column,
+   clears indicators on other columns. Works on any table without requiring a
+   <tbody> (falls back to the table itself).
+*/
+function sortTable(tableEl, colIdx, type) {
+  if (!tableEl) return;
+  const tbody = tableEl.tBodies[0] || tableEl;
+  const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => r.querySelector('td'));
+  if (rows.length === 0) return;
+  const headerCells = tableEl.querySelectorAll('th');
+
+  const prevCol = tableEl.getAttribute('data-sort-col');
+  const prevDir = tableEl.getAttribute('data-sort-dir');
+  const currentDir = prevCol === String(colIdx)
+    ? (prevDir === 'asc' ? 'desc' : 'asc')
+    : 'asc';
+  const sign = currentDir === 'asc' ? 1 : -1;
+
+  const readCell = (row) => {
+    const cell = row.children[colIdx];
+    if (!cell) return type === 'number' ? 0 : '';
+    let raw = cell.textContent.trim();
+    if (type === 'number') {
+      // Strip common decorators so "+3", "-5", "12.4%", "1,234" all parse
+      raw = raw.replace(/[,%+]/g, '').replace(/[—–]/g, '0');
+      const n = parseFloat(raw);
+      return isNaN(n) ? 0 : n;
+    }
+    return raw.toLowerCase();
+  };
+
+  rows.sort((a, b) => {
+    const av = readCell(a);
+    const bv = readCell(b);
+    if (av < bv) return -1 * sign;
+    if (av > bv) return  1 * sign;
+    return 0;
+  });
+  for (const row of rows) tbody.appendChild(row);
+
+  tableEl.setAttribute('data-sort-col', String(colIdx));
+  tableEl.setAttribute('data-sort-dir', currentDir);
+
+  headerCells.forEach((th, i) => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (i === colIdx) th.classList.add(currentDir === 'asc' ? 'sort-asc' : 'sort-desc');
+  });
 }
 
 /* ── Toast ─────────────────────────────────────────────── */
@@ -210,6 +329,7 @@ const CMD_PAGES = [
   { label: 'Incidents', hint: 'g i', href: '/demo/ui/incidents', icon: 'I' },
   { label: 'Suppression Rules', hint: 'g r', href: '/demo/ui/rules', icon: 'R' },
   { label: 'Metrics', hint: 'g m', href: '/demo/ui/metrics', icon: 'M' },
+  { label: 'Signal Calibration', hint: 'g k', href: '/demo/ui/calibration', icon: 'K' },
   { label: 'Upload', hint: 'g u', href: '/demo/ui/upload', icon: 'U' },
   { label: 'Jobs', hint: 'g j', href: '/demo/ui/jobs', icon: 'J' },
   { label: 'Admin', hint: 'g a', href: '/demo/ui/admin', icon: 'A' },

@@ -366,3 +366,23 @@ foreach ($categoryName in $categories.Keys) {
 }
 
 Write-Host "[$(Get-Date -Format HH:mm:ss)] State drift done: drifts=$totalDrifts sent=$totalSent failed=$totalFailed" -ForegroundColor Green
+
+# ---- Heartbeat POST (Days 1-3 observability) ----
+$heartbeatBody = @{
+    exporter        = "state"
+    hostname        = $env:COMPUTERNAME.ToLower()
+    events_sent     = $totalSent
+    events_filtered = $totalDrifts
+    last_run        = (Get-Date).ToUniversalTime().ToString("o")
+} | ConvertTo-Json -Compress
+
+try {
+    $null = Invoke-RestMethod -Uri "$VigilisUrl/api/v1/exporter/heartbeat" `
+        -Method POST `
+        -Headers @{ "X-API-Key" = $ApiKey; "Content-Type" = "application/json" } `
+        -Body $heartbeatBody `
+        -TimeoutSec 10 `
+        -ErrorAction Stop
+} catch {
+    Write-Host "  [HB] Heartbeat POST failed: $($_.Exception.Message)" -ForegroundColor Yellow
+}

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vigilis - Pilot Metrics</title>
-<link rel="stylesheet" href="/static/vigilis.css?v=8">
+<link rel="stylesheet" href="/static/vigilis.css?v=9">
 <style>
 .container{max-width:1280px;margin:1.5rem auto;padding:0 2rem}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
@@ -15,8 +15,8 @@
 </style>
 </head>
 <body>
-<script src="/static/vigilis.js?v=10"></script>
-<script>document.write(renderNav('metrics'));</script>
+<script src="/static/vigilis.js?v=12"></script>
+<script>document.write(renderNav('tuning', 'metrics'));</script>
 <div class="container">
 <h1>Pilot Metrics</h1>
 <div class="toolbar">
@@ -29,6 +29,8 @@
  <button class="btn" onclick="exportMetrics()">Export Metrics JSON</button>
 </div>
 <div id="roi"></div>
+<div id="exporter-health-section"></div>
+<div id="enrichment-quality-section"></div>
 <div id="summary-cards" class="cards"></div>
 <div id="dist-section"></div>
 <div id="readiness-section"></div>
@@ -60,14 +62,113 @@ function exportMetrics(){
 async function load(){
  try{
   const dp=dateParams();
-  const [sumR,ttfdR,btR,whR]=await Promise.all([
+  const [sumR,ttfdR,btR,whR,expR,eqR]=await Promise.all([
    fetch('/api/v1/metrics/summary?_=1'+dp,AH),fetch('/api/v1/metrics/ttfd?_=1'+dp,AH),
-   fetch('/api/v1/metrics/by-alert-type?_=1'+dp,AH),fetch('/api/v1/webhooks/logs?limit=10',AH)
+   fetch('/api/v1/metrics/by-alert-type?_=1'+dp,AH),fetch('/api/v1/webhooks/logs?limit=10',AH),
+   fetch('/api/v1/exporter/status',AH),
+   fetch('/api/v1/metrics/enrichment-quality?_=1'+dp,AH)
   ]);
-  const sum=await sumR.json(),ttfd=await ttfdR.json(),bt=await btR.json(),wh=await whR.json();
-  _lastData={summary:sum,ttfd:ttfd,byAlertType:bt,recentWebhooks:wh};
-  renderRoi(sum,ttfd);renderSummary(sum);renderDistributions(sum);renderReadiness(sum);renderTtfd(ttfd);renderByType(bt);renderWebhooks(wh);
- }catch(e){document.getElementById('roi').innerHTML='<div class="spinner" style="color:var(--red)">Failed to load metrics: '+e.message+'</div>'}
+  const sum=await sumR.json(),ttfd=await ttfdR.json(),bt=await btR.json(),wh=await whR.json(),exp=await expR.json(),eq=await eqR.json();
+  _lastData={summary:sum,ttfd:ttfd,byAlertType:bt,recentWebhooks:wh,exporters:exp,enrichmentQuality:eq};
+  renderRoi(sum,ttfd);renderExporterHealth(exp);renderEnrichmentQuality(eq);renderSummary(sum);renderDistributions(sum);renderReadiness(sum);renderTtfd(ttfd);renderByType(bt);renderWebhooks(wh);
+ }catch(e){document.getElementById('roi').innerHTML='<div class="spinner" style="color:var(--red)">Failed to load metrics: '+escapeHtml(e.message)+'</div>'}
+}
+
+function renderEnrichmentQuality(eq){
+ const el=document.getElementById('enrichment-quality-section');
+ if(!eq||!eq.totalCases){el.innerHTML='';return;}
+ const q=eq.qualityScore;
+ const qColor=q>=80?'var(--green)':q>=60?'var(--yellow)':'var(--red)';
+ const qLabel=q>=80?'GOOD':q>=60?'FAIR':'NEEDS WORK';
+ const scoreColors={'90-100':'#dc2626','80-89':'#dc2626','70-79':'#d97706','60-69':'#d97706','50-59':'var(--blue)','40-49':'var(--blue)','30-39':'var(--dim)','20-29':'var(--dim)','0-19':'var(--dim)'};
+ const sigColors={'0':'#dc2626','1':'#dc2626','2':'#d97706','3':'#d97706','4':'var(--green)','5':'var(--green)','6+':'var(--green)'};
+ // Noisy signals card (red-bordered warning)
+ let noisyHtml='';
+ if(eq.noisySignals&&eq.noisySignals.length>0){
+  const rows=eq.noisySignals.map(s=>`<tr>
+   <td style="font-family:var(--mono);font-size:.85rem">${escapeHtml(s.name)}</td>
+   <td style="text-align:right">${s.fires}</td>
+   <td style="text-align:right;color:var(--red);font-weight:600">${s.pctOfCases}%</td>
+  </tr>`).join('');
+  noisyHtml=`<div class="card" style="border-left:4px solid var(--red);margin-top:1rem">
+   <h2>\u26A0 Noisy Signals (fire on &gt;50% of cases)</h2>
+   <div style="color:var(--dim);font-size:.8rem;margin-bottom:.75rem">
+    Signals that fire on most cases provide no discrimination. Either fix the detection logic or disable them via <b>Tuning \u2192 Calibration \u2192 Signal Configuration</b>.
+   </div>
+   <table style="width:100%">
+    <tr><th>Signal</th><th style="text-align:right">Fires</th><th style="text-align:right">% of Cases</th></tr>
+    ${rows}
+   </table>
+  </div>`;
+ }
+ // Compressed alert-type warning
+ const compressed=(eq.perAlertType||[]).filter(a=>a.compressed);
+ let compressedHtml='';
+ if(compressed.length>0){
+  const names=compressed.map(a=>`<code>${escapeHtml(a.alertType)}</code> (n=${a.count}, \u03C3=${a.stddev})`).join(', ');
+  compressedHtml=`<div style="color:var(--yellow);font-size:.8rem;margin-top:.75rem;padding:.5rem;background:rgba(217,119,6,.08);border-radius:var(--radius)">
+   \u26A0 <b>Compressed score variance:</b> ${compressed.length} alert type(s) have stddev &lt; 7 across 100+ cases. The enrichment can't distinguish benign from malicious events within these types: ${names}
+  </div>`;
+ }
+ el.innerHTML=`
+  <div class="card">
+   <h2>Enrichment Quality
+    <span style="color:${qColor};font-weight:800;margin-left:.75rem;font-size:1.4rem">${q}/100</span>
+    <span style="color:${qColor};font-weight:700;margin-left:.25rem;font-size:.85rem;letter-spacing:.5px">${qLabel}</span>
+   </h2>
+   <div style="color:var(--dim);font-size:.8rem;margin-bottom:1rem">
+    Composite diagnostic of how well the enrichment pipeline discriminates between benign and malicious cases.
+    ${eq.totalCases} cases analyzed. Overall score \u03C3 = ${eq.scoreStddev} (target &ge; 15). Auto-close rate ${eq.autoCloseRate}%.
+   </div>
+   <div class="dist-row">
+    <div class="card"><h2>Score Distribution</h2>
+     ${barChart(eq.scoreHistogram,scoreColors,eq.totalCases)}
+     <div style="color:var(--dim);font-size:.72rem;margin-top:.5rem">
+      Good enrichment spreads cases across the histogram. Bunching in 60-79 means the scoring isn't discriminating.
+     </div>
+    </div>
+    <div class="card"><h2>Signals per Case</h2>
+     ${barChart(eq.signalsPerCase,sigColors,eq.totalCases)}
+     <div style="color:var(--dim);font-size:.72rem;margin-top:.5rem">
+      4+ signals per case = rich evidence. &lt;3 = thin enrichment, check your extractors.
+     </div>
+    </div>
+   </div>
+   ${compressedHtml}
+  </div>
+  ${noisyHtml}`;
+}
+
+function renderExporterHealth(exp){
+ const el=document.getElementById('exporter-health-section');
+ if(!exp||!exp.exporters||exp.exporters.length===0){el.innerHTML='';return}
+ const badges={
+  fresh:{color:'#16a34a',label:'FRESH'},
+  stale:{color:'#dc2626',label:'STALE'}
+ };
+ let rows='';
+ for(const e of exp.exporters){
+  const b=badges[e.status]||badges.stale;
+  const age=e.age_seconds<60?e.age_seconds+'s':Math.floor(e.age_seconds/60)+'m';
+  rows+=`<tr>
+   <td style="font-family:var(--mono)">${e.exporter}</td>
+   <td>${e.hostname}</td>
+   <td><span style="background:${b.color};color:#fff;padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:700">${b.label}</span></td>
+   <td>${age} ago</td>
+   <td>${e.events_sent}</td>
+   <td>${e.events_filtered}</td>
+  </tr>`;
+ }
+ const summary=exp.stale>0
+  ?`<span style="color:#dc2626">⚠ ${exp.stale} stale</span> / ${exp.fresh} fresh`
+  :`${exp.fresh} fresh / ${exp.total} total`;
+ el.innerHTML=`<div class="card"><h2>Exporter Health (${summary})</h2>
+  <table>
+   <tr><th>Exporter</th><th>Hostname</th><th>Status</th><th>Last Seen</th><th>Events Sent</th><th>Filtered</th></tr>
+   ${rows}
+  </table>
+  <div style="color:var(--dim);font-size:.75rem;margin-top:.5rem">Freshness threshold: ${exp.freshness_window_seconds}s (${Math.floor(exp.freshness_window_seconds/60)} min)</div>
+  </div>`;
 }
 
 function sparkline(points,color,w,h){

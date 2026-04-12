@@ -381,6 +381,7 @@ def _run_enrichment(
 
     # Fetch calibration adjustments from analyst feedback (learning loop)
     _weight_adj: dict[str, float] | None = None
+    _disabled: set[str] | None = None
     if tenant_id:
         try:
             from backend.app.services.calibration import get_weight_adjustments
@@ -389,11 +390,21 @@ def _run_enrichment(
                 _weight_adj = get_weight_adjustments(_cal_session, tenant_id)
         except Exception:
             logger.debug("Calibration fetch failed (non-fatal)", exc_info=True)
+        # Day 5 Lite: per-tenant signal denylist (hard on/off switch, separate
+        # from the learning loop's soft weight adjustments)
+        try:
+            from backend.app.services.config_service import get_disabled_signals
+            _dl = get_disabled_signals(tenant_id)
+            if _dl:
+                _disabled = _dl
+        except Exception:
+            logger.debug("Disabled signals fetch failed (non-fatal)", exc_info=True)
 
     score, label, explanation = compute_confidence(
         severity, signals, source_tool=source_tool,
         asset_weight=asset_weight, user_weight=user_weight,
         tenant_weight_adjustments=_weight_adj,
+        disabled_signals=_disabled,
     )
 
     # Admin noise suppression: reduce score for authorized admin tools

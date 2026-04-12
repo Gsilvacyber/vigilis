@@ -9,6 +9,7 @@ from backend.app.core.auth import require_tenant
 from backend.app.core.db import get_session
 from backend.app.services.metrics_service import (
     compute_by_alert_type,
+    compute_enrichment_quality,
     compute_summary,
     compute_ttfd,
 )
@@ -65,3 +66,21 @@ def api_metrics_by_tenant(
         raise HTTPException(status_code=403, detail="Access denied: tenant mismatch")
     with get_session() as session:
         return compute_summary(session, tenant_id=auth_tenant, start=start, end=end)
+
+
+@router.get("/enrichment-quality")
+def api_metrics_enrichment_quality(
+    auth_tenant: str = Depends(require_tenant),
+    tenantId: Optional[str] = Query(None, description="Ignored when API key present"),
+    start: Optional[datetime] = Query(None),
+    end: Optional[datetime] = Query(None),
+) -> dict[str, Any]:
+    """Enrichment quality diagnostic — score histogram, signals-per-case,
+    noisy-signals list, per-alert-type variance, and a composite 0-100
+    quality score. Answers the question: is our enrichment actually
+    discriminating between benign and malicious cases?
+    """
+    with get_session() as session:
+        return compute_enrichment_quality(
+            session, tenant_id=auth_tenant, start=start, end=end,
+        )

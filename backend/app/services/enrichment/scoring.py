@@ -124,6 +124,7 @@ def compute_confidence(
     severity: str, signals: list[Signal], source_tool: str | None = None,
     asset_weight: int = 0, user_weight: int = 0,
     tenant_weight_adjustments: dict[str, float] | None = None,
+    disabled_signals: set[str] | None = None,
 ) -> tuple[int, str, list[dict[str, Any]]]:
     """Compute confidence score from signals.
 
@@ -131,6 +132,11 @@ def compute_confidence(
         tenant_weight_adjustments: Optional dict of signal_name -> multiplier
             from the learning loop (calibration.py). Adjusts weights based on
             analyst feedback. 0.3 = 70% FP rate (reduce). 1.3 = 85% TP rate (boost).
+        disabled_signals: Optional set of signal names to filter out entirely
+            from positive scoring (Day 5 Lite per-tenant denylist). Signals in
+            this set contribute zero to the score and do not appear in the
+            explanation dict. Negative-weight suppression signals are never
+            removed — only positive signals are affected.
     """
     base = _SEVERITY_BASE.get(severity, 25)
 
@@ -147,6 +153,12 @@ def compute_confidence(
         [s for s in signals if s.fired and s.weight > 0],
         key=lambda s: s.weight, reverse=True,
     )
+    # Day 5 Lite: per-tenant denylist filters disabled signals out BEFORE the
+    # tier/calibration weight calculation, so they contribute literally zero
+    # to the score. They also disappear from the explanation dict entirely
+    # (they never reach fired_names).
+    if disabled_signals:
+        positive_fired = [s for s in positive_fired if s.name not in disabled_signals]
     negative_boost = sum(s.weight for s in signals if s.fired and s.weight < 0)
     _adj = tenant_weight_adjustments or {}
     positive_boost = 0
@@ -252,11 +264,13 @@ def compute_confidence(
             label = lbl
             break
 
+    # Explanation iterates over `positive_fired` (already denylist-filtered)
+    # rather than the raw signals list, so disabled signals disappear from
+    # the explanation the same way they disappear from the score.
     explanation = [
         {"signal": s.name, "weight": s.weight, "label": s.label,
          "tier": getattr(s, 'tier', None) or get_signal_tier(s.name)}
-        for s in signals
-        if s.fired and s.weight > 0
+        for s in positive_fired
     ]
     if asset_weight > 0:
         explanation.append({"signal": "asset_criticality", "weight": asset_weight,

@@ -26,6 +26,8 @@ import logging
 import re
 from typing import Any
 
+from backend.app.core.metrics import sysmon_eid_fork_hits, sysmon_pattern_hits
+
 _log = logging.getLogger(__name__)
 
 
@@ -385,6 +387,7 @@ def _translate_by_sysmon_event_id(raw_alert: dict[str, Any]) -> tuple[int, set[s
                 raw_alert["_lsassAccess"] = True
                 added += 1
             techniques.add("T1003.001")
+            sysmon_eid_fork_hits.labels(event_id="10", branch="lsass_access").inc()
             _log.debug("sysmon_translator: EID 10 → _lsassAccess (T1003.001)")
 
     # ── Sysmon EIDs 17/18: Named Pipe Create/Connect ─────────────────────
@@ -394,6 +397,9 @@ def _translate_by_sysmon_event_id(raw_alert: dict[str, Any]) -> tuple[int, set[s
             if raw_alert.get("_namedPipeActivity") is not True:
                 raw_alert["_namedPipeActivity"] = True
                 added += 1
+            sysmon_eid_fork_hits.labels(
+                event_id=str(eid), branch="named_pipe_activity"
+            ).inc()
             # Known lateral movement / C2 pipe patterns
             lm_pipes = ["psexesvc", "paexec", "remcom", "csexec", "atexec",
                         "crackmapexec", "mojo", "admin$", "ipc$"]
@@ -404,6 +410,9 @@ def _translate_by_sysmon_event_id(raw_alert: dict[str, Any]) -> tuple[int, set[s
                     added += 1
                 techniques.add("T1570")
                 techniques.add("T1021.002")
+                sysmon_eid_fork_hits.labels(
+                    event_id=str(eid), branch="lateral_movement_pipe"
+                ).inc()
 
     # ── Sysmon EIDs 19/20/21: WMI Event Filter/Consumer/Binding ─────────
     elif eid in (19, 20, 21):
@@ -412,6 +421,7 @@ def _translate_by_sysmon_event_id(raw_alert: dict[str, Any]) -> tuple[int, set[s
             raw_alert["_wmiPersistence"] = True
             added += 1
         techniques.add("T1546.003")
+        sysmon_eid_fork_hits.labels(event_id=str(eid), branch="wmi_persistence").inc()
         _log.debug("sysmon_translator: EID %d → _wmiPersistence (T1546.003)", eid)
 
     # ── Windows Security Event 1102: Audit Log Cleared ──────────────────
@@ -420,6 +430,7 @@ def _translate_by_sysmon_event_id(raw_alert: dict[str, Any]) -> tuple[int, set[s
             raw_alert["_logCleared"] = True
             added += 1
         techniques.add("T1070.001")
+        sysmon_eid_fork_hits.labels(event_id="1102", branch="log_cleared").inc()
 
     # ── Windows Security Event 4720: User Account Created ───────────────
     elif eid == 4720:
@@ -427,6 +438,7 @@ def _translate_by_sysmon_event_id(raw_alert: dict[str, Any]) -> tuple[int, set[s
             raw_alert["_accountCreated"] = True
             added += 1
         techniques.add("T1136.001")
+        sysmon_eid_fork_hits.labels(event_id="4720", branch="account_created").inc()
 
     # ── Windows Security Events 4728/4732: Added to Privileged Group ────
     elif eid in (4728, 4732):
@@ -438,12 +450,16 @@ def _translate_by_sysmon_event_id(raw_alert: dict[str, Any]) -> tuple[int, set[s
                 raw_alert["_privilegeEscalation"] = True
                 added += 1
             techniques.add("T1098")
+            sysmon_eid_fork_hits.labels(
+                event_id=str(eid), branch="privilege_escalation"
+            ).inc()
 
     # ── Windows Security Event 4672: Special Privileges Assigned ────────
     elif eid == 4672:
         if raw_alert.get("_privilegeEscalation") is not True:
             raw_alert["_privilegeEscalation"] = True
             added += 1
+        sysmon_eid_fork_hits.labels(event_id="4672", branch="priv_assigned").inc()
         # Not a full technique hit (4672 can be noisy) — no MITRE add
 
     return added, techniques
@@ -483,10 +499,14 @@ def translate_sysmon_event(raw_alert: dict[str, Any]) -> int:
     combined = " ".join(candidates)
 
     # ── Command-line MITRE pattern matching ───────────────────────────────
+    tenant_label = str(raw_alert.get("_tenantId") or raw_alert.get("tenantId") or "unknown")
     if combined:
         for pattern, technique, label, field_name in _MITRE_PATTERNS:
             if pattern.search(combined):
                 techniques_found.add(technique)
+                sysmon_pattern_hits.labels(
+                    pattern=technique, tenant=tenant_label
+                ).inc()
                 if field_name and raw_alert.get(field_name) is not True:
                     raw_alert[field_name] = True
                     added += 1
@@ -561,4 +581,65 @@ def translate_sysmon_event(raw_alert: dict[str, Any]) -> int:
                 existing_mitre["techniques"] = sorted(merged)
                 added += 1
 
+    # ── Benign PowerShell classifier ────────────────────────────────────
+    # Only runs when NO MITRE pattern matched. Identifies known-safe scripts
+    # (module imports, Get-* cmdlets, DSC, WMI queries) so the scoring pipeline
+    # can push them DOWN with a negative-weight signal. MITRE always wins —
+    # a script that matches both a MITRE technique AND a benign pattern gets
+    # the attack signal, not the benign classification.
+    if not techniques_found and combined:
+        benign_reason = _classify_benign_powershell(combined)
+        if benign_reason and raw_alert.get("_benignPowerShell") is not True:
+            raw_alert["_benignPowerShell"] = True
+            raw_alert["_benignPowerShellReason"] = benign_reason
+            added += 2
+            _log.debug(
+                "sysmon_translator: benign PowerShell classified: %s",
+                benign_reason,
+            )
+
     return added
+
+
+# ---------------------------------------------------------------------------
+# Benign PowerShell classification
+# ---------------------------------------------------------------------------
+
+_BENIGN_POWERSHELL_PATTERNS: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"(?:^|\n)\s*(?:import-module|using\s+module|using\s+namespace)\s", re.I),
+     "Module import statement"),
+    (re.compile(r"(?:^|\n)\s*#\s*(?:requires|region|endregion)\b", re.I),
+     "Script metadata directive"),
+    (re.compile(r"(?:^|\n)\s*(?:Get-|Select-|Where-Object|ForEach-Object|Format-|Out-|Write-(?:Host|Output|Verbose|Debug|Warning))\b", re.I),
+     "Read-only cmdlet"),
+    (re.compile(r"\bWindowsUpdateClient\b|\bWudfHost\b|\bPSWindowsUpdate\b", re.I),
+     "Windows Update activity"),
+    (re.compile(r"\bConfiguration\s+\w+\s*\{|\bStart-DscConfiguration\b|\bTest-DscConfiguration\b", re.I),
+     "DSC configuration"),
+    (re.compile(r"(?:^|\n)\s*(?:Install-Module|Find-Module|Update-Module|Get-Package|Register-PSRepository)\b", re.I),
+     "Package management cmdlet"),
+    (re.compile(r"(?:^|\n)\s*(?:function\s+prompt\b|\$profile\b)|Microsoft\.PowerShell_profile\.ps1", re.I),
+     "PowerShell profile/prompt"),
+    (re.compile(r"(?:^|\n)\s*(?:Get-CimInstance|Get-WmiObject)\s+(?:Win32_|CIM_|MSFT_)", re.I),
+     "WMI/CIM inventory query"),
+    (re.compile(r"\bCompatTelRunner\b|\bSoftwareInventoryLogging\b|\bCeipData\b", re.I),
+     "Compatibility/telemetry collection"),
+    (re.compile(r"\bGet-AuthenticodeSignature\b|\bSet-AuthenticodeSignature\b", re.I),
+     "Script signing operation"),
+    (re.compile(r"(?:^|\n)\s*(?:Test-Connection|Test-NetConnection|Resolve-DnsName|Get-Service|Get-EventLog|Get-Counter)\b", re.I),
+     "Admin health-check cmdlet"),
+]
+
+
+def _classify_benign_powershell(combined_text: str) -> str | None:
+    """Return a reason string if the script matches a known-safe pattern.
+
+    Returns None for unknown / suspicious scripts. Called only when no MITRE
+    technique matched, so attack scripts are never classified as benign.
+    """
+    if not combined_text:
+        return None
+    for pattern, reason in _BENIGN_POWERSHELL_PATTERNS:
+        if pattern.search(combined_text):
+            return reason
+    return None

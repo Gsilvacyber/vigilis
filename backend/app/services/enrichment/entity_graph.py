@@ -156,14 +156,31 @@ def _extract_pairs(
         if raw_ip and not _is_private_ip(raw_ip) and raw_ip not in external_ips:
             external_ips.append(raw_ip)
 
-    # Extract process name from raw fields
+    # Extract process name from raw fields. Endpoint alerts (especially Sysmon,
+    # PowerShell, and cross-vendor EDR) use a wide variety of field names for
+    # the same thing. We try 15+ common variants so _extract_pairs doesn't miss
+    # process pair generation on non-network alert types. Previously this
+    # failed on 99% of endpoint.powershellExecution cases because the primary
+    # field (commandLine) had a full command string that started with "C:\..."
+    # but the bare "process" / "processName" fields were empty.
     process_name = ""
-    for field in ("process", "_processName", "processName", "imagePath",
-                  "_imagePath", "commandLine", "_commandLine"):
+    for field in (
+        # Original fields
+        "process", "_processName", "processName",
+        "imagePath", "_imagePath",
+        "commandLine", "_commandLine",
+        # Sysmon (PascalCase)
+        "Image", "CommandLine", "ParentImage",
+        # PowerShell / EDR common variants
+        "parentProcess", "parent_process_name",
+        "executablePath", "exe", "_exe",
+        # Fallback to the file entity name
+        "fileName",
+    ):
         raw_proc = raw_alert.get(field, "") or ""
         if raw_proc:
             # Extract just the executable name from paths
-            proc = raw_proc.strip().strip('"')
+            proc = str(raw_proc).strip().strip('"')
             if "\\" in proc:
                 proc = proc.rsplit("\\", 1)[-1]
             elif "/" in proc:
@@ -172,8 +189,22 @@ def _extract_pairs(
             if " " in proc:
                 proc = proc.split()[0]
             if proc and len(proc) > 2:
-                process_name = proc
+                process_name = proc.lower()  # normalize for pair-keying
                 break
+
+    # Fallback: pull from the `file` entity dict if still empty
+    if not process_name:
+        file_entity = raw_alert.get("file")
+        if isinstance(file_entity, dict):
+            fname = file_entity.get("fileName") or ""
+            if fname:
+                proc = str(fname).strip()
+                if "\\" in proc:
+                    proc = proc.rsplit("\\", 1)[-1]
+                elif "/" in proc:
+                    proc = proc.rsplit("/", 1)[-1]
+                if proc and len(proc) > 2:
+                    process_name = proc.lower()
 
     # Extract domain from raw fields or enrichment
     domain = ""
@@ -242,21 +273,35 @@ def check_entity_relationships(
       - rare_entity_relationship: Entity pair seen 1-2 times (weight 15, verified)
       - entity_graph_anomaly: Multiple NEW relationships in one case (weight 18, verified)
     """
+    from backend.app.core.metrics import entity_graph_query_latency
+
+    with entity_graph_query_latency.labels(operation="check_entity_relationships").time():
+        return _check_entity_relationships_impl(raw_alert, event_time, tenant_id)
+
+
+def _check_entity_relationships_impl(
+    raw_alert: dict[str, Any],
+    event_time: datetime,
+    tenant_id: str | None = None,
+) -> list[Signal]:
     pairs = _extract_pairs(raw_alert)
     if not pairs:
         return []
 
-    # Cold-start suppression: if the entity graph has fewer than 20 total
+    # Cold-start suppression: if the entity graph has fewer than 10 total
     # relationships, we don't have enough behavioral baseline to make
     # meaningful "new" vs "rare" judgments. Without this, fresh deployments
     # flag EVERY alert as novel, inflating scores on benign activity.
+    # (Was 20; lowered to 10 so fresh deployments ramp up faster. The graph
+    # reaches 10+ within ~3 real Sysmon cases so this is effectively permissive
+    # after the first few minutes of operation.)
     try:
         from backend.app.core.db import get_session as _gs
         from backend.app.db.models import EntityRelationship as _ER
         from sqlmodel import select as _sel, func as _fn
         with _gs() as _cs:
             total_rels = _cs.exec(_sel(_fn.count(_ER.id))).one()
-        if total_rels < 20:
+        if total_rels < 10:
             _log.debug(
                 "Entity graph cold-start: only %d relationships, suppressing signals",
                 total_rels,
@@ -297,14 +342,16 @@ def check_entity_relationships(
                     relationship_details.append(
                         f"{a_type}:{a_val} ↔ {b_type}:{b_val} (NEW)"
                     )
-                elif existing.count <= 2:
-                    # Seen 1-2 times — still rare
+                elif existing.count <= 5:
+                    # Seen 1-5 times — still rare (widened from <= 2 to catch
+                    # more emerging patterns while the graph is still building
+                    # toward maturity).
                     rare_count += 1
                     relationship_details.append(
                         f"{a_type}:{a_val} ↔ {b_type}:{b_val} "
                         f"(seen {existing.count}x, first: {existing.first_seen:%Y-%m-%d})"
                     )
-                # count > 2 = normal, no signal
+                # count > 5 = normal, no signal
 
     except Exception:
         _log.debug("Entity graph query failed (non-fatal)", exc_info=True)
@@ -397,8 +444,10 @@ def check_process_relationships(
     signals: list[Signal] = []
 
     # Cold-start suppression: known_tool_on_dc always fires (too important),
-    # but process_on_new_host requires ≥10 total relationships to avoid
-    # flagging every process as "new" on fresh deployment
+    # but process_on_new_host requires ≥5 total relationships to avoid
+    # flagging every process as "new" on fresh deployment. (Was 10; lowered
+    # so novel-process detection unblocks faster on endpoint-only deployments
+    # where the graph doesn't get the 30-relationship boost from network alerts.)
     _suppress_novelty = False
     try:
         from backend.app.core.db import get_session as _gs2
@@ -406,7 +455,7 @@ def check_process_relationships(
         from sqlmodel import select as _sel2, func as _fn2
         with _gs2() as _cs2:
             _total = _cs2.exec(_sel2(_fn2.count(_ER2.id))).one()
-        _suppress_novelty = _total < 10
+        _suppress_novelty = _total < 5
     except Exception:
         pass
 
@@ -723,9 +772,14 @@ def _is_private_ip(ip: str) -> bool:
 
 
 def get_entity_graph_stats(tenant_id: str | None = None) -> dict[str, Any]:
-    """Return graph statistics for health/status endpoints."""
+    """Return graph statistics for health/status endpoints.
+
+    Also updates the `vigilis_entity_graph_relationships` Prometheus gauge
+    so external monitoring can alert on unexpected graph size changes.
+    """
     try:
         from backend.app.core.db import get_session
+        from backend.app.core.metrics import entity_graph_size
         from backend.app.db.models import EntityRelationship
         from sqlmodel import select, func
 
@@ -745,6 +799,10 @@ def get_entity_graph_stats(tenant_id: str | None = None) -> dict[str, Any]:
             if tenant_id:
                 type_q = type_q.where(EntityRelationship.tenant_id == tenant_id)
             by_type = {rtype: cnt for rtype, cnt in session.exec(type_q).all()}
+
+            # Populate the Prometheus gauge per relationship type
+            for rtype, cnt in by_type.items():
+                entity_graph_size.labels(relationship_type=rtype).set(cnt)
 
             # Unique entities
             unique_a = session.exec(

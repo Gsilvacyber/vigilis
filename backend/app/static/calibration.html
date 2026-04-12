@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vigilis - Signal Calibration</title>
+<link rel="stylesheet" href="/static/vigilis.css?v=9">
+<style>
+.container{max-width:1280px;margin:1.5rem auto;padding:0 2rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.status-reduce{background:var(--red);color:#fff;padding:2px 10px;border-radius:4px;font-size:.7rem;font-weight:700;letter-spacing:.5px}
+.status-boost{background:var(--green);color:#fff;padding:2px 10px;border-radius:4px;font-size:.7rem;font-weight:700;letter-spacing:.5px}
+.status-stable{background:var(--dim);color:#fff;padding:2px 10px;border-radius:4px;font-size:.7rem;font-weight:700;letter-spacing:.5px}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--dim)}
+.empty-state h2{margin-bottom:1rem;color:var(--text)}
+.empty-state p{margin:.5rem 0}
+.subtitle{color:var(--dim);margin-bottom:1.5rem;font-size:.9rem}
+.fp-hot{color:var(--red);font-weight:600}
+.fp-warm{color:var(--yellow);font-weight:600}
+.fp-cool{color:var(--dim)}
+.signal-toggle{position:relative;width:36px;height:20px;flex-shrink:0;display:inline-block}
+.signal-toggle input{opacity:0;width:0;height:0}
+.signal-toggle .slider{position:absolute;inset:0;background:var(--border);border-radius:10px;cursor:pointer;transition:background .2s}
+.signal-toggle .slider::before{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.signal-toggle input:checked + .slider{background:var(--green)}
+.signal-toggle input:checked + .slider::before{transform:translateX(16px)}
+tr.row-disabled td{opacity:.5;text-decoration:line-through}
+.tier-verified{color:var(--green);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px}
+.tier-inferred{color:var(--blue);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px}
+.tier-observed{color:var(--dim);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px}
+#sigSearch{padding:.5rem;border:1px solid var(--border);border-radius:var(--radius);font-size:.85rem}
+</style>
+</head>
+<body>
+<script src="/static/vigilis.js?v=12"></script>
+<script>document.write(renderNav('tuning', 'calibration'));</script>
+<div class="container">
+<h1>Signal Calibration</h1>
+<p class="subtitle">
+ The learning loop adjusts signal weights based on analyst dispositions.
+ Signals with high false-positive rates are reduced, signals with high true-positive rates are boosted,
+ and all adjustments are automatically applied to future case scoring.
+</p>
+<div class="toolbar">
+ <label style="font-size:.85rem;color:var(--dim)">Window:
+  <select id="windowDays" onchange="load()" style="margin-left:.5rem">
+   <option value="7">7 days</option>
+   <option value="30" selected>30 days</option>
+   <option value="60">60 days</option>
+   <option value="90">90 days</option>
+  </select>
+ </label>
+ <button class="btn" onclick="load()">Refresh</button>
+ <div style="flex:1"></div>
+ <button class="btn" id="seedBtn" onclick="seedDispositions()"
+         title="Dev-only: seed ~100 random dispositions on open cases so the calibration loop has data">
+  Seed Dispositions
+ </button>
+</div>
+<div id="summary-cards" class="cards"></div>
+<div id="report-section"></div>
+<div id="impact-section"></div>
+<div id="signal-config-section"></div>
+</div>
+<script>
+let _lastReport=null;
+
+async function load(){
+ const days=document.getElementById('windowDays').value;
+ document.getElementById('summary-cards').innerHTML='<div class="spinner">Loading calibration data...</div>';
+ try{
+  const [reportR,statsR,telemR]=await Promise.all([
+   fetch(`/api/v1/calibration/report?window_days=${days}`,AH),
+   fetch(`/api/v1/calibration/stats`,AH),
+   fetch(`/api/v1/telemetry/dashboard?window_hours=${days*24}`,AH),
+  ]);
+  const report=await reportR.json();
+  const stats=await statsR.json();
+  const telem=await telemR.json();
+  _lastReport=report;
+  renderSummary(report,stats);
+  renderReport(report);
+  renderImpact(telem);
+  loadSignalCatalog();
+ }catch(e){
+  document.getElementById('report-section').innerHTML=
+   `<div class="spinner" style="color:var(--red)">Failed to load: ${escapeHtml(e.message)}</div>`;
+ }
+}
+
+function renderSummary(report,stats){
+ const signals=report.signals||[];
+ const signalCount=signals.length;
+ const reduced=signals.filter(s=>s.status==='reduce').length;
+ const boosted=signals.filter(s=>s.status==='boost').length;
+ const stable=signalCount-reduced-boosted;
+ const totalFeedback=stats.total_feedback||0;
+ const fpRatePct=((stats.false_positive_rate||0)*100).toFixed(1);
+ const precisionPct=((stats.precision||0)*100).toFixed(1);
+ document.getElementById('summary-cards').innerHTML=`
+  <div class="metric-card"><div class="metric-val">${signalCount}</div><div class="metric-label">Signals Tracked</div></div>
+  <div class="metric-card"><div class="metric-val" style="color:var(--red)">${reduced}</div><div class="metric-label">Reduced</div></div>
+  <div class="metric-card"><div class="metric-val" style="color:var(--green)">${boosted}</div><div class="metric-label">Boosted</div></div>
+  <div class="metric-card"><div class="metric-val" style="color:var(--dim)">${stable}</div><div class="metric-label">Stable</div></div>
+  <div class="metric-card"><div class="metric-val">${totalFeedback}</div><div class="metric-label">Total Dispositions</div></div>
+  <div class="metric-card"><div class="metric-val">${precisionPct}%</div><div class="metric-label">Overall Precision</div></div>`;
+}
+
+function fpClass(rate){
+ if(rate>=70)return'fp-hot';
+ if(rate>=40)return'fp-warm';
+ return'fp-cool';
+}
+
+function renderReport(report){
+ const el=document.getElementById('report-section');
+ const signals=report.signals||[];
+ if(signals.length===0){
+  el.innerHTML=`<div class="card empty-state">
+   <h2>No calibration data yet</h2>
+   <p>The learning loop needs analyst dispositions to compute signal effectiveness.</p>
+   <p>Disposition at least <b>10 cases per signal</b> to see the first weight adjustments fire.</p>
+   <p style="margin-top:1.5rem;font-size:.85rem;color:var(--dim)">
+    <b>Tip:</b> click <b>Seed Dispositions</b> above to populate test data in dev environments.
+   </p>
+  </div>`;
+  return;
+ }
+ const reducedCount=signals.filter(s=>s.status==='reduce').length;
+ const boostedCount=signals.filter(s=>s.status==='boost').length;
+ let rows='';
+ for(const s of signals){
+  const statusClass='status-'+s.status;
+  const delta=s.adjustedWeight-s.originalWeight;
+  const deltaLabel=delta>0?`+${delta}`:(delta<0?`${delta}`:'—');
+  const deltaColor=delta>0?'var(--green)':(delta<0?'var(--red)':'var(--dim)');
+  rows+=`<tr>
+   <td style="font-family:var(--mono);font-size:.85rem">${escapeHtml(s.signal)}</td>
+   <td style="text-align:right">${s.originalWeight}</td>
+   <td style="text-align:right"><b>${s.adjustedWeight}</b></td>
+   <td style="text-align:right;color:${deltaColor};font-weight:600">${deltaLabel}</td>
+   <td style="text-align:right">${s.multiplier.toFixed(2)}x</td>
+   <td style="text-align:right" class="${fpClass(s.fpRate)}">${s.fpRate.toFixed(1)}%</td>
+   <td style="text-align:right">${s.tpRate.toFixed(1)}%</td>
+   <td style="text-align:right">${s.totalCases}</td>
+   <td><span class="${statusClass}">${s.status.toUpperCase()}</span></td>
+  </tr>`;
+ }
+ el.innerHTML=`<div class="card"><h2>Signal Calibration Report
+   <span style="color:var(--dim);font-weight:400;font-size:.8rem">
+    (${signals.length} tracked, ${reducedCount} reduced, ${boostedCount} boosted, ${report.windowDays}d window)
+   </span>
+  </h2>
+  <table style="width:100%">
+   <tr>
+    <th class="sortable" onclick="sortTable(this.closest('table'),0,'string')">Signal</th>
+    <th class="sortable" style="text-align:right" onclick="sortTable(this.closest('table'),1,'number')">Original</th>
+    <th class="sortable" style="text-align:right" onclick="sortTable(this.closest('table'),2,'number')">Adjusted</th>
+    <th class="sortable" style="text-align:right" onclick="sortTable(this.closest('table'),3,'number')" title="Adjusted − Original">Δ</th>
+    <th class="sortable" style="text-align:right" onclick="sortTable(this.closest('table'),4,'number')">Multiplier</th>
+    <th class="sortable sort-desc" style="text-align:right" onclick="sortTable(this.closest('table'),5,'number')">FP %</th>
+    <th class="sortable" style="text-align:right" onclick="sortTable(this.closest('table'),6,'number')">TP %</th>
+    <th class="sortable" style="text-align:right" onclick="sortTable(this.closest('table'),7,'number')">Cases</th>
+    <th class="sortable" onclick="sortTable(this.closest('table'),8,'string')">Status</th>
+   </tr>
+   ${rows}
+  </table>
+  <div style="color:var(--dim);font-size:.75rem;margin-top:.75rem">
+   Tiers: <span class="status-reduce">REDUCE</span> fires when FP rate &ge; 30%.
+   <span class="status-boost">BOOST</span> fires when TP rate &ge; 85% (capped at 1.3x).
+   <span class="status-stable">STABLE</span> means the signal is in the normal range.
+   Click any column header to sort.
+  </div>
+ </div>`;
+}
+
+function renderImpact(telem){
+ const top=(telem&&telem.top_signals_by_impact)||[];
+ const el=document.getElementById('impact-section');
+ if(top.length===0){el.innerHTML='';return;}
+ const max=Math.max(...top.map(t=>t.total_impact||0))||1;
+ let bars='';
+ for(const t of top.slice(0,10)){
+  const pct=Math.round(((t.total_impact||0)/max)*100);
+  bars+=`<div class="bar-group">
+   <div class="bar-label">
+    <span style="font-family:var(--mono);font-size:.85rem">${escapeHtml(t.signal)}</span>
+    <span style="color:var(--dim);font-size:.8rem">${t.fire_count||0} fires &times; ${t.weight||0} wt = ${t.total_impact||0} impact</span>
+   </div>
+   <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--blue)"></div></div>
+  </div>`;
+ }
+ el.innerHTML=`<div class="card"><h2>Top Signals by Impact (${telem.window_hours||0}h)</h2>
+  <div style="color:var(--dim);font-size:.75rem;margin-bottom:.75rem">
+   Impact = fire count &times; signal weight. Higher impact signals drive more of the scoring — prioritize dispositioning these to train the learning loop.
+  </div>
+  ${bars}
+ </div>`;
+}
+
+// ── Signal Configuration (Day 5 Lite per-tenant denylist) ──────────────
+let _disabledSet=new Set();
+let _signalCatalog=[];
+
+async function loadSignalCatalog(){
+ try{
+  const [catalogR,configR]=await Promise.all([
+   fetch('/api/v1/config/signals-catalog',AH),
+   fetch('/api/v1/config',AH),
+  ]);
+  if(!catalogR.ok||!configR.ok)throw new Error('config fetch failed');
+  _signalCatalog=await catalogR.json();
+  const cfg=await configR.json();
+  _disabledSet=new Set(cfg.disabledSignals||[]);
+  renderSignalCatalog();
+ }catch(e){
+  document.getElementById('signal-config-section').innerHTML=
+   `<div class="card" style="color:var(--red)">Signal config load failed: ${escapeHtml(e.message)}</div>`;
+ }
+}
+
+function renderSignalCatalog(){
+ const searchEl=document.getElementById('sigSearch');
+ const search=(searchEl?.value||'').toLowerCase();
+ const filtered=search
+  ? _signalCatalog.filter(s=>s.name.toLowerCase().includes(search))
+  : _signalCatalog;
+
+ // Group by tier so 171 signals become 3 digestible collapsible sections.
+ // Within each tier, sort by weight desc so highest-impact signals are at the top.
+ const groups={verified:[],inferred:[],observed:[]};
+ for(const s of filtered){
+  const tier=(s.tier in groups)?s.tier:'inferred';
+  groups[tier].push(s);
+ }
+ for(const t in groups){groups[t].sort((a,b)=>b.weight-a.weight);}
+
+ const renderRow=(s)=>{
+  const isDisabled=_disabledSet.has(s.name);
+  const checked=isDisabled?'':'checked';
+  const rowClass=isDisabled?'row-disabled':'';
+  return `<tr data-signal="${escapeHtml(s.name)}" class="${rowClass}">
+   <td style="font-family:var(--mono);font-size:.85rem">${escapeHtml(s.name)}</td>
+   <td style="text-align:right">${s.weight}</td>
+   <td style="text-align:center">
+    <label class="signal-toggle">
+     <input type="checkbox" ${checked} onchange="toggleSignal('${escapeHtml(s.name)}')">
+     <span class="slider"></span>
+    </label>
+   </td>
+  </tr>`;
+ };
+
+ const renderGroup=(tier,items)=>{
+  if(items.length===0)return '';
+  const disabledInGroup=items.filter(s=>_disabledSet.has(s.name)).length;
+  const headerExtra=disabledInGroup>0?`, ${disabledInGroup} disabled`:'';
+  const rows=items.map(renderRow).join('');
+  return `<details open>
+   <summary class="tier-summary tier-${tier}">
+    ${tier} Signals
+    <span style="color:var(--dim);font-weight:400;font-size:.75rem;text-transform:none;letter-spacing:0;margin-left:.5rem">
+     (${items.length} total${headerExtra})
+    </span>
+   </summary>
+   <table style="width:100%;margin-top:.5rem;margin-bottom:1rem">
+    <tr>
+     <th class="sortable" onclick="sortTable(this.closest('table'),0,'string')">Signal</th>
+     <th class="sortable sort-desc" style="text-align:right" onclick="sortTable(this.closest('table'),1,'number')">Default Weight</th>
+     <th style="text-align:center">Enabled</th>
+    </tr>
+    ${rows}
+   </table>
+  </details>`;
+ };
+
+ const disabledCount=_disabledSet.size;
+ const totalCount=_signalCatalog.length;
+ const filteredLabel=search?` — showing ${filtered.length} matches`:'';
+ document.getElementById('signal-config-section').innerHTML=`
+  <div class="card">
+   <h2>Signal Configuration
+    <span style="color:var(--dim);font-weight:400;font-size:.8rem">
+     (${totalCount} total, ${disabledCount} disabled${filteredLabel})
+    </span>
+   </h2>
+   <div style="color:var(--dim);font-size:.8rem;margin-bottom:1rem">
+    Toggle individual signals on/off for your tenant. <b>Disabled signals are completely removed from scoring</b>
+    — not just reduced. Changes take effect immediately for new enrichments.
+   </div>
+   <div class="toolbar" style="margin-bottom:.75rem">
+    <input id="sigSearch" placeholder="Search signals by name..." oninput="renderSignalCatalog()" value="${escapeHtml(search)}" style="flex:1">
+    ${disabledCount>0?`<button class="btn" onclick="clearAllDisabled()" title="Re-enable every signal">Re-enable all</button>`:''}
+   </div>
+   ${renderGroup('verified',groups.verified)}
+   ${renderGroup('inferred',groups.inferred)}
+   ${renderGroup('observed',groups.observed)}
+  </div>`;
+ // Preserve focus in the search box after re-render
+ if(search){const s=document.getElementById('sigSearch');if(s){s.focus();s.setSelectionRange(search.length,search.length);}}
+}
+
+async function toggleSignal(name){
+ const wasDisabled=_disabledSet.has(name);
+ if(wasDisabled){_disabledSet.delete(name);}else{_disabledSet.add(name);}
+ try{
+  const r=await fetch('/api/v1/config',{
+   method:'PATCH',
+   headers:{'Content-Type':'application/json','X-API-Key':AK},
+   body:JSON.stringify({disabledSignals:[..._disabledSet]}),
+  });
+  if(!r.ok)throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+  toast(`${wasDisabled?'Enabled':'Disabled'} ${name}`,'ok');
+  renderSignalCatalog();
+ }catch(e){
+  // Revert optimistic update on failure
+  if(wasDisabled){_disabledSet.add(name);}else{_disabledSet.delete(name);}
+  toast('Save failed: '+e.message);
+  renderSignalCatalog();
+ }
+}
+
+async function clearAllDisabled(){
+ if(!confirm(`Re-enable all ${_disabledSet.size} currently disabled signals?`))return;
+ const previous=new Set(_disabledSet);
+ _disabledSet.clear();
+ try{
+  const r=await fetch('/api/v1/config',{
+   method:'PATCH',
+   headers:{'Content-Type':'application/json','X-API-Key':AK},
+   body:JSON.stringify({disabledSignals:[]}),
+  });
+  if(!r.ok)throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+  toast('All signals re-enabled','ok');
+  renderSignalCatalog();
+ }catch(e){
+  _disabledSet=previous;
+  toast('Save failed: '+e.message);
+  renderSignalCatalog();
+ }
+}
+
+async function seedDispositions(){
+ if(!confirm('Seed ~100 random dispositions on open cases?\n\nThis is a dev-only helper that calls /api/v1/demo/seed-dispositions. It will not run when APP_ENV=prod.'))return;
+ const btn=document.getElementById('seedBtn');
+ btn.disabled=true;
+ btn.textContent='Seeding...';
+ try{
+  const r=await fetch('/api/v1/demo/seed-dispositions?count=100',
+   {method:'POST',headers:{'X-API-Key':AK}});
+  if(!r.ok){
+   const err=await r.text();
+   throw new Error(`HTTP ${r.status}: ${err}`);
+  }
+  const body=await r.json();
+  if(body.total_processed===0){
+   toast('No open cases available to seed','');
+  }else{
+   toast(`Seeded ${body.total_processed}: TP=${body.true_positive} benign=${body.benign} escalated=${body.escalated}`,'ok');
+  }
+  setTimeout(load,500);
+ }catch(e){
+  toast('Seed failed: '+e.message);
+ }finally{
+  btn.disabled=false;
+  btn.textContent='Seed Dispositions';
+ }
+}
+
+load();
+</script>
+</body>
+</html>

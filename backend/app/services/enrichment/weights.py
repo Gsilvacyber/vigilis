@@ -231,6 +231,7 @@ W: dict[str, int] = {
     # "known_bad_hash" already in Tier 4 at 20
 
     # ── Negative signals (noise reduction) ────────────────────────────────
+    "benign_powershell": -15,  # Known-safe PowerShell script (module imports, Get-*, DSC, etc.)
     "blocked": -8,
     "ir_response": -30,
     "noise_flag": -25,
@@ -359,6 +360,9 @@ SIGNAL_TIERS: dict[str, str] = {
 
     # Inferred — keyword matching or pattern detection on alert text
     # (everything else defaults to "inferred")
+
+    # Negative signals — pattern-matched, deterministic
+    "benign_powershell": "verified",  # Regex match against known-safe cmdlets
 }
 
 

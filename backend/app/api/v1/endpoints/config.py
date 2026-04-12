@@ -25,6 +25,7 @@ class WebhookTargetRequest(BaseModel):
 
 class ConfigPatchRequest(BaseModel):
     mode: str | None = None
+    disabledSignals: list[str] | None = None
 
 
 @router.get("")
@@ -55,3 +56,32 @@ def api_add_webhook(
 ) -> list[dict[str, Any]]:
     """Add a webhook target for the authenticated tenant."""
     return add_webhook_target(auth_tenant, req.name, req.url, req.enabled)
+
+
+@router.get("/signals-catalog")
+def api_signals_catalog(
+    auth_tenant: str = Depends(require_tenant),
+) -> list[dict[str, Any]]:
+    """Return the full signal catalog for UI denylist management.
+
+    Excludes negative-weight suppression signals (noise_flag, ir_response,
+    authorized_admin_activity, service_account_noise, blocked) because disabling
+    those would INCREASE scores — nearly always not what the admin wants.
+    Also excludes any signal name starting with `_` (internal markers like
+    `_score_breakdown`).
+    """
+    from backend.app.services.enrichment.weights import SIGNAL_TIERS, W
+
+    catalog: list[dict[str, Any]] = []
+    for name in sorted(W.keys()):
+        weight = W[name]
+        if name.startswith("_"):
+            continue
+        if weight <= 0:
+            continue
+        catalog.append({
+            "name": name,
+            "weight": weight,
+            "tier": SIGNAL_TIERS.get(name, "inferred"),
+        })
+    return catalog

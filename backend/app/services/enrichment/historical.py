@@ -8,6 +8,21 @@ from backend.app.services.enrichment.base import Signal
 _log = logging.getLogger(__name__)
 
 
+def _to_naive_utc(dt: datetime | None) -> datetime | None:
+    """Normalize a datetime to timezone-naive UTC.
+
+    DB-stored event times come back as naive (both sqlite and postgres
+    strip tz). Comparison against tz-aware Python datetimes raises
+    TypeError and gets silently swallowed by the try/except, so we
+    normalize both sides to naive UTC before comparing.
+    """
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        return dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
+
+
 def check_user_history(
     user_upn: str,
     event_time: datetime,
@@ -54,12 +69,27 @@ def check_user_history(
                 if case_upn.lower() == user_upn.lower():
                     user_cases.append(case)
 
-            if len(user_cases) >= 3:
+            # Time-locality semantics: fire only on RECENT confirmed threats.
+            # Old logic fired on any history in 30d, which made the signal fire on
+            # 97.7% of cases in production — pure noise floor. Now it only fires
+            # when the user has multiple confirmed threats in the last 6h, which
+            # is actually actionable (= active compromise in progress).
+            # Disposition-only: no confidence_score fallback (cascade risk).
+            event_time_naive = _to_naive_utc(event_time)
+            recent_cutoff_6h = event_time_naive - timedelta(hours=6)
+            recent_confirmed = [
+                c for c in user_cases
+                if c.event_time is not None
+                and _to_naive_utc(c.event_time) >= recent_cutoff_6h
+                and c.disposition_status in ("true_positive", "escalated")
+            ]
+            if len(recent_confirmed) >= 2:
                 signals.append(Signal(
                     name="repeat_offender",
                     weight=10,
                     fired=True,
-                    label=f"User {user_upn} has {len(user_cases)} cases in the last 30 days",
+                    label=f"User {user_upn} had {len(recent_confirmed)} analyst-confirmed threats in the last 6h — active compromise",
+                    tier="verified",
                 ))
 
             # Check for critical cases in last 7 days
@@ -293,29 +323,54 @@ def check_hostname_history(
                 if case_host == hostname.lower():
                     host_cases.append(case)
 
-            if len(host_cases) >= 2:
+            # Time-locality semantics: fire ONLY on analyst-dispositioned threats.
+            # No confidence_score fallback — that created a cascade effect during
+            # re-enrichment (high-scoring cases trigger the signal for nearby cases,
+            # which is circular). Disposition-only means the signal is dormant
+            # until real analysts provide ground truth. That's the correct
+            # fail-safe behavior.
+            event_time_naive = _to_naive_utc(event_time)
+            recent_cutoff_6h = event_time_naive - timedelta(hours=6)
+            recent_confirmed = [
+                c for c in host_cases
+                if c.event_time is not None
+                and _to_naive_utc(c.event_time) >= recent_cutoff_6h
+                and c.disposition_status in ("true_positive", "escalated")
+            ]
+            if len(recent_confirmed) >= 2:
                 signals.append(Signal(
                     name="host_repeat_target",
                     weight=15,
                     fired=True,
-                    label=f"Host {hostname} has {len(host_cases)} cases in last 30 days — repeated target",
+                    label=f"Host {hostname} had {len(recent_confirmed)} analyst-confirmed threats in last 6h — active target",
                     tier="verified",
                 ))
 
-            # Check if hostname was in previous incidents
+            # Check if hostname was in RECENT confirmed incidents (not all-time).
+            # Old logic fired on any host ever linked to any incident — which was
+            # 99.4% of cases. New logic: only fire if the incident contains
+            # analyst-dispositioned positive cases in the last 24h.
             if host_cases:
                 from backend.app.db.models import IncidentCaseLink
-                case_ids = {c.id for c in host_cases}
-                links = session.exec(select(IncidentCaseLink)).all()
-                linked = {l.case_id for l in links}
-                if case_ids & linked:
-                    signals.append(Signal(
-                        name="host_in_prior_incident",
-                        weight=18,
-                        fired=True,
-                        label=f"Host {hostname} was previously involved in an incident",
-                        tier="verified",
-                    ))
+                recent_cutoff_24h = event_time_naive - timedelta(hours=24)
+                recent_host = [
+                    c for c in host_cases
+                    if c.event_time is not None
+                    and _to_naive_utc(c.event_time) >= recent_cutoff_24h
+                    and c.disposition_status in ("true_positive", "escalated")
+                ]
+                if recent_host:
+                    recent_ids = {c.id for c in recent_host}
+                    links = session.exec(select(IncidentCaseLink)).all()
+                    linked = {l.case_id for l in links}
+                    if recent_ids & linked:
+                        signals.append(Signal(
+                            name="host_in_prior_incident",
+                            weight=18,
+                            fired=True,
+                            label=f"Host {hostname} is in a recent incident with {len(recent_ids & linked)} confirmed threat(s) in last 24h",
+                            tier="verified",
+                        ))
 
     except Exception:
         _log.debug("Hostname history check failed (non-fatal)", exc_info=True)

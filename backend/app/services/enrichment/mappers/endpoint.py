@@ -518,6 +518,12 @@ def extract_powershell_execution(
                _action_desc or "Action status scoring"),
         Signal("after_hours", W["after_hours"], is_after_hours(event_time),
                "PowerShell executed outside business hours"),
+        # Negative signal: pushes benign admin scripts DOWN so real threats
+        # bubble UP in the triage queue. Set by sysmon_translator's benign
+        # classifier when no MITRE pattern matched.
+        Signal("benign_powershell", W.get("benign_powershell", -15),
+               raw.get("_benignPowerShell") is True,
+               f"Benign PowerShell: {raw.get('_benignPowerShellReason', 'safe pattern')}"),
     ]
 
 
