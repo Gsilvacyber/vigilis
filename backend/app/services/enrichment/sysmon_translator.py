@@ -606,28 +606,77 @@ def translate_sysmon_event(raw_alert: dict[str, Any]) -> int:
 # ---------------------------------------------------------------------------
 
 _BENIGN_POWERSHELL_PATTERNS: list[tuple[re.Pattern, str]] = [
+    # ── Vigilis self-monitoring (own exporter scripts logged by PSBL) ────
+    (re.compile(r"\bexport_sysmon\b|\bexport_psbl\b|\bexport_secevt\b|\bexport_state\b", re.I),
+     "Vigilis exporter script (self-monitoring)"),
+    (re.compile(r"\bVigilisUrl\b|\bSet-Content\s+\$StateFile\b|\bConvertTo-Json\s+-Compress\b", re.I),
+     "Vigilis exporter fragment"),
+    (re.compile(r"\bInvoke-RestMethod\s+.*api/v1/cases\b|\bapi/v1/exporter/heartbeat\b", re.I),
+     "Vigilis API call (self-monitoring)"),
+
+    # ── PowerShell internals / automatic variables ──────────────────────
+    (re.compile(r"^\s*\$global:\?\s*$", re.I),
+     "PowerShell automatic variable"),
+    (re.compile(r"^\s*\{\s*\$_\s*[-\.]\w+\s*\}\s*$", re.I),
+     "Simple script block expression"),
+    (re.compile(r"^\s*\{\s*\[char\]\$_\s*\}\s*$", re.I),
+     "Character conversion block"),
+    (re.compile(r"^\s*\{\s*\$_\s+-in\s+[\d,\s]+\}\s*$", re.I),
+     "Numeric filter expression"),
+
+    # ── Module / assembly / alias setup ─────────────────────────────────
     (re.compile(r"(?:^|\n)\s*(?:import-module|using\s+module|using\s+namespace)\s", re.I),
      "Module import statement"),
+    (re.compile(r"(?:^|\n)\s*Set-Alias\s+-Name\s+\w+\s+-Value\s+\w+", re.I),
+     "Alias definition"),
     (re.compile(r"(?:^|\n)\s*#\s*(?:requires|region|endregion)\b", re.I),
      "Script metadata directive"),
+    (re.compile(r"^\s*#[^!]", re.I),
+     "Comment-only script block"),
+
+    # ── Pure read-only cmdlets (no side effects) ────────────────────────
     (re.compile(r"(?:^|\n)\s*(?:Get-|Select-|Where-Object|ForEach-Object|Format-|Out-|Write-(?:Host|Output|Verbose|Debug|Warning))\b", re.I),
      "Read-only cmdlet"),
+
+    # ── Variable assignment / string interpolation ──────────────────────
+    (re.compile(r"^\s*\$\w+\s*=\s*[\"']", re.I),
+     "Simple variable assignment"),
+
+    # ── Windows Update / servicing ──────────────────────────────────────
     (re.compile(r"\bWindowsUpdateClient\b|\bWudfHost\b|\bPSWindowsUpdate\b", re.I),
      "Windows Update activity"),
+
+    # ── DSC (Desired State Configuration) ───────────────────────────────
     (re.compile(r"\bConfiguration\s+\w+\s*\{|\bStart-DscConfiguration\b|\bTest-DscConfiguration\b", re.I),
      "DSC configuration"),
+
+    # ── Package management ──────────────────────────────────────────────
     (re.compile(r"(?:^|\n)\s*(?:Install-Module|Find-Module|Update-Module|Get-Package|Register-PSRepository)\b", re.I),
      "Package management cmdlet"),
+
+    # ── Prompt / profile / ISE ──────────────────────────────────────────
     (re.compile(r"(?:^|\n)\s*(?:function\s+prompt\b|\$profile\b)|Microsoft\.PowerShell_profile\.ps1", re.I),
      "PowerShell profile/prompt"),
+
+    # ── CIM/WMI read-only queries ───────────────────────────────────────
     (re.compile(r"(?:^|\n)\s*(?:Get-CimInstance|Get-WmiObject)\s+(?:Win32_|CIM_|MSFT_)", re.I),
      "WMI/CIM inventory query"),
+
+    # ── Compatibility telemetry ─────────────────────────────────────────
     (re.compile(r"\bCompatTelRunner\b|\bSoftwareInventoryLogging\b|\bCeipData\b", re.I),
      "Compatibility/telemetry collection"),
+
+    # ── Script signing / certificate ────────────────────────────────────
     (re.compile(r"\bGet-AuthenticodeSignature\b|\bSet-AuthenticodeSignature\b", re.I),
      "Script signing operation"),
-    (re.compile(r"(?:^|\n)\s*(?:Test-Connection|Test-NetConnection|Resolve-DnsName|Get-Service|Get-EventLog|Get-Counter)\b", re.I),
-     "Admin health-check cmdlet"),
+
+    # ── Admin health-check cmdlets ──────────────────────────────────────
+    (re.compile(r"(?:^|\n)\s*(?:Test-Connection|Test-NetConnection|Resolve-DnsName|Get-Service|Get-EventLog|Get-Counter|Get-Process|Get-ChildItem|Get-Item|Get-Content|Get-Date|Get-Host|Get-Member|Get-Variable|Get-Command|Get-Help)\b", re.I),
+     "Admin/diagnostic cmdlet"),
+
+    # ── Type accelerator / .NET access (read-only) ──────────────────────
+    (re.compile(r"^\s*\[(?:System\.)?(?:IO|Net|Text|Xml|Math|Convert|Environment|DateTime)\b", re.I),
+     ".NET type access"),
 ]
 
 

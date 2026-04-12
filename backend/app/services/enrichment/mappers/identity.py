@@ -321,7 +321,35 @@ def extract_privilege_elevation(
                "Known CVE exploited — device compromised via unpatched vulnerability"),
         Signal("iot_ot_attack", W["iot_ot_attack"], has_iot_ot_context(raw),
                "IoT/OT/ICS attack — industrial device exploitation"),
+        # Negative signal: routine privilege assignment for known system accounts
+        # pushes EID 4672 noise DOWN. SYSTEM, LOCAL SERVICE, NETWORK SERVICE
+        # get special privileges on every logon — not a threat.
+        Signal("routine_privilege", W.get("routine_privilege", -10),
+               _is_routine_privilege_account(raw),
+               "Routine privilege assignment (system/service account)"),
+        # Catch-all: ensures every privilegeElevation case has at least 1 signal
+        Signal("privilege_activity", W.get("privilege_activity", 3),
+               True,
+               "Privilege elevation event detected"),
     ]
+
+
+_ROUTINE_ACCOUNTS = frozenset({
+    "system", "nt authority\\system", "nt authority\\local service",
+    "nt authority\\network service", "local service", "network service",
+    "font driver host\\umfd-0", "font driver host\\umfd-1",
+    "window manager\\dwm-1", "window manager\\dwm-2",
+})
+
+
+def _is_routine_privilege_account(raw: dict[str, Any]) -> bool:
+    """Check if the privilege assignment is for a known system/service account."""
+    identity = raw.get("identity") or {}
+    upn = (identity.get("upn") or identity.get("userId") or "").lower().strip()
+    actor = raw.get("actor") or {}
+    actor_upn = (actor.get("upn") or actor.get("userId") or "").lower().strip()
+    # Check both identity and actor — 4672 events often have the account in either
+    return upn in _ROUTINE_ACCOUNTS or actor_upn in _ROUTINE_ACCOUNTS
 
 
 # ---------------------------------------------------------------------------

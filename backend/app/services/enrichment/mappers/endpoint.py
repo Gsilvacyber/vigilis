@@ -524,6 +524,13 @@ def extract_powershell_execution(
         Signal("benign_powershell", W.get("benign_powershell", -15),
                raw.get("_benignPowerShell") is True,
                f"Benign PowerShell: {raw.get('_benignPowerShellReason', 'safe pattern')}"),
+        # Catch-all: ensures every PSBL case has at least 1 signal. Without
+        # this, cases that don't match any pattern get zero signals and the
+        # quality dashboard shows 34% zero-signal cases. This low-weight
+        # observed signal says "we looked at this and found nothing specific."
+        Signal("powershell_activity", W.get("powershell_activity", 3),
+               True,  # always fires for PSBL cases
+               "PowerShell script execution detected (no specific threat indicator)"),
     ]
 
 

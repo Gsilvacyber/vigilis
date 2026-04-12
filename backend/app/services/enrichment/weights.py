@@ -231,7 +231,12 @@ W: dict[str, int] = {
     # "known_bad_hash" already in Tier 4 at 20
 
     # ── Negative signals (noise reduction) ────────────────────────────────
+    "powershell_activity": 3,  # Catch-all: PSBL case, no specific threat indicator (low weight)
+    "privilege_activity": 3,  # Catch-all: privilege elevation event (low weight)
+
+    # ── Negative signals (noise reduction) ────────────────────────────────
     "benign_powershell": -15,  # Known-safe PowerShell script (module imports, Get-*, DSC, etc.)
+    "routine_privilege": -10,  # Known system/service account privilege assignment
     "blocked": -8,
     "ir_response": -30,
     "noise_flag": -25,
@@ -361,7 +366,10 @@ SIGNAL_TIERS: dict[str, str] = {
     # Inferred — keyword matching or pattern detection on alert text
     # (everything else defaults to "inferred")
 
-    # Negative signals — pattern-matched, deterministic
+    # Catch-all and negative signals — pattern-matched, deterministic
+    "powershell_activity": "observed",  # Always fires on PSBL, very low weight
+    "privilege_activity": "observed",  # Always fires on EID 4672, very low weight
+    "routine_privilege": "verified",  # System/service account check
     "benign_powershell": "verified",  # Regex match against known-safe cmdlets
 }
 
