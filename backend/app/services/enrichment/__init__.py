@@ -240,6 +240,33 @@ def _run_enrichment(
     except Exception:
         logger.debug("IP identity lookup failed (non-fatal)", exc_info=True)
 
+    # Domain intelligence (WHOIS/RDAP) — adds domain age + registrar signals.
+    # "Domain registered 2 days ago" is one of the strongest phishing/C2 indicators.
+    try:
+        from backend.app.services.enrichment.domain_intel import enrich_with_domain_intel
+        _domain_added = enrich_with_domain_intel(raw_alert)
+        if _domain_added:
+            logger.debug("Domain intel: added %d fields", _domain_added)
+            _existing_names = {s.name for s in signals}
+            if raw_alert.get("_domainVeryNew") and "domain_very_new" not in _existing_names:
+                signals.append(Signal("domain_very_new", 22, True,
+                    f"Domain registered < 7 days ago ({raw_alert.get('_domainAgeDays', '?')} days)",
+                    "verified"))
+            elif raw_alert.get("_domainNewlyRegistered") and "domain_newly_registered" not in _existing_names:
+                signals.append(Signal("domain_newly_registered", 18, True,
+                    f"Domain registered < 30 days ago ({raw_alert.get('_domainAgeDays', '?')} days)",
+                    "verified"))
+            if raw_alert.get("_domainSuspiciousTld") and "domain_suspicious_tld" not in _existing_names:
+                signals.append(Signal("domain_suspicious_tld", 12, True,
+                    "Domain uses a suspicious TLD commonly associated with phishing/malware",
+                    "inferred"))
+            if raw_alert.get("_domainKnownSafe") and "domain_known_safe" not in _existing_names:
+                signals.append(Signal("domain_known_safe", -10, True,
+                    f"Domain is a known-safe provider ({raw_alert.get('_domainRegistrar', '')})",
+                    "verified"))
+    except Exception:
+        logger.debug("Domain intel lookup failed (non-fatal)", exc_info=True)
+
     # Historical user correlation (Phase 4)
     try:
         from backend.app.services.enrichment.historical import check_user_history

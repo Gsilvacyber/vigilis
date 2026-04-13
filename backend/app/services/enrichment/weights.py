@@ -234,6 +234,12 @@ W: dict[str, int] = {
     "powershell_activity": 3,  # Catch-all: PSBL case, no specific threat indicator (low weight)
     "privilege_activity": 3,  # Catch-all: privilege elevation event (low weight)
 
+    # ── Domain intelligence signals ──────────────────────────────────────
+    "domain_very_new": 22,    # Domain registered < 7 days ago (strong C2/phishing indicator)
+    "domain_newly_registered": 18,  # Domain registered < 30 days ago
+    "domain_suspicious_tld": 12,    # .xyz, .top, .tk, etc.
+    "domain_known_safe": -10,       # Negative: known-safe domain (Microsoft, Google, etc.)
+
     # ── Negative signals (noise reduction) ────────────────────────────────
     "benign_powershell": -15,  # Known-safe PowerShell script (module imports, Get-*, DSC, etc.)
     "routine_privilege": -10,  # Known system/service account privilege assignment
@@ -365,6 +371,12 @@ SIGNAL_TIERS: dict[str, str] = {
 
     # Inferred — keyword matching or pattern detection on alert text
     # (everything else defaults to "inferred")
+
+    # Domain intelligence signals
+    "domain_very_new": "verified",  # RDAP registration date check
+    "domain_newly_registered": "verified",  # RDAP registration date check
+    "domain_suspicious_tld": "inferred",  # TLD pattern match
+    "domain_known_safe": "verified",  # Known-safe domain list
 
     # Catch-all and negative signals — pattern-matched, deterministic
     "powershell_activity": "observed",  # Always fires on PSBL, very low weight
