@@ -237,6 +237,12 @@ W: dict[str, int] = {
     # ── Negative signals (noise reduction) ────────────────────────────────
     "powershell_activity": 1,  # Catch-all: near-zero weight so other signals drive discrimination (was 3)
     "privilege_activity": 1,  # Catch-all: same (was 3)
+    "endpoint_activity": 1,   # Catch-all: ensures every endpoint case has at least 1 signal
+    "identity_activity": 1,   # Catch-all: ensures every identity case has at least 1 signal
+    "network_activity": 1,    # Catch-all: ensures every network case has at least 1 signal
+    "email_activity": 1,      # Catch-all: ensures every email case has at least 1 signal
+    "cloud_activity": 1,      # Catch-all: ensures every cloud case has at least 1 signal
+    "dlp_activity": 1,        # Catch-all: ensures every DLP case has at least 1 signal
 
     # ── PowerShell content-based signals (Step 2 quality improvement) ────
     "ps_registry_access": 8,        # Script touches registry
@@ -258,6 +264,7 @@ W: dict[str, int] = {
     "peer_anomaly": 15,             # User has 3x+ more cases than tenant avg for this alert type
     "peer_anomaly_critical": 22,    # User has 5x+ more cases than tenant avg
     "routine_admin_tool": -8,       # Negative: admin tool running normally (no abuse)
+    "routine_sysmon_event": -8,      # Negative: known Windows routine activity
 
     # ── Domain intelligence signals ──────────────────────────────────────
     "domain_very_new": 22,    # Domain registered < 7 days ago (strong C2/phishing indicator)
@@ -421,10 +428,17 @@ SIGNAL_TIERS: dict[str, str] = {
     "peer_anomaly": "verified",          # DB-backed case count comparison
     "peer_anomaly_critical": "verified", # DB-backed case count comparison
     "routine_admin_tool": "verified",    # Process name + path check
+    "routine_sysmon_event": "verified",   # Process name + safe path check
 
     # Catch-all and negative signals — pattern-matched, deterministic
     "powershell_activity": "observed",  # Always fires on PSBL, very low weight
     "privilege_activity": "observed",  # Always fires on EID 4672, very low weight
+    "endpoint_activity": "observed",   # Always fires on endpoint alerts
+    "identity_activity": "observed",   # Always fires on identity alerts
+    "network_activity": "observed",    # Always fires on network alerts
+    "email_activity": "observed",      # Always fires on email alerts
+    "cloud_activity": "observed",      # Always fires on cloud alerts
+    "dlp_activity": "observed",        # Always fires on DLP alerts
     "routine_privilege": "verified",  # System/service account check
     "benign_powershell": "verified",  # Regex match against known-safe cmdlets
 }

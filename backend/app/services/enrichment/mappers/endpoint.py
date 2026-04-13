@@ -208,6 +208,57 @@ def _is_routine_admin_activity(raw: dict[str, Any]) -> bool:
     return True
 
 
+_ROUTINE_SYSMON_PROCESSES = frozenset({
+    "msmpeng.exe",              # Windows Defender
+    "mousocoreworker.exe",      # Windows Update
+    "tiworker.exe",             # Windows Update (Trusted Installer)
+    "searchindexer.exe",        # Windows Search
+    "onedrive.exe",             # OneDrive sync
+    "msedge.exe",               # Edge browser
+    "chrome.exe",               # Chrome browser
+    "firefox.exe",              # Firefox browser
+    "runtimebroker.exe",        # UWP app broker
+    "backgroundtaskhost.exe",   # Background tasks
+    "wmiprvse.exe",             # WMI Provider
+    "compattelrunner.exe",      # Compatibility telemetry
+    "sihclient.exe",            # Server-Initiated Healing
+    "musnotifyicon.exe",        # Windows Update notification
+    "securityhealthservice.exe",  # Windows Security Health
+})
+
+
+def _is_routine_sysmon_event(raw: dict[str, Any]) -> bool:
+    """Check if this is a routine Windows system event (Update, browser, AV, sync).
+
+    True when: the process is a known routine Windows process
+    AND it's NOT running from a suspicious path
+    AND there's no attack context (no LOLBin abuse, no encoded command, etc.)
+    This pushes routine Sysmon noise DOWN below 50 to break the 60-65 cluster.
+    """
+    f = raw.get("file") or {}
+    name = (f.get("fileName") or "").lower()
+    proc = (raw.get("process") or raw.get("_processName") or "").lower()
+    proc_base = proc.rsplit("\\", 1)[-1].rsplit("/", 1)[-1] if proc else ""
+    check_name = name or proc_base
+    if not check_name:
+        return False
+    # Must be a known routine process
+    if check_name not in _ROUTINE_SYSMON_PROCESSES:
+        return False
+    # Must NOT have any suspicious indicators
+    if raw.get("_lolbinAbuse"):
+        return False
+    if raw.get("_encodedCommand") or raw.get("_downloadCradle"):
+        return False
+    if raw.get("_processInjection") or raw.get("_uacBypass"):
+        return False
+    if _suspicious_path(raw):
+        return False
+    if _has_known_attack_tool(raw):
+        return False
+    return True
+
+
 def _has_known_attack_tool(raw: dict[str, Any]) -> bool:
     """Check if process name, file path, or context mentions a known attack tool."""
     f = raw.get("file") or {}
@@ -301,6 +352,13 @@ def extract_malware_detection(
         Signal("high_item_count", W["high_item_count"],
                (raw.get("_itemCount") or 0) > 50,
                f"High volume: {raw.get('_itemCount',0)} items"),
+        Signal("routine_sysmon_event", W.get("routine_sysmon_event", -8),
+               _is_routine_sysmon_event(raw),
+               "Routine Windows system activity"),
+        # Catch-all: ensures every malwareDetection case has at least 1 signal
+        Signal("endpoint_activity", W.get("endpoint_activity", 1),
+               True,
+               "Endpoint event detected"),
     ]
 
 
@@ -376,6 +434,13 @@ def extract_suspicious_process(
         Signal("routine_admin_tool", W.get("routine_admin_tool", -8),
                _is_routine_admin_activity(raw),
                "Routine admin tool execution (safe path, no abuse indicators)"),
+        Signal("routine_sysmon_event", W.get("routine_sysmon_event", -8),
+               _is_routine_sysmon_event(raw),
+               "Routine Windows system activity (Update, browser, AV, sync)"),
+        # Catch-all: ensures every suspiciousProcess case has at least 1 signal
+        Signal("endpoint_activity", W.get("endpoint_activity", 1),
+               True,
+               "Endpoint event detected"),
     ]
 
 
@@ -420,6 +485,10 @@ def extract_ransomware_detection(
                _action_desc or "Action status scoring"),
         Signal("after_hours", W["after_hours"], is_after_hours(event_time),
                "Ransomware activity detected outside business hours"),
+        # Catch-all: ensures every ransomwareDetection case has at least 1 signal
+        Signal("endpoint_activity", W.get("endpoint_activity", 1),
+               True,
+               "Endpoint event detected"),
     ]
 
 
@@ -462,6 +531,10 @@ def extract_lateral_movement(
                "Multiple devices compromised in lateral movement campaign"),
         Signal("action_status", _action_w, _action_w != 0,
                _action_desc or "Action status scoring"),
+        # Catch-all: ensures every lateralMovement case has at least 1 signal
+        Signal("endpoint_activity", W.get("endpoint_activity", 1),
+               True,
+               "Endpoint event detected"),
     ]
 
 
@@ -503,6 +576,10 @@ def extract_credential_dumping(
                "Credential dumping executed under service account"),
         Signal("action_status", _action_w, _action_w != 0,
                _action_desc or "Action status scoring"),
+        # Catch-all: ensures every credentialDumping case has at least 1 signal
+        Signal("endpoint_activity", W.get("endpoint_activity", 1),
+               True,
+               "Endpoint event detected"),
     ]
 
 
@@ -541,6 +618,10 @@ def extract_persistence_mechanism(
                "Persistence established under service account"),
         Signal("action_status", _action_w, _action_w != 0,
                _action_desc or "Action status scoring"),
+        # Catch-all: ensures every persistenceMechanism case has at least 1 signal
+        Signal("endpoint_activity", W.get("endpoint_activity", 1),
+               True,
+               "Endpoint event detected"),
     ]
 
 
@@ -585,6 +666,10 @@ def extract_defense_evasion(
                "Defense evasion activity from anomalous IP address"),
         Signal("action_status", _action_w, _action_w != 0,
                _action_desc or "Action status scoring"),
+        # Catch-all: ensures every defenseEvasion case has at least 1 signal
+        Signal("endpoint_activity", W.get("endpoint_activity", 1),
+               True,
+               "Endpoint event detected"),
     ]
 
 
@@ -697,6 +782,10 @@ def extract_lsass_access(
                "LSASS access under privileged account"),
         Signal("server_target", W["server_target"], _is_server(raw),
                "LSASS access on server — higher blast radius"),
+        # Catch-all: ensures every lsassAccess case has at least 1 signal
+        Signal("endpoint_activity", W.get("endpoint_activity", 1),
+               True,
+               "Endpoint event detected"),
     ]
 
 
@@ -720,6 +809,10 @@ def extract_pipe_activity(
                "Known attack tool in pipe context"),
         Signal("after_hours", W["after_hours"], is_after_hours(event_time),
                "Pipe activity outside business hours"),
+        # Catch-all: ensures every pipeActivity case has at least 1 signal
+        Signal("endpoint_activity", W.get("endpoint_activity", 1),
+               True,
+               "Endpoint event detected"),
     ]
 
 
@@ -742,6 +835,10 @@ def extract_wmi_persistence(
                "WMI persistence under privileged account"),
         Signal("after_hours", W["after_hours"], is_after_hours(event_time),
                "WMI persistence created outside business hours"),
+        # Catch-all: ensures every wmiPersistence case has at least 1 signal
+        Signal("endpoint_activity", W.get("endpoint_activity", 1),
+               True,
+               "Endpoint event detected"),
     ]
 
 
@@ -767,6 +864,10 @@ def extract_mass_file_create(
                "Ransomware chain indicators"),
         Signal("after_hours", W["after_hours"], is_after_hours(event_time),
                "Mass file create outside business hours"),
+        # Catch-all: ensures every massFileCreate case has at least 1 signal
+        Signal("endpoint_activity", W.get("endpoint_activity", 1),
+               True,
+               "Endpoint event detected"),
     ]
 
 
@@ -794,6 +895,10 @@ def extract_state_drift(
         Signal("script_scheduled_task", W["script_scheduled_task"],
                raw.get("_scriptScheduledTask") is True,
                "Scheduled task runs shell/script interpreter"),
+        # Catch-all: ensures every stateDrift case has at least 1 signal
+        Signal("endpoint_activity", W.get("endpoint_activity", 1),
+               True,
+               "Endpoint event detected"),
     ]
 
 

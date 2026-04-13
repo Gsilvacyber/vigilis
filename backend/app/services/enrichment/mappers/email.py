@@ -108,6 +108,10 @@ def extract_forwarding_rule(
                "Social engineering using urgency, secrecy, or authority"),
         Signal("ransomware_extortion", W["ransomware_extortion"], has_ransomware_context(raw),
                "Ransomware extortion — ransom demand, data exfil threat, or payment deadline"),
+        # Catch-all: ensures every forwardingRule/phishingDetected case has at least 1 signal
+        Signal("email_activity", W.get("email_activity", 1),
+               True,
+               "Email event detected"),
     ]
 
 
@@ -195,6 +199,10 @@ def extract_business_email_compromise(
                f"Auto-forwarding to external domain ({fwd_domain})" if fwd_domain else "External forwarding detected"),
         Signal("insider_threat", W["insider_threat"], has_insider_threat_context(raw),
                "Insider threat indicators in BEC context"),
+        # Catch-all: ensures every businessEmailCompromise case has at least 1 signal
+        Signal("email_activity", W.get("email_activity", 1),
+               True,
+               "Email event detected"),
     ]
 
 
@@ -234,6 +242,10 @@ def extract_malicious_attachment(
                f"Sender domain registered {raw.get('_domainAgeDays', 0)} days ago"),
         Signal("insider_persistence", W["insider_persistence"], has_persistence_context(raw),
                "Attachment may establish persistence mechanism"),
+        # Catch-all: ensures every maliciousAttachment case has at least 1 signal
+        Signal("email_activity", W.get("email_activity", 1),
+               True,
+               "Email event detected"),
     ]
 
 

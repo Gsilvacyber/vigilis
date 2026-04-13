@@ -392,6 +392,138 @@ _MITRE_PATTERNS: list[tuple[re.Pattern, str, str, str | None]] = [
     # ── T1486: Data Encrypted for Impact (ransomware encryption) ────────
     (re.compile(r"\b(?:AESManaged|RijndaelManaged|RSACryptoServiceProvider|CryptoStream)\b", re.I),
      "T1486", "Cryptographic API usage (potential ransomware encryption)", None),
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # MITRE Coverage Expansion #2 — 15 new techniques (60+ base target)
+    # Covers gaps in: Discovery, Collection, Defense Evasion, Credential
+    # Access, Lateral Movement, Command and Control
+    # ═══════════════════════════════════════════════════════════════════════
+
+    # ── T1010: Application Window Discovery ─────────────────────────────
+    (re.compile(r"\bGet-Process\b.*\bMainWindowTitle\b", re.I),
+     "T1010", "Application window title enumeration via PowerShell", None),
+    (re.compile(r"\b(?:EnumWindows|GetForegroundWindow|GetWindowText)\b", re.I),
+     "T1010", "Application window enumeration via Win32 API", None),
+
+    # ── T1007: System Service Discovery ─────────────────────────────────
+    (re.compile(r"\bsc(?:\.exe)?\s+query(?:\s+type=\s*(?:service|driver|all)|\s+state=|\s+\S+)", re.I),
+     "T1007", "Service enumeration via sc query", None),
+    (re.compile(r"\bGet-Service\b", re.I),
+     "T1007", "Service enumeration via PowerShell Get-Service", None),
+    (re.compile(r"\bwmic(?:\.exe)?\s+service\s+(?:list|get|where)", re.I),
+     "T1007", "Service enumeration via WMIC", None),
+
+    # ── T1518: Software Discovery ───────────────────────────────────────
+    (re.compile(r"\bwmic(?:\.exe)?\s+product\s+(?:list|get|where)", re.I),
+     "T1518", "Installed software enumeration via WMIC", None),
+    (re.compile(r"\bGet-WmiObject\s+Win32_Product\b", re.I),
+     "T1518", "Installed software enumeration via PowerShell WMI", None),
+    (re.compile(r"\bGet-CimInstance\s+Win32_Product\b", re.I),
+     "T1518", "Installed software enumeration via PowerShell CIM", None),
+    (re.compile(r"\breg(?:\.exe)?\s+query\s+.*Uninstall\b", re.I),
+     "T1518", "Installed software enumeration via registry", None),
+
+    # ── T1518.001: Security Software Discovery ──────────────────────────
+    (re.compile(r"\bGet-MpComputerStatus\b|\bGet-MpPreference\b", re.I),
+     "T1518.001", "Windows Defender status query", None),
+    (re.compile(r"\bwmic(?:\.exe)?\s+/namespace:\\\\root\\\\SecurityCenter2\s+path\s+AntiVirusProduct", re.I),
+     "T1518.001", "Antivirus product discovery via WMI", None),
+
+    # ── T1124: System Time Discovery ────────────────────────────────────
+    (re.compile(r"\bw32tm(?:\.exe)?\s+/(?:query|tz|stripchart)", re.I),
+     "T1124", "System time discovery via w32tm", None),
+    (re.compile(r"\bnet(?:1)?(?:\.exe)?\s+time\b", re.I),
+     "T1124", "System time discovery via net time", None),
+    (re.compile(r"\bGet-Date\b|\b\[DateTime\]::(?:Now|UtcNow)\b", re.I),
+     "T1124", "System time discovery via PowerShell", None),
+
+    # ── T1120: Peripheral Device Discovery ──────────────────────────────
+    (re.compile(r"\bfsutil(?:\.exe)?\s+(?:fsinfo|volume)\s+", re.I),
+     "T1120", "Peripheral/volume discovery via fsutil", None),
+    (re.compile(r"\bGet-PnpDevice\b|\bGet-WmiObject\s+Win32_PnPEntity\b", re.I),
+     "T1120", "Peripheral device enumeration via PowerShell", None),
+    (re.compile(r"\bwmic(?:\.exe)?\s+(?:diskdrive|logicaldisk)\s+(?:list|get)", re.I),
+     "T1120", "Disk/device enumeration via WMIC", None),
+
+    # ── T1614: System Location Discovery ────────────────────────────────
+    (re.compile(r"\bGet-WinHomeLocation\b|\bGet-WinSystemLocale\b", re.I),
+     "T1614", "System location discovery via PowerShell", None),
+    (re.compile(r"\btzutil(?:\.exe)?\s+/(?:g|l|s)", re.I),
+     "T1614", "Timezone enumeration via tzutil", None),
+    (re.compile(r"\bGet-TimeZone\b", re.I),
+     "T1614", "Timezone discovery via PowerShell", None),
+
+    # ── T1040: Network Sniffing ─────────────────────────────────────────
+    (re.compile(r"\bnetsh(?:\.exe)?\s+trace\s+start\b", re.I),
+     "T1040", "Network capture via netsh trace", None),
+    (re.compile(r"\bpktmon(?:\.exe)?\s+(?:start|filter\s+add)", re.I),
+     "T1040", "Network sniffing via pktmon", None),
+    (re.compile(r"\b(?:tshark|dumpcap|windump|tcpdump)(?:\.exe)?\s+.*-(?:i|w)\s+", re.I),
+     "T1040", "Network packet capture tool", None),
+
+    # ── T1564.001: Hidden Files and Directories ─────────────────────────
+    (re.compile(r"\battrib(?:\.exe)?\s+\+[hH]\s+", re.I),
+     "T1564.001", "File hidden via attrib +h", None),
+    (re.compile(r"\bSet-ItemProperty\s+.*Attributes.*Hidden\b", re.I),
+     "T1564.001", "File hidden via PowerShell", None),
+
+    # ── T1564.004: NTFS Alternate Data Streams ──────────────────────────
+    (re.compile(r"\btype\s+.*>\s*\S+:\S+", re.I),
+     "T1564.004", "Data written to NTFS alternate data stream", None),
+    (re.compile(r"\bSet-Content\s+.*-Stream\s+", re.I),
+     "T1564.004", "NTFS ADS written via PowerShell", None),
+    (re.compile(r"\bstreams(?:\.exe|64\.exe)?\s+", re.I),
+     "T1564.004", "Sysinternals Streams ADS enumeration", None),
+
+    # ── T1222: File and Directory Permissions Modification ──────────────
+    (re.compile(r"\bicacls(?:\.exe)?\s+.*(?:/grant|/deny|/remove|/inheritance)", re.I),
+     "T1222.001", "File permissions modified via icacls", None),
+    (re.compile(r"\btakeown(?:\.exe)?\s+/", re.I),
+     "T1222.001", "File ownership taken via takeown", None),
+    (re.compile(r"\bcacls(?:\.exe)?\s+.*(?:/[egtpcd])", re.I),
+     "T1222.001", "File permissions modified via cacls", None),
+    (re.compile(r"\bSet-Acl\b|\bGet-Acl\b.*\bSet-Acl\b", re.I),
+     "T1222.001", "File ACL modified via PowerShell", None),
+
+    # ── T1552.001: Credentials in Files ─────────────────────────────────
+    (re.compile(r"\bfindstr(?:\.exe)?\s+/si\s+(?:password|passwd|credential|secret|token)", re.I),
+     "T1552.001", "Credential search in files via findstr", None),
+    (re.compile(r"\bSelect-String\s+.*(?:password|passwd|credential|secret|token|apikey)", re.I),
+     "T1552.001", "Credential search in files via PowerShell", None),
+    (re.compile(r"\bdir\s+.*(?:\.config|web\.config|appsettings\.json|\.env)\b", re.I),
+     "T1552.001", "Configuration file enumeration for credentials", None),
+
+    # ── T1560.001: Archive Collected Data via Utility ────────────────────
+    (re.compile(r"\bcompact(?:\.exe)?\s+/c\s+", re.I),
+     "T1560.001", "Data compressed via compact.exe", None),
+    (re.compile(r"\bmakecab(?:\.exe)?\s+", re.I),
+     "T1560.001", "Data archived via makecab", None),
+    (re.compile(r"\brar(?:\.exe)?\s+a\b", re.I),
+     "T1560.001", "Data archived via rar", None),
+
+    # ── T1132: Data Encoding ────────────────────────────────────────────
+    (re.compile(r"\bcertutil(?:\.exe)?\s+.*(?:-|/)encode\b", re.I),
+     "T1132.001", "Data encoded via certutil (base64)", None),
+    (re.compile(r"\b\[Convert\]::ToBase64String\b", re.I),
+     "T1132.001", "Data encoded via PowerShell Base64", None),
+
+    # ── T1557: Adversary-in-the-Middle / LLMNR Poisoning ────────────────
+    (re.compile(r"\b(?:responder|Responder)(?:\.py|\.exe)?\s+.*-I\s+", re.I),
+     "T1557.001", "LLMNR/NBT-NS poisoning via Responder", None),
+    (re.compile(r"\bInveigh\b.*(?:Start|Invoke)", re.I),
+     "T1557.001", "LLMNR/NBT-NS poisoning via Inveigh", None),
+    (re.compile(r"\bmitm6(?:\.py)?\s+", re.I),
+     "T1557.001", "IPv6 DNS poisoning via mitm6", None),
+
+    # ── T1110: Brute Force ──────────────────────────────────────────────
+    (re.compile(r"\bhydra(?:\.exe)?\s+.*(?:-l|-L|-P|-C)\s+", re.I),
+     "T1110", "Brute force attack via Hydra", None),
+    (re.compile(r"\bcrackmapexec(?:\.exe)?\s+", re.I),
+     "T1110", "Credential brute-force/spray via CrackMapExec", None),
+    (re.compile(r"\b(?:ncrack|medusa|patator)(?:\.exe)?\s+", re.I),
+     "T1110", "Network brute force tool detected", None),
+    (re.compile(r"\bInvoke-SprayPassword\b|\bSpray-Passwords\b", re.I),
+     "T1110.003", "Password spray via PowerShell", None),
 ]
 
 

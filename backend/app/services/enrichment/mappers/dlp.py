@@ -47,6 +47,10 @@ def extract_sensitive_data_exposure(
                "User has resignation on file"),
         Signal("action_status", _action_w, _action_w != 0,
                _action_desc or "Action status"),
+        # Catch-all: ensures every sensitiveDataExposure case has at least 1 signal
+        Signal("dlp_activity", W.get("dlp_activity", 1),
+               True,
+               "DLP event detected"),
     ]
 
 

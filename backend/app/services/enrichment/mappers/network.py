@@ -88,6 +88,10 @@ def extract_impossible_geo(
                "Source flagged as noise — baseline activity"),
         Signal("ir_response", W["ir_response"], is_ir_response(raw),
                "Defensive/IR response action — not a threat"),
+        # Catch-all: ensures every impossibleGeo case has at least 1 signal
+        Signal("network_activity", W.get("network_activity", 1),
+               True,
+               "Network event detected"),
     ]
 
 
@@ -110,6 +114,10 @@ def extract_command_and_control(
                "C2 communication detected outside business hours"),
         Signal("action_status", _action_w, _action_w != 0,
                _action_desc or "Action status scoring"),
+        # Catch-all: ensures every commandAndControl case has at least 1 signal
+        Signal("network_activity", W.get("network_activity", 1),
+               True,
+               "Network event detected"),
     ]
 
 
@@ -131,6 +139,10 @@ def extract_port_scan(
                "Port scanning detected outside business hours"),
         Signal("action_status", _action_w, _action_w != 0,
                _action_desc or "Action status scoring"),
+        # Catch-all: ensures every portScan case has at least 1 signal
+        Signal("network_activity", W.get("network_activity", 1),
+               True,
+               "Network event detected"),
     ]
 
 
@@ -150,6 +162,10 @@ def extract_dns_anomaly(
                f"High-volume DNS data transfer: {raw.get('_transferSizeMB', 0)}MB"),
         Signal("action_status", _action_w, _action_w != 0,
                _action_desc or "Action status scoring"),
+        # Catch-all: ensures every dnsAnomaly case has at least 1 signal
+        Signal("network_activity", W.get("network_activity", 1),
+               True,
+               "Network event detected"),
     ]
 
 
@@ -200,6 +216,10 @@ def extract_data_exfiltration(
                "Source flagged as noise"),
         Signal("ir_response", W["ir_response"], is_ir_response(raw),
                "Defensive/IR response action"),
+        # Catch-all: ensures every dataExfiltration case has at least 1 signal
+        Signal("network_activity", W.get("network_activity", 1),
+               True,
+               "Network event detected"),
     ]
 
 

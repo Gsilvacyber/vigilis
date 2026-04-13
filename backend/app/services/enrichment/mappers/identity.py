@@ -104,6 +104,10 @@ def extract_suspicious_sign_in(
                "C2 beaconing indicators in sign-in context"),
         Signal("lateral_movement", W["lateral_movement"], has_lateral_movement_context(raw),
                "Lateral movement indicators — multi-host compromise"),
+        # Catch-all: ensures every suspiciousSignIn case has at least 1 signal
+        Signal("identity_activity", W.get("identity_activity", 1),
+               True,
+               "Identity event detected"),
     ]
 
 
@@ -141,6 +145,10 @@ def extract_password_spray(
                tier=has_domain_admin_context_tiered(raw)[1] if has_domain_admin_context(raw) else "inferred"),
         Signal("dormant_account", W["dormant_account"], has_dormant_account_context(raw),
                "Dormant account credentials used — likely cracked offline"),
+        # Catch-all: ensures every passwordSpray case has at least 1 signal
+        Signal("identity_activity", W.get("identity_activity", 1),
+               True,
+               "Identity event detected"),
     ]
 
 
@@ -171,6 +179,10 @@ def extract_mfa_fatigue(
                "Context confirms MFA fatigue attack — multiple push denials or rapid attempts"),
         Signal("insider_threat", W["insider_threat"], has_insider_threat_context(raw),
                "Insider threat indicators in MFA fatigue context"),
+        # Catch-all: ensures every mfaFatigue case has at least 1 signal
+        Signal("identity_activity", W.get("identity_activity", 1),
+               True,
+               "Identity event detected"),
     ]
 
 
@@ -257,6 +269,10 @@ def extract_oauth_consent_risk(
                "Admin consent granted to unknown application — tenant-wide access"),
         Signal("full_access_scopes", W["full_access_scopes"], _has_full_access_scopes(app),
                "Application has full read/write access to mail, files, and directory"),
+        # Catch-all: ensures every oauthConsentRisk case has at least 1 signal
+        Signal("identity_activity", W.get("identity_activity", 1),
+               True,
+               "Identity event detected"),
     ]
 
 
@@ -391,6 +407,10 @@ def extract_impossible_travel(
                "Lateral movement indicators from impossible travel source"),
         Signal("ad_attack", W["ad_attack"], has_ad_attack_context(raw),
                "Active Directory attack technique detected alongside travel anomaly"),
+        # Catch-all: ensures every impossibleTravel case has at least 1 signal
+        Signal("identity_activity", W.get("identity_activity", 1),
+               True,
+               "Identity event detected"),
     ]
 
 
@@ -431,6 +451,10 @@ def extract_dormant_account_login(
                "Active Directory attack using dormant credentials"),
         Signal("insider_threat", W["insider_threat"], has_insider_threat_context(raw),
                "Insider threat indicators — dormant account may be ex-employee access"),
+        # Catch-all: ensures every dormantAccountLogin case has at least 1 signal
+        Signal("identity_activity", W.get("identity_activity", 1),
+               True,
+               "Identity event detected"),
     ]
 
 
@@ -472,6 +496,10 @@ def extract_service_account_abuse(
         Signal("domain_admin_target", W["domain_admin_target"], has_domain_admin_context(raw),
                "Service account with domain admin level access",
                tier=has_domain_admin_context_tiered(raw)[1] if has_domain_admin_context(raw) else "inferred"),
+        # Catch-all: ensures every serviceAccountAbuse case has at least 1 signal
+        Signal("identity_activity", W.get("identity_activity", 1),
+               True,
+               "Identity event detected"),
     ]
 
 
@@ -511,6 +539,10 @@ def extract_logon_success(
         Signal("repeat_offender", W.get("repeat_offender", 10),
                has_insider_threat_context(raw),
                "Logon combined with insider threat context"),
+        # Catch-all: ensures every logonSuccess case has at least 1 signal
+        Signal("identity_activity", W.get("identity_activity", 1),
+               True,
+               "Identity event detected"),
     ]
 
 
@@ -535,6 +567,10 @@ def extract_account_creation(
         Signal("persistence_mechanism", W.get("persistence_mechanism", 15),
                has_persistence_context(raw),
                "Account creation as persistence technique"),
+        # Catch-all: ensures every accountCreation case has at least 1 signal
+        Signal("identity_activity", W.get("identity_activity", 1),
+               True,
+               "Identity event detected"),
     ]
 
 

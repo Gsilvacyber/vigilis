@@ -125,6 +125,10 @@ def extract_secret_store_anomaly(
                "IoT/OT/ICS data access — SCADA/historian/industrial systems"),
         Signal("physical_safety_risk", W["physical_safety_risk"], has_physical_safety_context(raw),
                "Physical safety system data accessed — potential operational impact"),
+        # Catch-all: ensures every secretStoreAccessAnomaly case has at least 1 signal
+        Signal("cloud_activity", W.get("cloud_activity", 1),
+               True,
+               "Cloud event detected"),
     ]
 
 
@@ -162,6 +166,10 @@ def extract_resource_hijacking(
                "Resource hijacking detected outside business hours"),
         Signal("action_status", _action_w, _action_w != 0,
                _action_desc or "Action status scoring"),
+        # Catch-all: ensures every resourceHijacking case has at least 1 signal
+        Signal("cloud_activity", W.get("cloud_activity", 1),
+               True,
+               "Cloud event detected"),
     ]
 
 
@@ -184,6 +192,10 @@ def extract_data_exposure(
                "Classified or sensitive data in exposed storage"),
         Signal("action_status", _action_w, _action_w != 0,
                _action_desc or "Action status scoring"),
+        # Catch-all: ensures every dataExposure case has at least 1 signal
+        Signal("cloud_activity", W.get("cloud_activity", 1),
+               True,
+               "Cloud event detected"),
     ]
 
 
@@ -209,6 +221,10 @@ def extract_iam_privilege_escalation(
                "Persistence mechanism alongside privilege escalation"),
         Signal("action_status", _action_w, _action_w != 0,
                _action_desc or "Action status"),
+        # Catch-all: ensures every iamPrivilegeEscalation case has at least 1 signal
+        Signal("cloud_activity", W.get("cloud_activity", 1),
+               True,
+               "Cloud event detected"),
     ]
 
 
@@ -235,6 +251,10 @@ def extract_suspicious_api_call(
                "Service principal making anomalous API calls"),
         Signal("action_status", _action_w, _action_w != 0,
                _action_desc or "Action status"),
+        # Catch-all: ensures every suspiciousApiCall case has at least 1 signal
+        Signal("cloud_activity", W.get("cloud_activity", 1),
+               True,
+               "Cloud event detected"),
     ]
 
 
