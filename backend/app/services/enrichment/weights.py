@@ -235,8 +235,24 @@ W: dict[str, int] = {
     # "known_bad_hash" already in Tier 4 at 20
 
     # ── Negative signals (noise reduction) ────────────────────────────────
-    "powershell_activity": 3,  # Catch-all: PSBL case, no specific threat indicator (low weight)
-    "privilege_activity": 3,  # Catch-all: privilege elevation event (low weight)
+    "powershell_activity": 1,  # Catch-all: near-zero weight so other signals drive discrimination (was 3)
+    "privilege_activity": 1,  # Catch-all: same (was 3)
+
+    # ── PowerShell content-based signals (Step 2 quality improvement) ────
+    "ps_registry_access": 8,        # Script touches registry
+    "ps_file_write": 10,            # Script writes files
+    "ps_network_call": 15,          # Script makes HTTP/socket calls
+    "ps_process_spawn": 12,         # Script starts other processes
+    "ps_credential_access": 18,     # Script accesses credentials
+    "ps_com_object": 10,            # Script uses COM objects
+    "ps_wmi_call": 15,              # Script invokes WMI methods
+    "ps_service_manipulation": 18,  # Script modifies services
+    "ps_event_log_access": 12,      # Script accesses event logs
+    "ps_base64_usage": 10,          # Script uses base64
+
+    # ── Process risk-tier signals (Step 4 quality improvement) ───────────
+    "known_system_process": -5,     # Negative: known safe Windows system process
+    "unknown_process": 10,          # Unknown process warrants investigation
 
     # ── Domain intelligence signals ──────────────────────────────────────
     "domain_very_new": 22,    # Domain registered < 7 days ago (strong C2/phishing indicator)
@@ -383,6 +399,20 @@ SIGNAL_TIERS: dict[str, str] = {
     "domain_newly_registered": "verified",  # RDAP registration date check
     "domain_suspicious_tld": "inferred",  # TLD pattern match
     "domain_known_safe": "verified",  # Known-safe domain list
+
+    # PowerShell content classification
+    "ps_registry_access": "observed",
+    "ps_file_write": "observed",
+    "ps_network_call": "inferred",
+    "ps_process_spawn": "inferred",
+    "ps_credential_access": "verified",
+    "ps_com_object": "observed",
+    "ps_wmi_call": "inferred",
+    "ps_service_manipulation": "verified",
+    "ps_event_log_access": "inferred",
+    "ps_base64_usage": "observed",
+    "known_system_process": "verified",  # DB-backed path check
+    "unknown_process": "inferred",       # Negative list match
 
     # Catch-all and negative signals — pattern-matched, deterministic
     "powershell_activity": "observed",  # Always fires on PSBL, very low weight

@@ -581,6 +581,13 @@ def translate_sysmon_event(raw_alert: dict[str, Any]) -> int:
                 existing_mitre["techniques"] = sorted(merged)
                 added += 1
 
+    # ── PowerShell content classification ─────────────────────────────────
+    # Runs on ALL PowerShell cases (even if MITRE matched) to add granular
+    # signals based on WHAT the script does. These create score spread —
+    # a script that writes files scores differently from one that reads them.
+    if combined and not techniques_found:
+        _classify_powershell_content(raw_alert, combined)
+
     # ── Benign PowerShell classifier ────────────────────────────────────
     # Only runs when NO MITRE pattern matched. Identifies known-safe scripts
     # (module imports, Get-* cmdlets, DSC, WMI queries) so the scoring pipeline
@@ -599,6 +606,74 @@ def translate_sysmon_event(raw_alert: dict[str, Any]) -> int:
             )
 
     return added
+
+
+# ---------------------------------------------------------------------------
+# PowerShell content classification — granular behavioral signals
+# ---------------------------------------------------------------------------
+# These fire based on WHAT the script does (not just that it exists).
+# Each one sets a boolean flag on raw_alert that the signal extractor reads.
+
+_PS_CONTENT_PATTERNS: list[tuple[re.Pattern, str]] = [
+    # Registry access (read or write)
+    (re.compile(r"\b(?:Get-ItemProperty|Set-ItemProperty|New-ItemProperty|Remove-ItemProperty)\s+.*(?:HKLM|HKCU|HKCR|Registry)", re.I),
+     "_psRegistryAccess"),
+    (re.compile(r"\breg(?:\.exe)?\s+(?:add|delete|query)\s+HK", re.I),
+     "_psRegistryAccess"),
+
+    # File write operations
+    (re.compile(r"\b(?:Set-Content|Add-Content|Out-File|New-Item\s+.*-ItemType\s+File)\b", re.I),
+     "_psFileWrite"),
+    (re.compile(r"\b(?:\[IO\.File\]::Write|\[System\.IO\.File\]::Write|StreamWriter)", re.I),
+     "_psFileWrite"),
+
+    # Network calls
+    (re.compile(r"\b(?:Invoke-WebRequest|Invoke-RestMethod|System\.Net\.WebClient|Net\.Sockets|HttpClient|wget|curl)\b", re.I),
+     "_psNetworkCall"),
+    (re.compile(r"\b(?:Test-NetConnection|New-Object\s+.*Net\.)", re.I),
+     "_psNetworkCall"),
+
+    # Process spawning
+    (re.compile(r"\b(?:Start-Process|Invoke-Expression|Invoke-Command|iex\s*\(|& (?:cmd|powershell|wscript|cscript))", re.I),
+     "_psProcessSpawn"),
+
+    # Credential access
+    (re.compile(r"\b(?:Get-Credential|ConvertTo-SecureString|ConvertFrom-SecureString|PSCredential|CredentialCache)", re.I),
+     "_psCredentialAccess"),
+
+    # COM object usage
+    (re.compile(r"\bNew-Object\s+.*-ComObject\b", re.I),
+     "_psComObject"),
+
+    # WMI method calls (not just queries — actual method invocations)
+    (re.compile(r"\b(?:Invoke-WmiMethod|Invoke-CimMethod|Set-WmiInstance|Set-CimInstance)\b", re.I),
+     "_psWmiCall"),
+
+    # Service manipulation
+    (re.compile(r"\b(?:Set-Service|New-Service|Remove-Service|Restart-Service|Stop-Service)\b", re.I),
+     "_psServiceManipulation"),
+
+    # Event log access
+    (re.compile(r"\b(?:Get-WinEvent|Get-EventLog|Clear-EventLog|wevtutil)\b", re.I),
+     "_psEventLogAccess"),
+
+    # Base64 usage (not flagged as encoded command by MITRE patterns)
+    (re.compile(r"\b(?:FromBase64String|ToBase64String|\[Convert\]::FromBase64)\b", re.I),
+     "_psBase64Usage"),
+]
+
+
+def _classify_powershell_content(raw_alert: dict[str, Any], combined: str) -> None:
+    """Set boolean flags on raw_alert based on PowerShell script content.
+
+    Each flag drives a signal in extract_powershell_execution with its own
+    weight and tier, creating score spread across different script behaviors.
+    """
+    for pattern, field_name in _PS_CONTENT_PATTERNS:
+        if raw_alert.get(field_name) is True:
+            continue  # already set (idempotent)
+        if pattern.search(combined):
+            raw_alert[field_name] = True
 
 
 # ---------------------------------------------------------------------------

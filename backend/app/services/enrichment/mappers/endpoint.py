@@ -113,6 +113,69 @@ def _is_masquerading(raw: dict[str, Any]) -> bool:
     return False
 
 
+_KNOWN_SYSTEM_PROCESSES = frozenset({
+    "svchost.exe", "csrss.exe", "lsass.exe", "services.exe",
+    "smss.exe", "winlogon.exe", "wininit.exe", "dwm.exe",
+    "taskhost.exe", "taskhostw.exe", "conhost.exe",
+    "searchindexer.exe", "spoolsv.exe", "lsm.exe",
+    "audiodg.exe", "sihost.exe", "fontdrvhost.exe",
+    "runtimebroker.exe", "shellexperiencehost.exe",
+    "searchui.exe", "ctfmon.exe", "dllhost.exe",
+    "wmiprvse.exe", "wuauclt.exe", "tiworker.exe",
+    "trustedinstaller.exe", "msiexec.exe", "smartscreen.exe",
+    "securityhealthservice.exe", "sgrmbroker.exe",
+    "systemsettingsbroker.exe", "backgroundtaskhost.exe",
+})
+
+_KNOWN_ADMIN_TOOLS = frozenset({
+    "powershell.exe", "pwsh.exe", "cmd.exe",
+    "wmic.exe", "net.exe", "net1.exe",
+    "certutil.exe", "bitsadmin.exe", "schtasks.exe",
+    "sc.exe", "reg.exe", "regedit.exe",
+    "whoami.exe", "ipconfig.exe", "netstat.exe",
+    "tasklist.exe", "systeminfo.exe", "hostname.exe",
+    "nslookup.exe", "ping.exe", "tracert.exe",
+})
+
+
+def _is_known_system_process(raw: dict[str, Any]) -> bool:
+    """Check if the process is a known Windows system process in a safe path."""
+    f = raw.get("file") or {}
+    name = (f.get("fileName") or "").lower()
+    proc = (raw.get("process") or raw.get("_processName") or "").lower()
+    proc_base = proc.rsplit("\\", 1)[-1].rsplit("/", 1)[-1] if proc else ""
+    check_name = name or proc_base
+    if not check_name:
+        return False
+    if check_name not in _KNOWN_SYSTEM_PROCESSES:
+        return False
+    # Must also be running from a system path
+    path = (f.get("filePath") or proc or "").lower()
+    safe = any(p in path for p in ("\\windows\\system32\\", "\\windows\\syswow64\\",
+                                    "\\windows\\", "/windows/system32/"))
+    return safe
+
+
+def _is_unknown_process(raw: dict[str, Any]) -> bool:
+    """Check if the process isn't in any known list (system, admin, LOLBin, attack tool)."""
+    f = raw.get("file") or {}
+    name = (f.get("fileName") or "").lower()
+    proc = (raw.get("process") or raw.get("_processName") or "").lower()
+    proc_base = proc.rsplit("\\", 1)[-1].rsplit("/", 1)[-1] if proc else ""
+    check_name = name or proc_base
+    if not check_name or len(check_name) < 3:
+        return False
+    if check_name in _KNOWN_SYSTEM_PROCESSES:
+        return False
+    if check_name in _KNOWN_ADMIN_TOOLS:
+        return False
+    if check_name in _LOLBINS:
+        return False
+    if check_name in {t + ".exe" for t in _KNOWN_ATTACK_TOOLS}:
+        return False
+    return True
+
+
 def _has_known_attack_tool(raw: dict[str, Any]) -> bool:
     """Check if process name, file path, or context mentions a known attack tool."""
     f = raw.get("file") or {}
@@ -266,6 +329,15 @@ def extract_suspicious_process(
                "Command and control beaconing pattern detected"),
         Signal("lateral_movement", W["lateral_movement"], has_lateral_movement_context(raw),
                "Lateral movement detected — infection spreading to additional hosts"),
+        # ── Process risk-tier signals (Step 4 quality improvement) ──────
+        # Push known-safe system processes DOWN and flag unknown processes UP
+        # so suspiciousProcess cases actually discriminate (stddev was 5.0).
+        Signal("known_system_process", W.get("known_system_process", -5),
+               _is_known_system_process(raw),
+               "Known Windows system process running from correct path"),
+        Signal("unknown_process", W.get("unknown_process", 10),
+               _is_unknown_process(raw),
+               "Process not in any known category — warrants investigation"),
     ]
 
 
@@ -528,9 +600,41 @@ def extract_powershell_execution(
         # this, cases that don't match any pattern get zero signals and the
         # quality dashboard shows 34% zero-signal cases. This low-weight
         # observed signal says "we looked at this and found nothing specific."
-        Signal("powershell_activity", W.get("powershell_activity", 3),
+        Signal("powershell_activity", W.get("powershell_activity", 1),
                True,  # always fires for PSBL cases
                "PowerShell script execution detected (no specific threat indicator)"),
+        # ── Content-based discrimination signals (Step 2 quality improvement) ──
+        # Each fires based on WHAT the script does, creating score spread.
+        Signal("ps_registry_access", W.get("ps_registry_access", 8),
+               raw.get("_psRegistryAccess") is True,
+               "Script accesses Windows Registry"),
+        Signal("ps_file_write", W.get("ps_file_write", 10),
+               raw.get("_psFileWrite") is True,
+               "Script writes files to disk"),
+        Signal("ps_network_call", W.get("ps_network_call", 15),
+               raw.get("_psNetworkCall") is True,
+               "Script makes network/HTTP calls"),
+        Signal("ps_process_spawn", W.get("ps_process_spawn", 12),
+               raw.get("_psProcessSpawn") is True,
+               "Script spawns other processes"),
+        Signal("ps_credential_access", W.get("ps_credential_access", 18),
+               raw.get("_psCredentialAccess") is True,
+               "Script accesses credentials/secure strings"),
+        Signal("ps_com_object", W.get("ps_com_object", 10),
+               raw.get("_psComObject") is True,
+               "Script creates COM objects"),
+        Signal("ps_wmi_call", W.get("ps_wmi_call", 15),
+               raw.get("_psWmiCall") is True,
+               "Script invokes WMI methods"),
+        Signal("ps_service_manipulation", W.get("ps_service_manipulation", 18),
+               raw.get("_psServiceManipulation") is True,
+               "Script modifies Windows services"),
+        Signal("ps_event_log_access", W.get("ps_event_log_access", 12),
+               raw.get("_psEventLogAccess") is True,
+               "Script accesses event logs"),
+        Signal("ps_base64_usage", W.get("ps_base64_usage", 10),
+               raw.get("_psBase64Usage") is True,
+               "Script uses Base64 encoding/decoding"),
     ]
 
 
