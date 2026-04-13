@@ -276,9 +276,10 @@ def cluster_cases(
             continue
 
         # Adaptive threshold: lower for internal-only cases (insider threats).
-        # External threshold reduced from 60 to 45 to match reduced severity
-        # base (scores are now signal-driven, not severity-driven).
-        _threshold = 45  # default for external IPs
+        # Thresholds lowered after the Day 6 noisy-signal removal which
+        # dropped average case scores from ~66 to ~38. The old threshold of
+        # 45 excluded 68% of cases from correlation.
+        _threshold = 30  # default for external IPs (was 45)
         case_ips = []
         ent_raw = case.entities or {}
         for ip_obj in ent_raw.get("ips", []) or []:
@@ -289,7 +290,7 @@ def cluster_cases(
 
         all_internal = all(_is_private_ip_str(ip) for ip in case_ips if ip) if case_ips else True
         if all_internal:
-            _threshold = 30  # lower threshold for insider threat cases
+            _threshold = 20  # lower threshold for insider threat cases (was 30)
 
         if case.confidence_score < _threshold:
             # Rescue: pull in low-confidence cases that share a user with an
@@ -299,21 +300,39 @@ def cluster_cases(
             # one case above the full threshold.
             _ent_rescue = extract_entities(case)
             rescued = False
-            if _ent_rescue["users"] and case.confidence_score >= 30:
-                if shared_egress_ips:
-                    _ent_rescue["ips"] = _ent_rescue["ips"] - shared_egress_ips
+            if shared_egress_ips:
+                _ent_rescue["ips"] = _ent_rescue["ips"] - shared_egress_ips
+            # Rescue by user OR device match (device-based rescue added to
+            # catch endpoint alerts that share a hostname but may not have
+            # a user identity, e.g. Sysmon process events).
+            if case.confidence_score >= 15:
                 for i, cluster in enumerate(clusters):
                     cluster_has_strong = any(
                         c.confidence_score >= _threshold for c in cluster
                     )
-                    if cluster_has_strong and _ent_rescue["users"] & cluster_entities[i]["users"]:
-                        # Same user, cluster has strong evidence — pull in
+                    if not cluster_has_strong:
+                        continue
+                    # User-based rescue (original)
+                    if _ent_rescue["users"] and _ent_rescue["users"] & cluster_entities[i]["users"]:
                         cluster.append(case)
                         cluster_entities[i]["users"] |= _ent_rescue["users"]
                         cluster_entities[i]["ips"] |= _ent_rescue["ips"]
                         cluster_entities[i]["devices"] |= _ent_rescue.get("devices", set())
                         results[i].reasons.add(
                             "User-linked rescue (below threshold but same user)"
+                        )
+                        results[i].reasons.add(f"Within {CORRELATION_WINDOW_HOURS}h time window")
+                        rescued = True
+                        break
+                    # Device-based rescue (NEW — catches endpoint-only cases)
+                    rescue_devices = _ent_rescue.get("devices", set())
+                    if rescue_devices and rescue_devices & cluster_entities[i].get("devices", set()):
+                        cluster.append(case)
+                        cluster_entities[i]["users"] |= _ent_rescue["users"]
+                        cluster_entities[i]["ips"] |= _ent_rescue["ips"]
+                        cluster_entities[i]["devices"] |= rescue_devices
+                        results[i].reasons.add(
+                            "Device-linked rescue (below threshold but same host)"
                         )
                         results[i].reasons.add(f"Within {CORRELATION_WINDOW_HOURS}h time window")
                         rescued = True

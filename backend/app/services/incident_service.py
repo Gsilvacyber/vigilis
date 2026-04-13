@@ -340,7 +340,7 @@ def correlate_incidents(
             total_alerts = sum(getattr(c, 'alert_count', 1) or 1 for c in cluster)
             max_score = max((getattr(c, 'confidence_score', 0) or 0) for c in cluster)
 
-            if total_alerts >= 5 and max_score >= 75:
+            if total_alerts >= 3 and max_score >= 50:
                 sole_stage = list(stage_set.keys())[0]
                 stage_label = _STAGE_LABELS.get(sole_stage, sole_stage)
                 users_list = sorted(all_entities["users"])
