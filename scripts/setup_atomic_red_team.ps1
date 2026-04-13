@@ -82,16 +82,21 @@ function Install-ART {
 
     # Download the atomics (test definitions)
     try {
-        Import-Module invoke-atomicredteam -Force
         if (-not (Test-Path "C:\AtomicRedTeam\atomics")) {
             Write-Host "  Downloading atomic test definitions..." -ForegroundColor DarkGray
-            Invoke-AtomicRedTeam -GetAtomics -Force
+            # Download and run the installer script from the official repo
+            IEX (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing).Content
+            Install-AtomicRedTeam -getAtomics -Force
             Write-OK "Atomics downloaded to C:\AtomicRedTeam"
         } else {
             Write-OK "Atomics already present"
         }
+        Import-Module invoke-atomicredteam -Force
     } catch {
         Write-Fail "Atomics download failed: $($_.Exception.Message)"
+        Write-Host "  Manual fix: run these two lines in PowerShell as Admin:" -ForegroundColor DarkGray
+        Write-Host "    IEX (IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing)" -ForegroundColor DarkGray
+        Write-Host "    Install-AtomicRedTeam -getAtomics -Force" -ForegroundColor DarkGray
         return $false
     }
 
