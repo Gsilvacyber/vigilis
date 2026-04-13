@@ -257,6 +257,7 @@ W: dict[str, int] = {
     # ── Peer comparison signals (Step 6 quality improvement) ────────────
     "peer_anomaly": 15,             # User has 3x+ more cases than tenant avg for this alert type
     "peer_anomaly_critical": 22,    # User has 5x+ more cases than tenant avg
+    "routine_admin_tool": -8,       # Negative: admin tool running normally (no abuse)
 
     # ── Domain intelligence signals ──────────────────────────────────────
     "domain_very_new": 22,    # Domain registered < 7 days ago (strong C2/phishing indicator)
@@ -419,6 +420,7 @@ SIGNAL_TIERS: dict[str, str] = {
     "unknown_process": "inferred",       # Negative list match
     "peer_anomaly": "verified",          # DB-backed case count comparison
     "peer_anomaly_critical": "verified", # DB-backed case count comparison
+    "routine_admin_tool": "verified",    # Process name + path check
 
     # Catch-all and negative signals — pattern-matched, deterministic
     "powershell_activity": "observed",  # Always fires on PSBL, very low weight

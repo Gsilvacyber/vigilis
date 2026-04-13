@@ -176,6 +176,38 @@ def _is_unknown_process(raw: dict[str, Any]) -> bool:
     return True
 
 
+def _is_routine_admin_activity(raw: dict[str, Any]) -> bool:
+    """Check if this is a routine admin tool execution with no abuse indicators.
+
+    True when: the process is a known admin tool (powershell, cmd, etc.)
+    AND it's running from a standard system path
+    AND there's no LOLBin abuse, suspicious path, or attack context.
+    This pushes routine admin noise DOWN to break the 61-70 mid-range cluster.
+    """
+    f = raw.get("file") or {}
+    name = (f.get("fileName") or "").lower()
+    proc = (raw.get("process") or raw.get("_processName") or "").lower()
+    proc_base = proc.rsplit("\\", 1)[-1].rsplit("/", 1)[-1] if proc else ""
+    check_name = name or proc_base
+    if not check_name:
+        return False
+    # Must be a known admin tool
+    if check_name not in _KNOWN_ADMIN_TOOLS:
+        return False
+    # Must NOT have any suspicious indicators
+    if raw.get("_lolbinAbuse"):
+        return False
+    if raw.get("_encodedCommand") or raw.get("_downloadCradle"):
+        return False
+    if raw.get("_processInjection") or raw.get("_uacBypass"):
+        return False
+    if _suspicious_path(raw):
+        return False
+    if _has_known_attack_tool(raw):
+        return False
+    return True
+
+
 def _has_known_attack_tool(raw: dict[str, Any]) -> bool:
     """Check if process name, file path, or context mentions a known attack tool."""
     f = raw.get("file") or {}
@@ -338,6 +370,12 @@ def extract_suspicious_process(
         Signal("unknown_process", W.get("unknown_process", 10),
                _is_unknown_process(raw),
                "Process not in any known category — warrants investigation"),
+        # Routine admin activity: admin tool running from safe path, no
+        # LOLBin abuse, no suspicious context → push DOWN to break the
+        # 61-70 mid-range cluster where 42% of cases land.
+        Signal("routine_admin_tool", W.get("routine_admin_tool", -8),
+               _is_routine_admin_activity(raw),
+               "Routine admin tool execution (safe path, no abuse indicators)"),
     ]
 
 
