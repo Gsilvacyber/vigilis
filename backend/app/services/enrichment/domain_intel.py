@@ -78,6 +78,12 @@ def lookup_domain(domain: str) -> dict[str, Any] | None:
 
     domain = domain.lower().strip()
 
+    # Input validation: reject domains with path traversal or URL injection chars
+    if any(c in domain for c in ("../", "/", "@", " ", "\t", "\n", "\\", "?")):
+        return None
+    if len(domain) > 253:  # RFC 1035 max domain length
+        return None
+
     # Skip known-safe domains
     for safe in _KNOWN_SAFE_DOMAINS:
         if domain == safe or domain.endswith("." + safe):
@@ -92,8 +98,10 @@ def lookup_domain(domain: str) -> dict[str, Any] | None:
                 "source": "cache",
             }
 
-    # Check cache
+    # Check cache (with size eviction to prevent unbounded memory growth)
     now = time.time()
+    if len(_cache) > 10000:
+        _cache.clear()  # evict all — simple but effective
     if domain in _cache:
         cached_result, cached_time = _cache[domain]
         if now - cached_time < _CACHE_TTL:

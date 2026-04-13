@@ -8,8 +8,6 @@ Uses the 10 attack scenarios from backend/app/fixtures/attack_scenarios.py.
 """
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 
 from backend.app.fixtures.attack_scenarios import get_all_scenarios
