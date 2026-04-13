@@ -21,7 +21,16 @@ def attack_results(test_client) -> dict[str, list[dict]]:
 
     Returns a dict of scenario_name -> list of case response dicts.
     Uses module scope so we only load once per test run.
+
+    Ensures the DB schema is ready before inserting (fixes the 'no such
+    table: tenants' flakiness when run after tests that drop/recreate tables).
     """
+    from sqlmodel import SQLModel
+    from backend.app.core.db import engine
+    from backend.app.core.auth import seed_demo_key
+    SQLModel.metadata.create_all(engine)
+    seed_demo_key()
+
     results: dict[str, list[dict]] = {}
     scenarios = get_all_scenarios()
     for scenario in scenarios:

@@ -56,6 +56,10 @@ _THREATFOX_URL = "https://threatfox.abuse.ch/export/csv/recent/"
 _MALWAREBAZAAR_URL = "https://bazaar.abuse.ch/export/csv/recent/"
 # Phase 4.1: URLhaus SHA256 hash feed (plain text, one hash per line)
 _URLHAUS_HASHES_URL = "https://urlhaus.abuse.ch/downloads/sha256/"
+# Step 7 quality improvement: additional feeds for broader IOC coverage
+_PHISHTANK_URL = "http://data.phishtank.com/data/online-valid.csv"
+_SSLBL_URL = "https://sslbl.abuse.ch/blacklist/sslblacklist.csv"
+_OPENPHISH_URL = "https://openphish.com/feed.txt"
 
 
 async def update_feeds_loop(interval_hours: int = 24):
@@ -79,6 +83,8 @@ def _run_feed_update():
     total += _download_threatfox()
     total += _download_malwarebazaar()     # Phase 4.1
     total += _download_urlhaus_hashes()    # Phase 4.1
+    total += _download_openphish()         # Step 7 quality improvement
+    total += _download_sslbl()             # Step 7 quality improvement
     _log.info("Feed update complete: %d IOCs ingested", total)
 
 
@@ -373,6 +379,103 @@ def _download_urlhaus_hashes() -> int:
     except Exception:
         _log.exception("URLhaus hashes download failed")
         _mark_fetch_failure("urlhaus_hashes")
+        return 0
+
+
+def _download_openphish() -> int:
+    """Step 7: OpenPhish community phishing URL feed.
+
+    Plain-text list of verified phishing URLs, one per line.
+    Extracts the domain and stores as domain IOC.
+    """
+    try:
+        resp = httpx.get(_OPENPHISH_URL, timeout=30, follow_redirects=True)
+        if resp.status_code != 200:
+            _log.warning("OpenPhish returned %d", resp.status_code)
+            _mark_fetch_failure("openphish")
+            return 0
+
+        from backend.app.core.db import get_session
+        from urllib.parse import urlparse
+
+        count = 0
+        with get_session() as session:
+            for line in resp.text.splitlines():
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                try:
+                    parsed = urlparse(line)
+                    domain = parsed.hostname
+                    if domain and "." in domain:
+                        _upsert_ioc(session, "domain", domain, "openphish",
+                                    threat_type="phishing",
+                                    confidence=0.90)
+                        count += 1
+                except (ValueError, TypeError):
+                    continue
+                if count >= 5000:
+                    break
+            session.commit()
+
+        _log.info("OpenPhish: %d phishing domains ingested", count)
+        _mark_fetch_success("openphish")
+        return count
+
+    except Exception:
+        _log.exception("OpenPhish download failed")
+        _mark_fetch_failure("openphish")
+        return 0
+
+
+def _download_sslbl() -> int:
+    """Step 7: abuse.ch SSL Blacklist — malicious SSL certificate SHA1 fingerprints.
+
+    CSV format: timestamp, sha1, reason. Certificates used by botnet C2,
+    malware delivery, or phishing infrastructure.
+    """
+    try:
+        resp = httpx.get(_SSLBL_URL, timeout=30, follow_redirects=True)
+        if resp.status_code != 200:
+            _log.warning("SSLBL returned %d", resp.status_code)
+            _mark_fetch_failure("sslbl")
+            return 0
+
+        from backend.app.core.db import get_session
+
+        count = 0
+        with get_session() as session:
+            reader = csv.reader(io.StringIO(resp.text))
+            for row in reader:
+                if not row or row[0].startswith("#"):
+                    continue
+                try:
+                    if len(row) < 3:
+                        continue
+                    sha1 = row[1].strip().strip('"').lower()
+                    reason = row[2].strip().strip('"') if len(row) > 2 else ""
+                    # Validate SHA1 (40 hex chars)
+                    if len(sha1) == 40 and all(c in "0123456789abcdef" for c in sha1):
+                        _upsert_ioc(
+                            session, "hash", sha1, "sslbl",
+                            threat_type="malicious_ssl",
+                            malware=reason,
+                            confidence=0.90,
+                        )
+                        count += 1
+                except (IndexError, ValueError):
+                    continue
+                if count >= 5000:
+                    break
+            session.commit()
+
+        _log.info("SSLBL: %d malicious SSL certificates ingested", count)
+        _mark_fetch_success("sslbl")
+        return count
+
+    except Exception:
+        _log.exception("SSLBL download failed")
+        _mark_fetch_failure("sslbl")
         return 0
 
 
