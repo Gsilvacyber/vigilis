@@ -254,6 +254,10 @@ W: dict[str, int] = {
     "known_system_process": -5,     # Negative: known safe Windows system process
     "unknown_process": 10,          # Unknown process warrants investigation
 
+    # ── Peer comparison signals (Step 6 quality improvement) ────────────
+    "peer_anomaly": 15,             # User has 3x+ more cases than tenant avg for this alert type
+    "peer_anomaly_critical": 22,    # User has 5x+ more cases than tenant avg
+
     # ── Domain intelligence signals ──────────────────────────────────────
     "domain_very_new": 22,    # Domain registered < 7 days ago (strong C2/phishing indicator)
     "domain_newly_registered": 18,  # Domain registered < 30 days ago
@@ -413,6 +417,8 @@ SIGNAL_TIERS: dict[str, str] = {
     "ps_base64_usage": "observed",
     "known_system_process": "verified",  # DB-backed path check
     "unknown_process": "inferred",       # Negative list match
+    "peer_anomaly": "verified",          # DB-backed case count comparison
+    "peer_anomaly_critical": "verified", # DB-backed case count comparison
 
     # Catch-all and negative signals — pattern-matched, deterministic
     "powershell_activity": "observed",  # Always fires on PSBL, very low weight

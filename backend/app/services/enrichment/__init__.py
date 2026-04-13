@@ -283,6 +283,24 @@ def _run_enrichment(
     except Exception:
         logger.debug("Historical user correlation skipped (non-fatal)", exc_info=True)
 
+    # Peer comparison — "this user has 5x more alerts than the tenant average"
+    try:
+        from backend.app.services.enrichment.historical import check_peer_comparison
+        _identity_data_peer = raw_alert.get("identity")
+        _peer_upn = ""
+        if isinstance(_identity_data_peer, dict):
+            _peer_upn = _identity_data_peer.get("upn", "")
+        if _peer_upn:
+            peer_signals = check_peer_comparison(
+                str(_peer_upn), alert_type, event_time, tenant_id=tenant_id or "",
+            )
+            existing_names = {s.name for s in signals}
+            for ps in peer_signals:
+                if ps.name not in existing_names:
+                    signals.append(ps)
+    except Exception:
+        logger.debug("Peer comparison skipped (non-fatal)", exc_info=True)
+
     # Internal IP reputation (fills the enrichment gap for RFC 1918 addresses)
     # WHY: OTX/AbuseIPDB return nothing for private IPs.  This is the ONLY
     # enrichment that insider threat cases get — checking if the internal IP
