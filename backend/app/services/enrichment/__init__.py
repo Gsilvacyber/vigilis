@@ -376,6 +376,18 @@ def _run_enrichment(
     except Exception:
         logger.debug("Process relationship check skipped (non-fatal)", exc_info=True)
 
+    # Frequency anomaly — detects entity-pair usage spikes above baseline
+    # (fires AFTER novelty fades; complements new_entity_relationship)
+    try:
+        from backend.app.services.enrichment.entity_graph import check_frequency_anomaly
+        freq_signals = check_frequency_anomaly(raw_alert, event_time, tenant_id)
+        existing_names = {s.name for s in signals}
+        for fs in freq_signals:
+            if fs.name not in existing_names:
+                signals.append(fs)
+    except Exception:
+        logger.debug("Frequency anomaly check skipped (non-fatal)", exc_info=True)
+
     # Phase 3: State drift signal check — only for endpoint.stateDrift events
     if alert_type == "endpoint.stateDrift":
         try:

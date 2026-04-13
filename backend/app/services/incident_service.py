@@ -73,6 +73,61 @@ from backend.app.services.correlation import (  # noqa: F401 — re-exports
 _refine_cloud_stage = _refine_cloud_stage_fn
 
 
+# ── Cross-case compound scoring ──────────────────────────────────────────
+def _apply_compound_boost(
+    conf_score: int,
+    cases: list,
+    stage_set: dict[str, list],
+) -> int:
+    """Boost incident confidence when multiple cases compound suspicion.
+
+    When N cases each score 40-50 individually, the *pattern* of repeated
+    hits is far more suspicious than any single event.  This function
+    applies two independent boosts:
+
+    1. **Volume multiplier** — scales the max individual case score by a
+       factor that grows with the number of qualifying cases.
+    2. **Kill-chain breadth bonus** — rewards incidents that span multiple
+       MITRE ATT&CK stages, because a wider spread across the kill chain
+       is a stronger indicator of a real attack.
+
+    The result replaces ``conf_score`` only when the boosted value is
+    higher, and is always capped at 100.
+    """
+    AVG_THRESHOLD = 30
+    case_scores = [getattr(c, "confidence_score", 0) or 0 for c in cases]
+    n_cases = len(cases)
+
+    if n_cases < 3:
+        return conf_score
+
+    avg_score = sum(case_scores) / n_cases if n_cases else 0
+    if avg_score < AVG_THRESHOLD:
+        return conf_score
+
+    max_score = max(case_scores) if case_scores else 0
+
+    # Volume multiplier
+    if n_cases > 10:
+        multiplier = 1.6
+    elif n_cases >= 6:
+        multiplier = 1.4
+    else:                          # 3-5 cases
+        multiplier = 1.2
+
+    boosted = max_score * multiplier
+
+    # Kill-chain breadth bonus
+    n_stages = len(stage_set)
+    if n_stages >= 3:
+        boosted += 20
+    elif n_stages >= 2:
+        boosted += 10
+
+    boosted = min(int(boosted), 100)
+    return max(conf_score, boosted)
+
+
 # ── Export payload generation (stays here — it's an API-layer helper) ─────
 
 def generate_export_payload(
@@ -312,6 +367,26 @@ def correlate_incidents(
                     _cs, _cl, _cb = _compute_confidence(
                         _all_cases, _ordered, _m_ents, _span,
                     )
+
+                    # ── Compound scoring boost on merge ─────────────────
+                    _pre = _cs
+                    _cs = _apply_compound_boost(_cs, _all_cases, _m_stages)
+                    if _cs != _pre:
+                        _cl = (
+                            "critical" if _cs >= 85 else
+                            "high" if _cs >= 65 else
+                            "medium" if _cs >= 45 else "low"
+                        )
+                        _cb.append({
+                            "factor": "Cross-case compound boost",
+                            "points": _cs - _pre,
+                            "maxPoints": 40,
+                            "detail": (
+                                f"{len(_all_cases)} cases, "
+                                f"{len(_m_stages)} kill-chain stages (merge)"
+                            ),
+                        })
+
                     matched_incident.confidence_score = _cs
                     matched_incident.confidence_label = _cl
                     matched_incident.confidence_breakdown = _cb
@@ -356,6 +431,12 @@ def correlate_incidents(
                 vol_bonus = min(total_alerts * 2, 20)
                 avg_case_conf = sum(c.confidence_score for c in cluster) / len(cluster)
                 pattern_conf = min(int(avg_case_conf + vol_bonus), 100)
+
+                # ── Compound scoring boost for single-stage clusters ────
+                pattern_conf = _apply_compound_boost(
+                    pattern_conf, cluster, stage_set,
+                )
+
                 pattern_conf_label = (
                     "critical" if pattern_conf >= 85 else
                     "high" if pattern_conf >= 65 else
@@ -466,6 +547,27 @@ def correlate_incidents(
         conf_score, conf_label, conf_breakdown = _compute_confidence(
             cluster, ordered_stages, all_entities, time_span,
         )
+
+        # ── Compound scoring boost for cross-case patterns ──────────
+        pre_boost = conf_score
+        conf_score = _apply_compound_boost(conf_score, cluster, stage_set)
+        if conf_score != pre_boost:
+            conf_label = (
+                "critical" if conf_score >= 85 else
+                "high" if conf_score >= 65 else
+                "medium" if conf_score >= 45 else "low"
+            )
+            conf_breakdown.append({
+                "factor": "Cross-case compound boost",
+                "points": conf_score - pre_boost,
+                "maxPoints": 40,
+                "detail": (
+                    f"{len(cluster)} cases (avg score "
+                    f"{sum(c.confidence_score for c in cluster) / len(cluster):.0f}%), "
+                    f"{len(stage_set)} kill-chain stages"
+                ),
+            })
+
         linkage = _build_linkage_reasons(cluster, cr.reasons, ordered_stages)
         link_str = _build_link_strength_summary(cr.max_link_score, cr.link_components)
         gaps = _analyze_kill_chain_gaps(ordered_stages)

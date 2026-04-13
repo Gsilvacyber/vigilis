@@ -191,6 +191,10 @@ W: dict[str, int] = {
     "rare_entity_relationship": 15,
     "entity_graph_anomaly": 18,
 
+    # ── Frequency anomaly (sustained detection after novelty fades) ───────
+    "frequency_anomaly": 18,           # verified — today > 3x baseline daily rate
+    "frequency_anomaly_critical": 22,  # verified — today > 5x baseline daily rate
+
     # ── Process-based verified signals (endpoint alerts without IPs) ─────
     "process_on_new_host": 18,
     "rare_process_on_server": 20,
@@ -306,6 +310,8 @@ SIGNAL_TIERS: dict[str, str] = {
     "process_on_new_host": "verified",
     "rare_process_on_server": "verified",
     "known_tool_on_dc": "verified",
+    "frequency_anomaly": "verified",
+    "frequency_anomaly_critical": "verified",
     # Phase 2 new signals
     "lsass_access": "verified",
     "wmi_persistence": "verified",

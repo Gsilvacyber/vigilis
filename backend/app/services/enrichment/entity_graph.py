@@ -406,6 +406,157 @@ def _check_entity_relationships_impl(
     return signals
 
 
+# ── Frequency Anomaly Detection ──────────────────────────────────────────
+# After the first week of operation, NOVELTY signals stop firing because
+# nothing is "new" anymore.  Enterprise security detects FREQUENCY ANOMALY:
+# "net.exe ran 50 times today vs 2 times baseline".  This fires every time
+# an attack deviates from normal patterns — not just the first occurrence.
+
+def check_frequency_anomaly(
+    raw_alert: dict[str, Any],
+    event_time: datetime,
+    tenant_id: str | None = None,
+) -> list[Signal]:
+    """Detect entity-pair frequency spikes above historical baseline.
+
+    For each entity pair in the alert, compute:
+      baseline_daily_rate = relationship.count / max(days_since_first_seen, 1)
+      today_count         = Cases ingested today sharing this entity pair
+
+    Signals produced:
+      - frequency_anomaly:          today > baseline * 3  (weight 18, verified)
+      - frequency_anomaly_critical: today > baseline * 5  (weight 22, verified)
+    """
+    from backend.app.core.metrics import entity_graph_query_latency
+
+    with entity_graph_query_latency.labels(operation="check_frequency_anomaly").time():
+        return _check_frequency_anomaly_impl(raw_alert, event_time, tenant_id)
+
+
+def _check_frequency_anomaly_impl(
+    raw_alert: dict[str, Any],
+    event_time: datetime,
+    tenant_id: str | None = None,
+) -> list[Signal]:
+    pairs = _extract_pairs(raw_alert)
+    if not pairs:
+        return []
+
+    signals: list[Signal] = []
+    _seen_signals: set[str] = set()  # deduplicate across pairs
+
+    try:
+        from backend.app.core.db import get_session
+        from backend.app.db.models import Case, EntityRelationship
+        from sqlmodel import select, func
+
+        now = datetime.now(timezone.utc)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        with get_session() as session:
+            # Cold-start guard: need at least 7 days of data for meaningful
+            # baselines.  Without this, a 2-day-old relationship with count=4
+            # yields baseline=2/day, and 3 alerts today would falsely spike.
+            oldest_rel = session.exec(
+                select(func.min(EntityRelationship.first_seen))
+            ).one()
+            if oldest_rel is None:
+                return []
+            graph_age_days = max((now - oldest_rel).days, 0)
+            if graph_age_days < 7:
+                _log.debug(
+                    "Frequency anomaly: graph only %d days old, skipping",
+                    graph_age_days,
+                )
+                return []
+
+            from backend.app.services.enrichment.weights import W
+
+            for rel_type, a_type, a_val, b_type, b_val in pairs:
+                a_val = a_val.strip().lower()
+                b_val = b_val.strip().lower()
+                if not a_val or not b_val or a_val == b_val:
+                    continue
+
+                # Look up the historical relationship
+                existing = session.exec(
+                    select(EntityRelationship).where(
+                        EntityRelationship.entity_a_type == a_type,
+                        EntityRelationship.entity_a_value == a_val,
+                        EntityRelationship.entity_b_type == b_type,
+                        EntityRelationship.entity_b_value == b_val,
+                    )
+                ).first()
+
+                if existing is None or existing.count < 5:
+                    # Not enough history — novelty signals handle brand-new
+                    # relationships; frequency anomaly needs a baseline.
+                    continue
+
+                days_active = max((now - existing.first_seen).days, 1)
+                baseline_daily_rate = existing.count / days_active
+
+                if baseline_daily_rate < 0.5:
+                    # Entity pair seen less than once every 2 days — too sparse
+                    # for rate-based anomaly; novelty signals are better here.
+                    continue
+
+                # Count today's cases containing EITHER entity value.
+                # Uses a lightweight text cast on the entities JSON column
+                # (works on both PostgreSQL and SQLite).
+                # We match on both entity values to reduce false positives.
+                from sqlalchemy import cast, String, and_
+                entities_text = cast(Case.entities, String)
+                today_count = session.exec(
+                    select(func.count(Case.id)).where(
+                        Case.event_time >= today_start,
+                        and_(
+                            entities_text.contains(a_val),
+                            entities_text.contains(b_val),
+                        ),
+                    )
+                ).one()
+
+                # Add 1 for the current case (not yet persisted)
+                today_count += 1
+
+                # Check thresholds
+                if today_count > baseline_daily_rate * 5 and "frequency_anomaly_critical" not in _seen_signals:
+                    weight = W.get("frequency_anomaly_critical", 22)
+                    signals.append(Signal(
+                        name="frequency_anomaly_critical",
+                        weight=weight,
+                        fired=True,
+                        label=(
+                            f"CRITICAL frequency spike: {a_type}:{a_val} ↔ {b_type}:{b_val} "
+                            f"seen {today_count}x today vs baseline {baseline_daily_rate:.1f}/day "
+                            f"({today_count / max(baseline_daily_rate, 0.1):.1f}x normal)"
+                        ),
+                        tier="verified",
+                    ))
+                    _seen_signals.add("frequency_anomaly_critical")
+                    _seen_signals.add("frequency_anomaly")  # critical subsumes normal
+                elif today_count > baseline_daily_rate * 3 and "frequency_anomaly" not in _seen_signals:
+                    weight = W.get("frequency_anomaly", 18)
+                    signals.append(Signal(
+                        name="frequency_anomaly",
+                        weight=weight,
+                        fired=True,
+                        label=(
+                            f"Frequency anomaly: {a_type}:{a_val} ↔ {b_type}:{b_val} "
+                            f"seen {today_count}x today vs baseline {baseline_daily_rate:.1f}/day "
+                            f"({today_count / max(baseline_daily_rate, 0.1):.1f}x normal)"
+                        ),
+                        tier="verified",
+                    ))
+                    _seen_signals.add("frequency_anomaly")
+
+    except Exception:
+        _log.debug("Frequency anomaly check failed (non-fatal)", exc_info=True)
+
+    return signals
+
+
 # ── Process-Based Enrichment (for endpoint alerts without external IPs) ──
 # Ransomware, malware, lateral movement alerts often have NO external IP.
 # The entity graph can still provide verified signals from host↔process data.

@@ -298,9 +298,10 @@ def test_confidence_breakdown_present(test_client):
 
     for inc in incidents:
         bd = inc["confidenceBreakdown"]
-        assert len(bd) == 7, f"Expected 7 factors, got {len(bd)}"
+        # 7 base factors + optional compound boost = 7 or 8
+        assert len(bd) >= 7, f"Expected >= 7 factors, got {len(bd)}"
         factors = {f["factor"] for f in bd}
-        assert factors == expected_factors, f"Missing factors: {expected_factors - factors}"
+        assert expected_factors.issubset(factors), f"Missing factors: {expected_factors - factors}"
 
         total = sum(f["points"] for f in bd)
         assert total == inc["confidenceScore"], (
