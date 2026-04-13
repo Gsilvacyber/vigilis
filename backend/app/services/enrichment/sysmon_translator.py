@@ -524,6 +524,210 @@ _MITRE_PATTERNS: list[tuple[re.Pattern, str, str, str | None]] = [
      "T1110", "Network brute force tool detected", None),
     (re.compile(r"\bInvoke-SprayPassword\b|\bSpray-Passwords\b", re.I),
      "T1110.003", "Password spray via PowerShell", None),
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # MITRE Coverage Expansion #3 — 20+ new base techniques (80+ target)
+    # Focuses on: Exfiltration, Collection, C2, Credential Access,
+    # Persistence, Execution, Impact, Defense Evasion
+    # ═══════════════════════════════════════════════════════════════════════
+
+    # ── T1005: Data from Local System ───────────────────────────────────
+    (re.compile(r"\bcopy\s+.*(?:SAM|SYSTEM|SECURITY|NTDS\.dit)\b", re.I),
+     "T1005", "Sensitive system file copy (SAM/NTDS)", None),
+    (re.compile(r"\besentutl(?:\.exe)?\s+.*(?:/y|copy|NTDS)", re.I),
+     "T1005", "Database file extraction via esentutl", None),
+    (re.compile(r"\bGet-Content\s+.*(?:\\SAM|\\SYSTEM|\\SECURITY|NTDS\.dit)", re.I),
+     "T1005", "Sensitive system file read via PowerShell", None),
+
+    # ── T1020: Automated Exfiltration ───────────────────────────────────
+    (re.compile(r"\bschtasks(?:\.exe)?\s+/create\s+.*(?:ftp|curl|scp|rclone|mega)", re.I),
+     "T1020", "Scheduled exfiltration task creation", None),
+    (re.compile(r"\brclone(?:\.exe)?\s+(?:copy|sync|move)\s+", re.I),
+     "T1020", "Automated cloud sync via rclone (exfiltration)", None),
+
+    # ── T1041: Exfiltration Over C2 Channel ─────────────────────────────
+    (re.compile(r"\bcurl(?:\.exe)?\s+.*(?:-T\s+|-d\s+@|--data-binary\s+@|--upload-file)\s*\S+", re.I),
+     "T1041", "Data upload via curl (C2 exfiltration)", None),
+    (re.compile(r"\bwget(?:\.exe)?\s+.*--post-file\s+", re.I),
+     "T1041", "Data upload via wget (C2 exfiltration)", None),
+    (re.compile(r"\bInvoke-RestMethod\s+.*-Method\s+(?:Post|Put)\s+.*-InFile\s+", re.I),
+     "T1041", "Data upload via PowerShell REST (C2 exfiltration)", None),
+
+    # ── T1046: Network Service Discovery ────────────────────────────────
+    (re.compile(r"\bnmap(?:\.exe)?\s+", re.I),
+     "T1046", "Port scan via nmap", None),
+    (re.compile(r"\bTest-NetConnection\b.*-Port\b", re.I),
+     "T1046", "Port scan via PowerShell Test-NetConnection", None),
+    (re.compile(r"\bmasscan(?:\.exe)?\s+", re.I),
+     "T1046", "Mass port scan via masscan", None),
+    (re.compile(r"\b(?:1\.\.(?:65535|1024|255)|ForEach.*Test-NetConnection.*-Port)", re.I),
+     "T1046", "PowerShell port sweep loop", None),
+
+    # ── T1056.001: Input Capture - Keylogging ───────────────────────────
+    (re.compile(r"\bSetWindowsHookEx\b.*(?:WH_KEYBOARD|13)\b", re.I),
+     "T1056.001", "Keyboard hook installation (keylogger)", None),
+    (re.compile(r"\bGetAsyncKeyState\b|\bGetKeyState\b.*(?:loop|while|for)", re.I),
+     "T1056.001", "Keystroke polling via Win32 API", None),
+    (re.compile(r"\b(?:keylog|KeyLogger|LogKeys|Get-Keystrokes)\b", re.I),
+     "T1056.001", "Keylogger tool detected", None),
+
+    # ── T1071: Application Layer Protocol ───────────────────────────────
+    (re.compile(r"\bInvoke-WebRequest\s+.*(?:\.onion|\.i2p)\b", re.I),
+     "T1071.001", "Communication over Tor/I2P network", None),
+    (re.compile(r"\b(?:ssh|plink)(?:\.exe)?\s+.*-R\s+\d+:", re.I),
+     "T1071", "Reverse SSH tunnel for C2 communication", None),
+    (re.compile(r"\bchisel(?:\.exe)?\s+(?:client|server)\b", re.I),
+     "T1071", "Chisel tunnel for C2 communication", None),
+
+    # ── T1102: Web Service (C2 via legitimate services) ─────────────────
+    (re.compile(r"\bhttps?://(?:pastebin\.com|paste\.ee|hastebin\.com|ghostbin\.co)/", re.I),
+     "T1102", "Communication with paste service (C2 channel)", None),
+    (re.compile(r"\bhttps?://(?:discord(?:app)?\.com/api/webhooks|hooks\.slack\.com)/", re.I),
+     "T1102", "Communication via Discord/Slack webhook (C2)", None),
+    (re.compile(r"\bhttps?://api\.telegram\.org/bot", re.I),
+     "T1102", "Communication via Telegram Bot API (C2)", None),
+    (re.compile(r"\bngrok(?:\.exe)?\s+(?:tcp|http|start)\b", re.I),
+     "T1102", "Ngrok tunnel for C2/exfiltration", None),
+
+    # ── T1106: Native API ───────────────────────────────────────────────
+    (re.compile(r"\bNtCreateThread(?:Ex)?\b|\bNtAllocateVirtualMemory\b|\bNtWriteVirtualMemory\b", re.I),
+     "T1106", "Direct NT syscall for code execution", None),
+    (re.compile(r"\bGetProcAddress\b.*(?:ntdll|kernel32).*\b(?:NtCreate|NtOpen|NtWrite|NtRead|NtAlloc)", re.I),
+     "T1106", "Dynamic resolution of NT API (evasion)", None),
+    (re.compile(r"\bAdd-Type\s+-MemberDefinition\s+.*DllImport.*(?:ntdll|kernel32)", re.I),
+     "T1106", "PowerShell P/Invoke for native API access", None),
+
+    # ── T1111: Multi-Factor Authentication Interception ─────────────────
+    (re.compile(r"\b(?:evilginx2?|modlishka|muraena|gophish)(?:\.exe)?\b", re.I),
+     "T1111", "MFA interception/phishing proxy tool", None),
+    (re.compile(r"\b(?:credsniper|king-phisher|SocialFish)\b", re.I),
+     "T1111", "Credential/MFA phishing framework", None),
+
+    # ── T1137: Office Application Startup ───────────────────────────────
+    (re.compile(r"\bcopy\s+.*(?:XLSTART|STARTUP|Word\\STARTUP|Excel\\XLSTART)\\", re.I),
+     "T1137", "File planted in Office startup folder", None),
+    (re.compile(r"\breg(?:\.exe)?\s+add\s+.*Office\\.*\\(?:Security|Addins|Common)", re.I),
+     "T1137", "Office startup registry key modified", None),
+    (re.compile(r"\.(?:wll|xll|xlam|dotm|ppam)\b.*(?:XLSTART|STARTUP|Addins)", re.I),
+     "T1137", "Office add-in planted in startup path", None),
+
+    # ── T1176: Browser Extensions ───────────────────────────────────────
+    (re.compile(r"\b(?:chrome|msedge)(?:\.exe)?\s+.*--load-extension\b", re.I),
+     "T1176", "Browser loaded with sideloaded extension", None),
+    (re.compile(r"\\(?:Chrome|Edge)\\User Data\\.*\\Extensions\\[a-z]{32}", re.I),
+     "T1176", "Browser extension path access", None),
+
+    # ── T1189: Drive-by Compromise ──────────────────────────────────────
+    (re.compile(r"\b(?:wscript|cscript)(?:\.exe)?\s+.*(?:\\Temp\\|\\Downloads\\|\\AppData\\).*\.(?:js|vbs|wsf)\b", re.I),
+     "T1189", "Script execution from temp/download folder (drive-by)", None),
+    (re.compile(r"\b(?:iexplore|msedge|chrome|firefox)(?:\.exe)?.*\.(?:hta|jnlp|application)\b", re.I),
+     "T1189", "Browser opening executable content (drive-by)", None),
+
+    # ── T1204: User Execution ───────────────────────────────────────────
+    (re.compile(r"\b(?:cmd|powershell|wscript|cscript)(?:\.exe)?\s+.*\\(?:Downloads|Desktop|Temp)\\.*\.(?:bat|cmd|ps1|vbs|js|exe|scr|pif)\b", re.I),
+     "T1204.002", "User executing file from download/desktop path", None),
+    (re.compile(r"\b(?:mshta|rundll32|regsvr32)(?:\.exe)?\s+.*\\(?:Downloads|Temp)\\", re.I),
+     "T1204.002", "LOLBin executing from user download folder", None),
+
+    # ── T1482: Domain Trust Discovery ───────────────────────────────────
+    (re.compile(r"\bnltest(?:\.exe)?\s+/domain_trusts", re.I),
+     "T1482", "Domain trust discovery via nltest", None),
+    (re.compile(r"\bGet-ADTrust\b|\bGet-DomainTrust\b|\b(?:dsquery|csvde)(?:\.exe)?\s+.*trustedDomain", re.I),
+     "T1482", "Domain trust enumeration via AD tools", None),
+    (re.compile(r"\b(?:Get-ForestTrust|Get-NetForestDomain|Get-DomainTrustMapping)\b", re.I),
+     "T1482", "Domain/forest trust mapping via PowerView", None),
+
+    # ── T1484: Domain Policy Modification ───────────────────────────────
+    (re.compile(r"\bNew-GPO\b|\bSet-GPRegistryValue\b|\bNew-GPLink\b", re.I),
+     "T1484.001", "Group Policy modification via PowerShell", None),
+    (re.compile(r"\bgpscript(?:\.exe)?\b|\bImport-GPO\b", re.I),
+     "T1484.001", "GPO import or script execution", None),
+
+    # ── T1485: Data Destruction ─────────────────────────────────────────
+    (re.compile(r"\b(?:sdelete|eraser|shred)(?:\.exe|64\.exe)?\s+", re.I),
+     "T1485", "Secure file deletion tool (data destruction)", None),
+    (re.compile(r"\bRemove-Item\s+.*-Recurse\s+.*-Force\b", re.I),
+     "T1485", "Recursive forced file deletion via PowerShell", None),
+    (re.compile(r"\brd\s+/s\s+/q\s+(?:C:\\|D:\\|\\\\)", re.I),
+     "T1485", "Recursive directory deletion (data destruction)", None),
+
+    # ── T1496: Resource Hijacking ───────────────────────────────────────
+    (re.compile(r"\b(?:xmrig|xmr-stak|cpuminer|cgminer|bfgminer|ethminer|minerd|t-rex)(?:\.exe)?\b", re.I),
+     "T1496", "Cryptocurrency miner detected", None),
+    (re.compile(r"\bstratum\+tcp://|\bstratum\+ssl://", re.I),
+     "T1496", "Stratum mining pool connection", None),
+    (re.compile(r"\b(?:monero|bitcoin|ethereum|zcash).*(?:wallet|pool|mining|hashrate)", re.I),
+     "T1496", "Crypto mining terminology in command line", None),
+
+    # ── T1550: Use Alternate Authentication Material ────────────────────
+    (re.compile(r"\bsekurlsa::pth\b|\b(?:Invoke-)?Pass(?:The|-)Hash\b", re.I),
+     "T1550.002", "Pass-the-Hash attack", None),
+    (re.compile(r"\bkerberos::ptt\b|\b(?:Invoke-)?Pass(?:The|-)Ticket\b|\bRubeus\b.*\bptt\b", re.I),
+     "T1550.003", "Pass-the-Ticket attack", None),
+    (re.compile(r"\b(?:Invoke-)?OverPass(?:The|-)Hash\b|\basktgt\b.*(?:/rc4|/aes256|/ntlm)", re.I),
+     "T1550.002", "Overpass-the-Hash / NTLM-to-Kerberos", None),
+
+    # ── T1553: Subvert Trust Controls ───────────────────────────────────
+    (re.compile(r"\bcertutil(?:\.exe)?\s+(?:-|/)addstore\s+(?:root|trustedpublisher)", re.I),
+     "T1553.004", "Root certificate installed via certutil", None),
+    (re.compile(r"\bImport-Certificate\b.*(?:Root|TrustedPublisher)", re.I),
+     "T1553.004", "Root certificate installed via PowerShell", None),
+    (re.compile(r"\bSet-AuthenticodeSignature\b|\bsigntool(?:\.exe)?\s+sign\b", re.I),
+     "T1553.002", "Code signing operation (trust subversion)", None),
+
+    # ── T1558: Steal or Forge Kerberos Tickets ──────────────────────────
+    (re.compile(r"\bRubeus(?:\.exe)?\s+(?:kerberoast|asreproast|harvest|tgtdeleg|renew|brute|s4u)\b", re.I),
+     "T1558", "Kerberos attack via Rubeus", None),
+    (re.compile(r"\b(?:Invoke-Kerberoast|Get-DomainSPNTicket)\b", re.I),
+     "T1558.003", "Kerberoasting via PowerShell", None),
+    (re.compile(r"\.kirbi\b|\.ccache\b|ticket\.(?:b64|bin)\b", re.I),
+     "T1558", "Kerberos ticket file detected", None),
+    (re.compile(r"\bkerberos::(?:golden|silver|list|purge|tgt)\b", re.I),
+     "T1558.001", "Golden/Silver ticket via Mimikatz kerberos module", None),
+
+    # ── T1059.003: Windows Command Shell ────────────────────────────────
+    (re.compile(r"\bcmd(?:\.exe)?\s+/c\s+.*(?:echo|type|more)\s+.*\|\s*(?:cmd|powershell)", re.I),
+     "T1059.003", "Piped command execution via cmd.exe", None),
+
+    # ── T1059.005: Visual Basic ─────────────────────────────────────────
+    (re.compile(r"\b(?:wscript|cscript)(?:\.exe)?\s+.*\.vbs\b", re.I),
+     "T1059.005", "VBScript execution via Windows Script Host", None),
+
+    # ── T1059.007: JavaScript ───────────────────────────────────────────
+    (re.compile(r"\b(?:wscript|cscript)(?:\.exe)?\s+.*\.(?:js|jse|wsf)\b", re.I),
+     "T1059.007", "JavaScript execution via Windows Script Host", None),
+
+    # ── T1574: Hijack Execution Flow ────────────────────────────────────
+    (re.compile(r"\breg(?:\.exe)?\s+add\s+.*(?:Image File Execution Options|IFEO)\\", re.I),
+     "T1574.012", "Image File Execution Options debugger set", None),
+    (re.compile(r"\breg(?:\.exe)?\s+add\s+.*\\Environment\\.*Path\b", re.I),
+     "T1574.007", "PATH environment variable modification for DLL hijack", None),
+
+    # ── T1027.010: Command Obfuscation ──────────────────────────────────
+    (re.compile(r"\^.\^.\^.\^.\^.", re.I),
+     "T1027.010", "Caret obfuscation in command line", None),
+    (re.compile(r"\bset\s+\w+=.\s*&&.*%\w+%.*%\w+%", re.I),
+     "T1027.010", "Environment variable concatenation obfuscation", None),
+
+    # ── T1546.001: Change Default File Association ──────────────────────
+    (re.compile(r"\bassoc\s+\.(?:exe|bat|cmd|ps1|vbs|js)=", re.I),
+     "T1546.001", "File association hijack via assoc", None),
+    (re.compile(r"\bftype\s+\w+=.*(?:cmd|powershell|wscript)", re.I),
+     "T1546.001", "File type handler hijack via ftype", None),
+
+    # ── T1546.015: Component Object Model Hijacking ─────────────────────
+    (re.compile(r"\breg(?:\.exe)?\s+add\s+.*\\CLSID\\.*\\InprocServer32\b", re.I),
+     "T1546.015", "COM object hijack via InprocServer32 registry", None),
+
+    # ── T1003.003: NTDS.dit extraction ──────────────────────────────────
+    (re.compile(r"\bntdsutil(?:\.exe)?\s+.*(?:ifm|\"activate instance ntds\")", re.I),
+     "T1003.003", "Active Directory database extraction via ntdsutil", None),
+
+    # ── T1048.002: Exfiltration Over Asymmetric Encrypted Protocol ──────
+    (re.compile(r"\bscp(?:\.exe)?\s+.*@.*:", re.I),
+     "T1048.002", "File transfer via SCP (encrypted exfiltration)", None),
+    (re.compile(r"\bsftp(?:\.exe)?\s+.*@", re.I),
+     "T1048.002", "File transfer via SFTP (encrypted exfiltration)", None),
 ]
 
 
