@@ -282,6 +282,116 @@ _MITRE_PATTERNS: list[tuple[re.Pattern, str, str, str | None]] = [
     # `net user` without /domain is local account enumeration
     (re.compile(r"\bnet(?:1)?(?:\.exe)?\s+user\s*(?!.*\/domain)(?!\s+\S+\s+\S+\s+/add)(?:\s|$)", re.I),
      "T1087.001", "Local account enumeration via net user", None),
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # MITRE Coverage Expansion — 20+ new techniques (quality council Step 3)
+    # Covers gaps in: Discovery, Collection, Impact, Defense Evasion,
+    # Lateral Movement, Execution, Persistence
+    # ═══════════════════════════════════════════════════════════════════════
+
+    # ── T1012: Query Registry ────────────────────────────────────────────
+    (re.compile(r"\breg(?:\.exe)?\s+query\s+HK", re.I),
+     "T1012", "Registry query for configuration data", None),
+
+    # ── T1016: System Network Configuration Discovery ────────────────────
+    (re.compile(r"\b(?:ipconfig|ifconfig)(?:\.exe)?\s+(?:/all|/displaydns|/flushdns)", re.I),
+     "T1016", "Network configuration discovery", None),
+    (re.compile(r"\bnetsh(?:\.exe)?\s+(?:interface|wlan|firewall)\s+show", re.I),
+     "T1016", "Network configuration via netsh", None),
+
+    # ── T1049: System Network Connections Discovery ──────────────────────
+    (re.compile(r"\bnetstat(?:\.exe)?\s+.*-(?:a|n|o|b|p)", re.I),
+     "T1049", "Active network connections enumeration", None),
+    (re.compile(r"\bGet-NetTCPConnection\b|\bGet-NetUDPEndpoint\b", re.I),
+     "T1049", "PowerShell network connection discovery", None),
+
+    # ── T1057: Process Discovery ─────────────────────────────────────────
+    (re.compile(r"\btasklist(?:\.exe)?\s+(?:/v|/svc|/fi)", re.I),
+     "T1057", "Process listing with details", None),
+
+    # ── T1069: Permission Groups Discovery ───────────────────────────────
+    (re.compile(r"\bnet(?:1)?(?:\.exe)?\s+(?:local)?group\s*(?!.*\/add)(?:\s|$)", re.I),
+     "T1069.001", "Local group enumeration", None),
+
+    # ── T1082: System Information Discovery ──────────────────────────────
+    (re.compile(r"\bsysteminfo(?:\.exe)?\b", re.I),
+     "T1082", "System information discovery", None),
+    (re.compile(r"\bhostname(?:\.exe)?\b", re.I),
+     "T1082", "Hostname discovery", None),
+
+    # ── T1083: File and Directory Discovery ──────────────────────────────
+    (re.compile(r"\bdir\s+.*(?:/s|/b|/a)\b", re.I),
+     "T1083", "Recursive file/directory listing", None),
+    (re.compile(r"\bGet-ChildItem\s+.*-Recurse\b", re.I),
+     "T1083", "PowerShell recursive file search", None),
+    (re.compile(r"\btree(?:\.exe)?\s+(?:/f|/a)", re.I),
+     "T1083", "Directory tree enumeration", None),
+
+    # ── T1112: Modify Registry ───────────────────────────────────────────
+    (re.compile(r"\breg(?:\.exe)?\s+(?:add|delete)\s+HK(?!.*CurrentVersion[\\/]+Run)", re.I),
+     "T1112", "Registry modification (non-Run key)", None),
+
+    # ── T1036: Masquerading ──────────────────────────────────────────────
+    (re.compile(r"\brename\s+.*\.exe\s+.*(?:svchost|csrss|lsass|services|explorer)\.exe", re.I),
+     "T1036.003", "Rename masquerading as system process", None),
+    (re.compile(r"\bcopy\s+.*\.exe\s+.*(?:svchost|csrss|lsass|services)\.exe", re.I),
+     "T1036.003", "Copy masquerading as system process", None),
+
+    # ── T1489: Service Stop (Impact) ─────────────────────────────────────
+    (re.compile(r"\bnet(?:1)?(?:\.exe)?\s+stop\s+(?!WinDefend|MsMpSvc|Sense)\S+", re.I),
+     "T1489", "Service stopped via net stop", None),
+    (re.compile(r"\bstop[\-]?service\s+(?!.*(?:windefend|msmpsvc|sense))\S+", re.I),
+     "T1489", "Service stopped via PowerShell", None),
+
+    # ── T1529: System Shutdown/Reboot (Impact) ───────────────────────────
+    (re.compile(r"\bshutdown(?:\.exe)?\s+.*(?:/s|/r|/f|/t\s+0)", re.I),
+     "T1529", "System shutdown or forced reboot", None),
+    (re.compile(r"\bRestart-Computer\b|\bStop-Computer\b", re.I),
+     "T1529", "PowerShell system shutdown/restart", None),
+
+    # ── T1561: Disk Wipe (Impact) ────────────────────────────────────────
+    (re.compile(r"\bformat(?:\.exe)?\s+[a-zA-Z]:\s+/(?:y|q|fs)", re.I),
+     "T1561.002", "Disk format (data destruction)", None),
+    (re.compile(r"\bcipher(?:\.exe)?\s+/w:", re.I),
+     "T1561.001", "Secure file deletion via cipher", None),
+
+    # ── T1119: Automated Collection ──────────────────────────────────────
+    (re.compile(r"\bforfiles(?:\.exe)?\s+.*(?:/s|/c|\.doc|\.xls|\.pdf|\.pst)", re.I),
+     "T1119", "Automated file collection via forfiles", None),
+    (re.compile(r"\bGet-ChildItem\s+.*-Include\s+\*\.(?:doc|xls|pdf|pst|key|pem|pfx)", re.I),
+     "T1119", "PowerShell automated document collection", None),
+
+    # ── T1115: Clipboard Data ────────────────────────────────────────────
+    (re.compile(r"\bGet-Clipboard\b|\b\[Windows\.Clipboard\]|\bpowershell.*clip\b", re.I),
+     "T1115", "Clipboard data access", None),
+
+    # ── T1074: Data Staged ───────────────────────────────────────────────
+    (re.compile(r"\bCompress-Archive\b|\btar\s+.*-c|\b7z(?:\.exe)?\s+a\b", re.I),
+     "T1074.001", "Data staged via compression for exfiltration", None),
+
+    # ── T1021.001: Remote Desktop Protocol ───────────────────────────────
+    (re.compile(r"\bmstsc(?:\.exe)?\s+/v:", re.I),
+     "T1021.001", "RDP connection initiated", None),
+    (re.compile(r"\breg(?:\.exe)?\s+add\s+.*Terminal\s*Server.*fDenyTSConnections.*0", re.I),
+     "T1021.001", "RDP enabled via registry", None),
+
+    # ── T1091: Replication Through Removable Media ───────────────────────
+    (re.compile(r"\bxcopy\s+.*[a-eA-E]:\\.*\s+[a-eA-E]:", re.I),
+     "T1091", "File copy to removable media", None),
+
+    # ── T1497: Virtualization/Sandbox Evasion ────────────────────────────
+    (re.compile(r"\b(?:Get-WmiObject|Get-CimInstance)\s+Win32_(?:ComputerSystem|BIOS).*(?:VMware|VirtualBox|QEMU|Hyper-V|Xen)", re.I),
+     "T1497.001", "VM/sandbox detection query", None),
+    (re.compile(r"\bSbieDll\.dll\b|\bdbghelp\.dll.*IsDebuggerPresent\b", re.I),
+     "T1497.001", "Sandbox/debugger evasion check", None),
+
+    # ── T1048: Exfiltration Over Alternative Protocol ────────────────────
+    (re.compile(r"\bnslookup(?:\.exe)?\s+.*-type=(?:TXT|AAAA|MX)\s+.*\.", re.I),
+     "T1048.003", "DNS-based data exfiltration (TXT/MX query)", None),
+
+    # ── T1486: Data Encrypted for Impact (ransomware encryption) ────────
+    (re.compile(r"\b(?:AESManaged|RijndaelManaged|RSACryptoServiceProvider|CryptoStream)\b", re.I),
+     "T1486", "Cryptographic API usage (potential ransomware encryption)", None),
 ]
 
 
