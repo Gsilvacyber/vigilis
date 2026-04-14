@@ -286,7 +286,7 @@ def scenario_ad_takeover() -> dict[str, Any]:
                   {"identity": {"upn": user}, "device": {"hostname": dc},
                    "_sourceName": "WindowsEventLog", "_sourceEventId": 4720,
                    "_accountCreated": True, "_newAccountName": "svc-backdoor",
-                   "commandLine": "net user svc-backdoor P@ssw0rd123 /add"},
+                   "commandLine": "net user svc-backdoor <REDACTED> /add"},
                   name, 3, "T1136.001", hours_ago=10),
 
             _case("identity.privilegeElevation", "critical",

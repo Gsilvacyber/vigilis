@@ -13,7 +13,6 @@ false C2 score.
 """
 from __future__ import annotations
 
-import ipaddress
 from typing import Any
 
 # Known cloud provider org names (from ip-api.com lookups)
