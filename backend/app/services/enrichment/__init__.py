@@ -240,6 +240,21 @@ def _run_enrichment(
     except Exception:
         logger.debug("IP identity lookup failed (non-fatal)", exc_info=True)
 
+    # Cloud provider IP allowlist — suppress false-positive C2 alerts on
+    # Microsoft Azure, GitHub, Google Cloud, AWS, Cloudflare traffic.
+    # The quality council flagged this as a credibility-destroying FP problem:
+    # outbound connections to Azure IPs were scoring as C2 at 90-100 confidence.
+    try:
+        from backend.app.services.enrichment.cloud_ip_allowlist import check_cloud_provider
+        if check_cloud_provider(raw_alert):
+            _existing_names = {s.name for s in signals}
+            if "known_cloud_provider" not in _existing_names:
+                signals.append(Signal("known_cloud_provider", -12, True,
+                    f"Destination is a known cloud provider IP ({raw_alert.get('_knownCloudProviderIP', '')})",
+                    "verified"))
+    except Exception:
+        logger.debug("Cloud provider check failed (non-fatal)", exc_info=True)
+
     # Domain intelligence (WHOIS/RDAP) — adds domain age + registrar signals.
     # "Domain registered 2 days ago" is one of the strongest phishing/C2 indicators.
     try:

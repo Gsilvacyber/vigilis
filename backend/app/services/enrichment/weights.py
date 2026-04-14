@@ -264,6 +264,7 @@ W: dict[str, int] = {
     "peer_anomaly": 15,             # User has 3x+ more cases than tenant avg for this alert type
     "peer_anomaly_critical": 22,    # User has 5x+ more cases than tenant avg
     "routine_admin_tool": -8,       # Negative: admin tool running normally (no abuse)
+    "known_cloud_provider": -12,    # Negative: destination is Microsoft/Google/AWS/GitHub (not C2)
     "routine_sysmon_event": -8,      # Negative: known Windows routine activity
 
     # ── Domain intelligence signals ──────────────────────────────────────
@@ -428,6 +429,7 @@ SIGNAL_TIERS: dict[str, str] = {
     "peer_anomaly": "verified",          # DB-backed case count comparison
     "peer_anomaly_critical": "verified", # DB-backed case count comparison
     "routine_admin_tool": "verified",    # Process name + path check
+    "known_cloud_provider": "verified",  # IP prefix match against cloud ranges
     "routine_sysmon_event": "verified",   # Process name + safe path check
 
     # Catch-all and negative signals — pattern-matched, deterministic
