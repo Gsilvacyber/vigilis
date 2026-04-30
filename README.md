@@ -153,6 +153,39 @@ The UI surfaces this directly at `http://localhost:8000/cases/<id>`.
 
 ---
 
+## Tested on public data
+
+The two-alert demo above is hand-crafted. The fairer question is: *what happens when you point this at data the engine has never seen?*
+
+I ran it against 200 alerts from a public HuggingFace SIEM dataset (Chronicle UDM-formatted, mix of login, process, network, and cloud events from a synthetic but unfamiliar fleet). A 30-line adapter — [`test_data/public_datasets/map_udm_to_csv.py`](test_data/public_datasets/map_udm_to_csv.py) — flattens the nested UDM schema into the flat columns the upload endpoint expects. No per-record tuning, no signal weight changes, no IOC pre-loading.
+
+200 alerts in, 200 cases out. Score histogram:
+
+```
+00-20 |   0
+21-40 |  38  ######################################
+41-60 | 157  ##################################################################
+61-65 |   5  #####    <- cap zone
+66-80 |   0
+81-100|   0
+```
+
+**Zero records crossed 65.** The engine didn't have access to threat intel that could verify any of these alerts (no OTX, no AbuseIPDB — just the local IOC DB and GreyNoise community), so the cap held on every one of 200 cases. Five pressed up against the cap zone — the engine wanted to score them higher, structurally, and the cap stopped it.
+
+That's the cap doing exactly what the headline says: refusing to grade alerts as critical without verifiable evidence, even when the alert text *looks* dramatic. The cap is not a unit test fixture. It's a property of the engine on real data.
+
+To reproduce:
+```bash
+python test_data/public_datasets/map_udm_to_csv.py
+curl -X POST "http://localhost:8000/api/v1/demo/upload?persist=true&grouping=true" \
+  -H "X-API-Key: socai-demo-key-do-not-use-in-production" \
+  -F "file=@test_data/public_datasets/hf_siem_mapped.csv"
+```
+
+The dataset itself (`hf_siem_200_curated.json`, ~124KB) is in [`test_data/public_datasets/`](test_data/public_datasets/) and is the curated 200-row slice of a larger HuggingFace SIEM dataset. The CSV the mapper produces is gitignored — regenerate it with the script.
+
+---
+
 ## Architecture
 
 ```
