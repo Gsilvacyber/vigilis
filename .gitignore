@@ -130,6 +130,7 @@ log/
 # Decide later whether to publish polished public versions.
 CLAUDE.md
 docs/vigilis-reference.md
+memory-bank/
 
 # ------------------------------------------------------------------------------
 # IDE and tooling local state
