@@ -64,13 +64,16 @@ _OPENPHISH_URL = "https://openphish.com/feed.txt"
 
 async def update_feeds_loop(interval_hours: int = 24):
     """Background task: download IOC feeds on startup and every 24h."""
+    from backend.app.core.config import settings
     _log.info("Feed ingestion task started (interval=%dh)", interval_hours)
-    # Run immediately on startup
-    _run_feed_update()
+    if settings.skip_initial_feeds:
+        _log.info("SKIP_INITIAL_FEEDS=true — deferring first feed download to scheduled interval")
+    else:
+        await asyncio.to_thread(_run_feed_update)
     while True:
         await asyncio.sleep(interval_hours * 3600)
         try:
-            _run_feed_update()
+            await asyncio.to_thread(_run_feed_update)
         except Exception:
             _log.exception("Feed update failed")
 

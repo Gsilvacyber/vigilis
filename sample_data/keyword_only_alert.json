@@ -1,0 +1,24 @@
+{
+  "tenantId": "demo-tenant",
+  "customer": {"name": "Demo Corp", "environment": "prod"},
+  "source": {
+    "sourceSystem": "edr",
+    "sourceName": "Generic EDR",
+    "sourceAlertId": "demo-keyword-001",
+    "sourceSeverity": "high"
+  },
+  "alertType": "endpoint.suspiciousProcess",
+  "title": "Suspected lateral movement via mimikatz on workstation",
+  "description": "Process command line contains references to credential theft tooling. The phrase 'pass-the-hash' appears in the script block. Possible mimikatz invocation detected by string match.",
+  "severity": "high",
+  "eventTime": "2026-04-30T12:00:00Z",
+  "rawAlert": {
+    "device": {"hostname": "WS-DEMO-01", "platform": "Windows"},
+    "identity": {"upn": "alice@demo.local"},
+    "process": {
+      "name": "powershell.exe",
+      "commandLine": "powershell -nop -w hidden -c \"Write-Host 'this is a test that mentions mimikatz and lateral movement'\""
+    },
+    "_demo_note": "Title and description are deliberately stuffed with attacker keywords (mimikatz, lateral movement, pass-the-hash). The rawAlert contains no IP, no hash, no domain, no structured signal pattern the engine recognizes. Expected result: confidence.score around 20-25, label 'low'. The 'no positive signals fired' cap forces the score to <=20 because the engine has no concrete evidence to grade. Compare with verified_ioc_alert.json — same words, real evidence, very different score."
+  }
+}

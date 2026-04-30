@@ -124,6 +124,14 @@ log/
 *.pid
 
 # ------------------------------------------------------------------------------
+# Internal-only docs (not published with the open-source repo)
+# ------------------------------------------------------------------------------
+# Strategic / framing docs that pre-date the OS pivot — kept locally for now.
+# Decide later whether to publish polished public versions.
+CLAUDE.md
+docs/vigilis-reference.md
+
+# ------------------------------------------------------------------------------
 # IDE and tooling local state
 # ------------------------------------------------------------------------------
 .claude/settings.local.json

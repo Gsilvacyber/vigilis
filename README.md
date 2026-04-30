@@ -1,22 +1,155 @@
 # Vigilis
 
-**Security alert-to-case enrichment platform with behavioral entity graph, threat intelligence, and learning-loop detection.**
+**A detection engine that refuses to call a keyword match a critical alert.**
 
-Vigilis ingests raw security alerts from any source, normalizes them into a common schema, enriches them with 5 threat intelligence providers, tracks entity relationships in a behavioral graph, and scores them with a transparent tier-aware confidence model.
+Send Vigilis an alert whose title is `"Suspected lateral movement via mimikatz"` and whose description name-drops every red-team term in the book — but with no IP, no hash, no domain, nothing the engine can corroborate. It scores **22/100, label "low"**, and explains why in plain text on the case page.
+
+Add one outbound IP to the same alert. The engine checks it against six threat-intel providers and a local IOC database. If any of them flags the IP, a `verified`-tier signal fires, the score climbs into the medium-to-high band, and the case becomes a real ticket. If none of them flag it, the score stays low.
+
+That asymmetry — between *evidence* and *vibes* — is the whole point of this project.
+
+Most detection tools weight a regex hit on `"mimikatz"` in a process name about the same as a confirmed SHA256 match against a malware database. Both fire the same red banner, both wake up the same Tier 1 analyst at 2 a.m. Vigilis doesn't. Every signal carries a **tier** that captures *what kind of evidence it actually is*, and the tier limits how high the case is allowed to score:
+
+```python
+# backend/app/services/enrichment/scoring.py — the cap
+if not has_verified and score > 65:
+    score = 65
+```
+
+A second cap fires earlier: if no positive signals fire at all, the score is forced to ≤20. Free-text keyword matches don't count as positive signals — they're not part of the structured pattern library. The engine has to find concrete structural or external evidence, or it stays low.
+
+The breakdown — every signal that fired, its tier, its weight contribution — is exposed in the case detail response and rendered in the UI. No black box.
 
 ---
 
-## What makes Vigilis different
+## Why this exists
 
-| Capability | What it does |
-|---|---|
-| **Entity Graph** | Tracks relationships between users, hosts, processes, IPs, and domains across all cases. Flags novel or rare entity pairs as verified behavioral signals. |
-| **Signal Tier System** | Every signal is classified as `verified` (DB-backed), `observed` (structured field from source tool), or `inferred` (keyword match). Scoring applies tier multipliers so keyword-only cases can't reach critical. |
-| **5 Threat Intel Providers** | OTX AlienVault, GreyNoise, WHOIS/RDAP, ip-api.com IP identity, plus local Postgres database of 11,628+ IOCs from abuse.ch feeds (Feodo Tracker, URLhaus, ThreatFox). |
-| **Learning Loop** | `calibration.py` reads analyst dispositions and adjusts signal weights based on false-positive rates. The system gets smarter from analyst feedback. |
-| **SOAR Framework** | Integration stubs for CrowdStrike (isolate host), Okta (suspend user), ServiceNow (create ticket). |
-| **30 Alert Types** | Across 6 domains (identity, endpoint, email, cloud, network, DLP) with MITRE ATT&CK mapping and kill-chain stages. |
-| **Sysmon Pipeline** | PowerShell exporter that feeds real endpoint telemetry (process create, network connect, DNS, file create, registry) from any Windows host into Vigilis every 5 minutes. |
+I've watched detection tools accumulate signals the way old code accumulates `if` statements: each addition makes the score climb, none of them subtract, and a string match in an alert title eventually weighs as much as a confirmed C2 connection. The result is alert theatre — high-confidence-looking output that an analyst can't trust without re-doing the investigation by hand.
+
+Vigilis takes the opposite default. It treats keyword matches as suggestive, not conclusive, and forces the engine to find at least one verified piece of evidence before a case is allowed to look critical. The cap is small, blunt, and deterministic — exactly the kind of rule a SOC analyst can reason about under load.
+
+---
+
+## How scoring works
+
+Every signal in the engine carries a **tier**:
+
+| Tier | Multiplier | Examples |
+|---|---|---|
+| `verified` (1.0×) | DB or external API confirms the indicator. | OTX has the IP in 50+ pulses. Local IOC DB matches the hash. Entity graph: this user has never logged into this host before. |
+| `observed` (0.4×) | Pre-populated structured field from the source tool. | `_isAdminGroupMember=true` from Azure AD. Sysmon EID 11 `TargetFilename` = a sensitive path. |
+| `inferred` (0.6×) | Keyword or pattern match on alert text. | `"lateral movement"` appears in description. PowerShell script block contains `Invoke-Mimikatz`. |
+
+The final score is:
+
+```
+score = base_severity + Σ(signal_weight × tier_multiplier)
+        + asset_criticality + user_risk
+        capped at 100
+```
+
+Then the cap fires:
+
+- **No verified signal anywhere → score capped at 65.**
+- IR response (host already isolated) → capped at 40.
+- Geo-anomaly with no corroboration → capped at 45.
+- Zero positive signals → capped at 20.
+
+Weights live in **one** registry — [`backend/app/services/enrichment/weights.py`](backend/app/services/enrichment/weights.py). One signal name = one weight everywhere in the codebase. Tuning is a single-file operation, not a scavenger hunt.
+
+The full score breakdown — every signal that fired, its tier, its weight contribution — is part of the case detail response. It exists because an analyst who can't ask "why did this score 78?" and get a concrete answer will go back to grepping the SIEM.
+
+---
+
+## What this is, and what it isn't
+
+**It is:**
+- An open-source detection-scoring engine you can run locally in 60 seconds.
+- A reference implementation of tier-aware confidence scoring with auditable output.
+- ~870 tests across the scoring pipeline, signal registry, entity graph, and provider integrations.
+
+**It isn't:**
+- A SIEM. It doesn't index logs. It expects normalized alerts in.
+- A SOAR. It can call out to playbooks (CrowdStrike, Okta, ServiceNow stubs are in the repo) but case action is not its job.
+- A startup pitch. There is no SaaS, no SSO, no billing, no hosted offering.
+
+If you want a turnkey product, you want something else. If you want an engine you can read end-to-end and bend to your environment, this is for you.
+
+---
+
+## Honest limitations
+
+The 30-day target on a cold install is roughly **17% of fired signals reach the `verified` tier**. That number is a function of how much external corroboration the engine can pull (threat intel feed coverage, entity graph baseline, asset CMDB, identity context) — not a scoring bug. Free feeds give you ~13K IOCs of coverage; richer integrations push the rate higher.
+
+**Why the cap doesn't move with the verified rate**: the cap is a property of an individual case. Either the engine found verified evidence for *this* alert or it didn't. A higher fleet-average verified rate just means more cases clear the cap, not that the cap is lowered for the cases that don't.
+
+If you're running this on a quiet network with no threat intel, expect most cases to land in the 50–65 band. That's the engine being honest. It is not a feature gap to fix with stronger keyword rules.
+
+---
+
+## Quick start
+
+### Run with Docker
+```bash
+git clone <repo> vigilis
+cd vigilis
+cp .env.example .env
+# Optional: add OTX_API_KEY, ABUSEIPDB_API_KEY for richer threat intel
+docker compose up --build -d
+```
+
+### Run with Python (no Docker)
+```bash
+python -m venv .venv && source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+pip install -r requirements.txt
+
+# SQLite mode — zero infra
+DATABASE_URL=sqlite:///local.db SKIP_INITIAL_FEEDS=true \
+  uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+```
+
+`SKIP_INITIAL_FEEDS=true` defers the IOC feed download to the background scheduler so the server is ready in <100 ms instead of waiting on 7 outbound HTTP calls. Useful for demos and CI.
+
+### Verify
+```bash
+curl http://localhost:8000/health
+# {"status":"ok","providers":{...}}
+
+curl -s "http://localhost:8000/api/v1/metrics/enrichment-quality" \
+  -H "X-API-Key: socai-demo-key-do-not-use-in-production"
+# {"totalCases":0,"qualityScore":null}  on a fresh DB
+```
+
+### See it in action
+
+Send two alerts whose titles and descriptions look identical to a SIEM. The difference is whether the alert contains anything the engine can verify.
+
+```bash
+# Alert A — title screams "mimikatz / lateral movement / pass-the-hash"
+#           but has no IP, no hash, no domain. Pure free-text bait.
+curl -X POST http://localhost:8000/api/v1/cases \
+  -H "X-API-Key: socai-demo-key-do-not-use-in-production" \
+  -H "Content-Type: application/json" \
+  -d @sample_data/keyword_only_alert.json
+# -> confidence.score = 22, label = "low"
+# -> explanation contains zero positive signals
+
+# Alert B — same text content, plus one outbound IP the engine can check
+curl -X POST http://localhost:8000/api/v1/cases \
+  -H "X-API-Key: socai-demo-key-do-not-use-in-production" \
+  -H "Content-Type: application/json" \
+  -d @sample_data/verified_ioc_alert.json
+# -> confidence.score = 56, label = "medium"
+# -> explanation includes known_proxy_vpn (verified), tor_exit_node,
+#    _multiVectorAttack, network_activity. Re-send the same alert
+#    after a few seconds and watch _rapidEscalation fire on top.
+```
+
+Pull each case back and look at `confidence.explanation`. Alert A has no positive-tier signals — the engine has nothing to grade. Alert B fires real signals, with `tier` annotations on each line.
+
+Same words, different scores, because evidence matters and vibes don't.
+
+The UI surfaces this directly at `http://localhost:8000/cases/<id>`.
 
 ---
 
@@ -24,170 +157,67 @@ Vigilis ingests raw security alerts from any source, normalizes them into a comm
 
 ```
 +------------------------------------------------------------------+
-|                     Alert Sources                                |
-|  Sysmon * SIEM * EDR * IdP * Email Gateway * Cloud * Custom     |
+|                     Alert sources                                |
+|  Sysmon * SIEM * EDR * IdP * Email gateway * Cloud * Custom      |
 +-------------------------------+----------------------------------+
                                 | POST /api/v1/cases
                                 v
 +------------------------------------------------------------------+
-|                    Vigilis Backend (FastAPI)                     |
+|                    Vigilis backend (FastAPI)                     |
 |  +--------------+  +-----------------+  +------------------+    |
-|  |  Normalize   |->|    Enrich       |->|  Entity Graph    |    |
-|  |  alert_mapper|  |  (8 phases)     |  |  (detection      |    |
-|  |              |  |                 |  |   brain)         |    |
+|  |  Normalize   |->|    Enrich       |->|  Entity graph    |    |
+|  |  alert_mapper|  |  (8 phases)     |  |  (verified-tier  |    |
+|  |              |  |                 |  |   signals)       |    |
 |  +--------------+  +-----------------+  +------------------+    |
 |                             |                                    |
 |         +-------------------+-------------------+                |
 |         v                   v                   v                |
 |  +----------+       +--------------+    +-------------+         |
-|  | Threat   |       |   Scoring    |    |   Case      |         |
-|  | Intel    |       | (tier-aware) |    |  Grouping   |         |
-|  | (5 prov) |       +--------------+    | & Incidents |         |
-|  +----------+                           +-------------+         |
+|  | Threat   |       |  Scoring     |    |   Case      |         |
+|  | intel    |       |  (tier-aware,|    |  grouping   |         |
+|  | (6 prov) |       |   capped)    |    | & incidents |         |
+|  +----------+       +--------------+    +-------------+         |
 +-----------------------------+------------------------------------+
                               |
                  +------------+------------+
                  v            v            v
           +----------+ +----------+ +----------+
-          | Webhook  | |  SOAR    | | Postgres |
-          | Delivery | | Actions  | |  Store   |
+          | Webhook  | |  SOAR    | |  Store   |
+          | delivery | |  stubs   | | (PG/SQLi)|
           +----------+ +----------+ +----------+
 ```
 
+The frontend is static HTML served by FastAPI — no Node toolchain, no build step. If you want to read what the UI does, it's in [`backend/app/static/`](backend/app/static/) and [`backend/app/api/demo_ui.py`](backend/app/api/demo_ui.py).
+
 ---
 
-## Quick start
+## Threat intel providers
 
-### Prerequisites
-- Docker + Docker Compose
-- (Optional) Python 3.11+ for running tests locally
+| Provider | Always on? | Free tier | What it provides |
+|---|---|---|---|
+| **LocalDBProvider** | Yes | Unlimited (local) | ~13K IOCs from abuse.ch feeds (Feodo, URLhaus, ThreatFox, MalwareBazaar, OpenPhish, SSLBL) ingested on startup |
+| **GreyNoiseProvider** | Yes | Community tier (no key) | Internet-scanner / background-noise classification for IPs |
+| **WHOISProvider** | Yes | RDAP, no key | Domain age and registration metadata |
+| **OTXProvider** | If `OTX_API_KEY` set | Free key | AlienVault OTX pulse lookups |
+| **AbuseIPDBProvider** | If `ABUSEIPDB_API_KEY` set | 1000 req/day | IP reputation |
+| **VirusTotalProvider** | If `VIRUSTOTAL_API_KEY` set | 4 req/min, 500/day | File / IP / domain reports |
 
-### Run with Docker
-```bash
-git clone <your-repo> vigilis
-cd vigilis
-cp .env.example .env
-# Edit .env and add your OTX_API_KEY (free at otx.alienvault.com)
-docker compose up --build -d
-```
-
-Verify it's running:
-```bash
-curl http://localhost:8000/health
-# -> {"status":"ok", "providers":{...}, "entity_graph":{...}}
-```
-
-### Open the UI
-Open your browser to:
-```
-http://localhost:8000/
-```
-
-Available views: `/cases`, `/incidents`, `/admin`, `/metrics`, `/rules`, `/upload`, `/enrich`.
-
-### Upload sample data
-```bash
-# CSV uploads (Sentinel, Splunk, or generic format)
-curl -X POST http://localhost:8000/api/v1/upload \
-  -H "X-API-Key: socai-demo-key-do-not-use-in-production" \
-  -F "file=@sample_data/sentinel_export.csv"
-```
-
-Or send a JSON alert directly:
-```bash
-curl -X POST http://localhost:8000/api/v1/cases \
-  -H "X-API-Key: socai-demo-key-do-not-use-in-production" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tenantId": "demo",
-    "customer": {"name": "Demo Corp", "environment": "prod"},
-    "source": {
-      "sourceSystem": "idp", "sourceName": "Azure AD",
-      "sourceAlertId": "test-001", "sourceSeverity": "high"
-    },
-    "alertType": "identity.suspiciousSignIn",
-    "title": "Test alert",
-    "severity": "high",
-    "eventTime": "2026-04-10T00:00:00Z",
-    "rawAlert": {
-      "identity": {"upn": "user@demo.com"},
-      "device": {"hostname": "WS-01"},
-      "ips": [{"ipAddress": "198.51.100.10", "role": "anomalous"}]
-    }
-  }'
-```
+All providers implement a single Protocol — adding a new one is one file plus an entry in `lifespan()`.
 
 ---
 
 ## Live endpoint telemetry
 
-Vigilis ships with six PowerShell exporters that feed real Windows endpoint
-events into the pipeline. Each exporter is a separate script with its own
-state file — failures in one don't cascade.
+Vigilis ships PowerShell exporters that feed real Windows endpoint events into the pipeline. Each exporter is independent — failures in one don't cascade.
 
 | Exporter | Source | Cadence | What it captures |
 |---|---|---|---|
-| `export_sysmon.ps1` | Sysmon Operational log | every 5 min | Process create, network, file create, registry, DNS, LSASS access, named pipes, WMI persistence (EIDs 1, 3, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22) |
+| `export_sysmon.ps1` | Sysmon Operational log | every 5 min | EIDs 1, 3, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22 (process, network, file, registry, DNS, LSASS access, named pipes, WMI persistence) |
 | `export_secevt.ps1` | Windows Security Event Log | every 5 min | Logon (4624/4625), privilege (4672), process (4688), service install (4697), scheduled task (4698), account create (4720), group add (4728/4732), log clear (1102) |
-| `export_psbl.ps1` | PowerShell Operational log | every 5 min | Script Block Logging (EventID 4104) — captures decoded PowerShell source code matched against 62 MITRE patterns |
-| `export_state.ps1` | Host state snapshots | hourly | Services, scheduled tasks, local users, autoruns (~15 registry keys), installed programs — diffed against previous snapshot to emit only drift events |
+| `export_psbl.ps1` | PowerShell Operational log | every 5 min | Script Block Logging (4104) — decoded source matched against MITRE patterns |
+| `export_state.ps1` | Host snapshots | hourly | Services, scheduled tasks, local users, autoruns, installed programs — diffed across snapshots, only drift events are emitted |
 
-### Setup
-
-1. **Install Sysmon** with the SwiftOnSecurity config:
-   ```powershell
-   C:\Tools\Sysmon\Sysmon64.exe -accepteula -i C:\Tools\Sysmon\sysmonconfig.xml
-   ```
-2. **Enable PowerShell Script Block Logging** (for `export_psbl.ps1`):
-   ```powershell
-   New-Item -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging -Force
-   New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging -Name EnableScriptBlockLogging -Value 1 -PropertyType DWord -Force
-   ```
-3. **Copy exporters** to `C:\Tools\SysmonExport\` on the target host
-4. **Register scheduled tasks** (one per exporter) to run every 5 minutes
-   (hourly for `export_state.ps1`) with `SYSTEM` account, `Highest` run level
-5. Events flow into Vigilis automatically, building the entity graph baseline
-
-### Noise reduction (Phase 1)
-
-`export_sysmon.ps1` applies aggressive filtering to keep signal-to-noise high:
-- EventID 11 file-create events from `C:\Windows\WinSxS\`, Microsoft Store,
-  Windows Update, Defender definitions, and Microsoft Edge user data are dropped
-- Benign writer processes (`svchost`, `TiWorker`, `TrustedInstaller`, `MsMpEng`,
-  `MoUsoCoreWorker`, `OneDrive`, `msedge`) are excluded
-- File-create events from the same `(process, directory, user)` within a 5-minute
-  window are aggregated into a single `endpoint.massFileCreate` alert
-- Repeated process-create events with identical command lines are deduplicated
-
-### Threat intel providers
-
-Vigilis ships with 5 active providers + 2 optional (require API keys):
-
-| Provider | Setup | Free tier limit |
-|---|---|---|
-| **LocalDBProvider** | Always active | Zero API calls — queries local IOC database |
-| **OTXProvider** | Set `OTX_API_KEY` in `.env` | Free — get key at [otx.alienvault.com](https://otx.alienvault.com) |
-| **GreyNoiseProvider** | Optional `GREYNOISE_API_KEY` | Community: 25 req/week; free API: 500 req/day |
-| **WHOISProvider** | Always active | RDAP (no key) |
-| **ip-api.com** | Always active | 45 req/min |
-| **VirusTotalProvider** | Set `VIRUSTOTAL_API_KEY` in `.env` | Free: 4 req/min, 500 req/day |
-| **AbuseIPDBProvider** | Set `ABUSEIPDB_API_KEY` in `.env` | Free: 1000 req/day |
-
-### Local IOC database
-
-On startup, Vigilis downloads 5 free IOC feeds from abuse.ch into a local
-Postgres table. Every IP/domain/hash in an incoming alert is checked against
-this table — zero API calls, sub-millisecond lookups:
-
-| Feed | IOC type | Count |
-|---|---|---|
-| Feodo Tracker | Botnet C2 IPs | ~300 |
-| URLhaus | Malicious domains | ~1000 |
-| ThreatFox | Mixed IOCs (IPs, domains, hashes) | ~2000 |
-| MalwareBazaar | Malware SHA256 hashes | ~5000 |
-| URLhaus hashes | Hosted payload SHA256 hashes | ~5000 |
-
-Feeds auto-update every 24 hours via a background task.
+Setup notes are in [`scripts/`](scripts/).
 
 ---
 
@@ -195,30 +225,29 @@ Feeds auto-update every 24 hours via a background task.
 
 ```
 vigilis/
-|-- backend/
-|   |-- app/
-|   |   |-- api/              # FastAPI routes
-|   |   |-- core/             # Config, auth, metrics, DB session
-|   |   |-- db/               # SQLModel models
-|   |   |-- schemas/          # Pydantic request/response schemas
-|   |   |-- services/
-|   |   |   |-- enrichment/   # The core enrichment engine
-|   |   |   |   |-- mappers/       # Per-domain extractors
-|   |   |   |   |-- providers/     # Threat intel providers
-|   |   |   |   |-- entity_graph.py  # Detection brain
-|   |   |   |   |-- scoring.py       # Tier-aware confidence scoring
-|   |   |   |   `-- weights.py       # Signal weight registry
-|   |   |   |-- case_service.py      # Case CRUD
-|   |   |   |-- incident_service.py  # Case correlation -> incidents
-|   |   |   |-- calibration.py       # Learning loop
-|   |   |   `-- integrations/soar.py # SOAR action framework
-|   `-- tests/                # 445 tests
-|-- scripts/
-|   `-- export_sysmon.ps1     # Sysmon -> Vigilis pipeline
-|-- sample_data/              # Example alerts for each alert type
-|-- docs/                     # Architecture, API, deployment docs
-|-- docker-compose.yml
-`-- Dockerfile
+├── backend/
+│   ├── app/
+│   │   ├── api/              # FastAPI routes
+│   │   ├── core/             # Config, auth, metrics, DB session
+│   │   ├── db/               # SQLModel models
+│   │   ├── schemas/          # Pydantic request/response schemas
+│   │   ├── services/
+│   │   │   ├── enrichment/
+│   │   │   │   ├── mappers/        # Per-domain extractors
+│   │   │   │   ├── providers/      # Threat intel providers
+│   │   │   │   ├── entity_graph.py # Cross-case entity relationships
+│   │   │   │   ├── scoring.py      # Tier-aware scoring + cap
+│   │   │   │   └── weights.py      # Single signal-weight registry
+│   │   │   ├── case_service.py
+│   │   │   ├── incident_service.py
+│   │   │   ├── calibration.py      # Analyst-disposition feedback loop
+│   │   │   └── integrations/soar.py
+│   │   └── static/                 # UI (vanilla HTML/JS, no build)
+│   └── tests/                      # ~870 tests
+├── sample_data/                    # Example alerts per type / format
+├── scripts/                        # PowerShell endpoint exporters
+├── docs/                           # Reference docs
+└── docker-compose.yml
 ```
 
 ---
@@ -227,74 +256,43 @@ vigilis/
 
 ```bash
 python -m pytest backend/tests/ -q
-# 445 passed, 19 skipped
+# 867 passed, 19 skipped
 ```
 
----
-
-## Threat intel providers
-
-| Provider | What it does | Setup |
-|---|---|---|
-| **LocalDBProvider** | Postgres lookup of 11,628+ IOCs from abuse.ch feeds | Auto-loaded on first startup |
-| **OTXProvider** | AlienVault OTX pulse lookup | Free API key at [otx.alienvault.com](https://otx.alienvault.com) |
-| **GreyNoiseProvider** | Background noise / internet scanner identification | Free community tier (25 req/week) |
-| **WHOISProvider** | Domain age and registration details | No API key needed (RDAP) |
-| **ip-api.com** | IP organization / proxy / VPN identification | Free tier, 45 req/min |
-| **AbuseIPDB** (optional) | IP reputation lookup | Free tier, 1000 req/day |
+The skipped tests are integration tests that require live external feeds.
 
 ---
 
-## Signal tier system
+## What's in scope, what isn't
 
-Not all signals carry equal evidential weight. Vigilis classifies every signal into one of three tiers:
+In scope for this repo:
+- The scoring engine and signal registry.
+- The entity graph (cross-case relationship tracking).
+- The threat intel provider protocol and the 6 default providers.
+- The MITRE ATT&CK pattern library used by `export_psbl.ps1`.
+- The static UI showing case detail with score breakdown.
+- The PowerShell endpoint exporters.
 
-- **`verified`** (1.0x multiplier): DB query or external API confirms the indicator. E.g., OTX confirms the IP is in 50+ threat pulses.
-- **`observed`** (0.4x multiplier): A pre-populated structured field from the source tool. E.g., `_isAdminGroupMember: true` from Azure AD.
-- **`inferred`** (0.6x multiplier): Keyword match on alert text. E.g., "lateral movement" appears in the description.
-
-**Scoring rule:** A case with no verified signals is capped at 65/100. A case with only keyword matches cannot reach "critical" severity. This prevents theatrical scoring from keyword lookups.
-
----
-
-## Entity graph
-
-The entity graph tracks relationships between entities across all cases:
-
-- `user <-> host` — Who logs into what
-- `user <-> ip` — Who connects from where
-- `host <-> process` — What runs on each machine
-- `host <-> ip` — What each host connects to
-- `process <-> ip` — Which processes make which network connections
-- `ip <-> domain` — IP/domain correlations
-
-When a new case arrives, the graph fires verified signals:
-- `new_entity_relationship` (weight 20) — Entity pair never seen before
-- `rare_entity_relationship` (weight 15) — Pair seen <= 2 times previously
-- `entity_graph_anomaly` (weight 18) — 3+ new relationships in a single case
-- `process_on_new_host` (weight 18) — Process never seen on this host
-- `rare_process_on_server` (weight 20) — Rare process on server infrastructure
-- `known_tool_on_dc` (weight 25) — Attack tool on a domain controller
-
-Cold-start suppression prevents false positives on fresh deployments (signals require >= 20 baseline relationships before firing).
+Deliberately out of scope:
+- SSO / SAML / OIDC. There's a single API-key model. You're expected to put this behind your own auth gateway if you deploy it.
+- Multi-tenant admin UI. Tenants exist at the data layer; the UI assumes one operator.
+- Hosted SaaS. There isn't one.
+- LLM-driven alert classification or narrative generation. The deterministic engine works without it. Adding LLM enrichment as a non-load-bearing layer is straightforward; making it the source of truth is not the goal of this project.
 
 ---
 
 ## License
 
-TBD — project currently private.
+Apache License 2.0. See [LICENSE](LICENSE).
 
 ---
 
-## Status
+## Contributing
 
-- Done: 30 alert types across 6 domains
-- Done: 5 threat intel providers + local IOC database
-- Done: Entity graph (detection brain) with cold-start suppression
-- Done: Tier-aware signal scoring
-- Done: Learning loop for signal calibration
-- Done: SOAR integration framework
-- Done: Sysmon live endpoint pipeline
-- Done: 445 tests passing
-- In progress: Windows Security Event Log, M365, Azure AD integration
-- In progress: SOC 2 readiness, SSO, load testing
+This started as a solo project; PRs are welcome. The most useful contributions are:
+
+1. **New threat intel providers** — implement `ThreatIntelProvider` and register in `lifespan()`. Tests in `backend/tests/test_threat_intel.py`.
+2. **New extractors / signals** — add to a domain mapper, register the weight in `W` (one place, please don't hardcode), add a tier annotation. Tests live alongside.
+3. **Calibration data** — if you run this on real telemetry, the disposition feedback the engine collects is the most useful artifact you can share back. (Anonymize first.)
+
+Style: keep it deterministic, keep it auditable, write the test before the regex.

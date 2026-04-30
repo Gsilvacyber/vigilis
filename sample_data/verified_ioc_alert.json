@@ -1,0 +1,35 @@
+{
+  "tenantId": "demo-tenant",
+  "customer": {"name": "Demo Corp", "environment": "prod"},
+  "source": {
+    "sourceSystem": "network",
+    "sourceName": "Generic Network Monitor",
+    "sourceAlertId": "demo-verified-001",
+    "sourceSeverity": "high"
+  },
+  "alertType": "network.commandAndControl",
+  "title": "Suspected lateral movement via mimikatz on workstation",
+  "description": "Process command line contains references to credential theft tooling. The phrase 'pass-the-hash' appears in the script block. Possible mimikatz invocation detected by string match.",
+  "severity": "high",
+  "eventTime": "2026-04-30T12:00:00Z",
+  "rawAlert": {
+    "device": {"hostname": "WS-DEMO-01", "platform": "Windows"},
+    "identity": {"upn": "alice@demo.local"},
+    "process": {
+      "name": "powershell.exe",
+      "commandLine": "powershell -nop -w hidden -c \"Write-Host 'this is a test that mentions mimikatz and lateral movement'\""
+    },
+    "network": {
+      "destination": {
+        "ip": "1.2.3.4",
+        "port": 443
+      },
+      "direction": "outbound",
+      "bytesSent": 524288
+    },
+    "ips": [
+      {"ipAddress": "1.2.3.4", "role": "destination"}
+    ],
+    "_demo_note": "Same text content as keyword_only_alert.json, plus one outbound IP. The engine runs the IP through six threat-intel providers and the local IOC DB. Even on a fresh install with no API keys, providers like the proxy/VPN classifier fire verified-tier signals on most non-residential IPs — confidence.score lands in the 60s, label 'high'. To see a known_malicious_ip hit specifically, replace 1.2.3.4 with any current Feodo Tracker IP from https://feodotracker.abuse.ch/downloads/ipblocklist.csv after the local feed download has run."
+  }
+}

@@ -28,6 +28,7 @@ class Settings:
     greynoise_api_key: str = ""
     enable_local_feeds: bool = True
     feed_update_hours: int = 24
+    skip_initial_feeds: bool = False
 
 
 def _get_bool(name: str, default: bool) -> bool:
@@ -53,6 +54,7 @@ settings = Settings(
     greynoise_api_key=os.getenv("GREYNOISE_API_KEY", ""),
     enable_local_feeds=os.getenv("ENABLE_LOCAL_FEEDS", "true").lower() in ("true", "1", "yes"),
     feed_update_hours=int(os.getenv("FEED_UPDATE_HOURS", "24")),
+    skip_initial_feeds=_get_bool("SKIP_INITIAL_FEEDS", False),
 )
 
 
