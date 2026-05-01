@@ -61,6 +61,37 @@ _KNOWN_BAD_HASHES = frozenset({
 })
 
 
+def _proc_str(raw: dict[str, Any]) -> str:
+    """Return a lowercase process-name string from raw alert payloads.
+
+    Some upstream adapters (notably dataset_adapter for HF SIEM data) set
+    raw["process"] to a structured dict {processName, commandLine, ...}.
+    Other paths leave it as a flat string. This coerces both shapes — and
+    any unexpected non-string value — to a safe lowercase string so the
+    downstream `in` checks never crash.
+    """
+    p = raw.get("process")
+    if isinstance(p, dict):
+        p = p.get("processName") or p.get("name") or ""
+    if not isinstance(p, str):
+        p = raw.get("_processName") or ""
+    if not isinstance(p, str):
+        return ""
+    return p.lower()
+
+
+def _cmdline_str(raw: dict[str, Any]) -> str:
+    """Return a lowercase command-line string, tolerant of dict-shaped process."""
+    c = raw.get("commandLine") or raw.get("_commandLine")
+    if not isinstance(c, str):
+        p = raw.get("process")
+        if isinstance(p, dict):
+            c = p.get("commandLine") or ""
+    if not isinstance(c, str):
+        return ""
+    return c.lower()
+
+
 def _is_unsigned(raw: dict[str, Any]) -> bool:
     f = raw.get("file") or {}
     signer = (f.get("signer") or "").strip()
@@ -90,8 +121,8 @@ def _has_context_keywords(raw: dict[str, Any], keywords: list[str]) -> bool:
     ctx = (raw.get("_additionalContext") or "").lower()
     alert_name = (raw.get("_sourceAlertName") or "").lower()
     desc = (raw.get("description") or raw.get("_description") or "").lower()
-    cmdline = (raw.get("commandLine") or raw.get("_commandLine") or "").lower()
-    process = (raw.get("process") or raw.get("_processName") or "").lower()
+    cmdline = _cmdline_str(raw)
+    process = _proc_str(raw)
     combined = f"{ctx} {alert_name} {desc} {cmdline} {process}"
     return any(kw in combined for kw in keywords)
 
@@ -142,7 +173,7 @@ def _is_known_system_process(raw: dict[str, Any]) -> bool:
     """Check if the process is a known Windows system process in a safe path."""
     f = raw.get("file") or {}
     name = (f.get("fileName") or "").lower()
-    proc = (raw.get("process") or raw.get("_processName") or "").lower()
+    proc = _proc_str(raw)
     proc_base = proc.rsplit("\\", 1)[-1].rsplit("/", 1)[-1] if proc else ""
     check_name = name or proc_base
     if not check_name:
@@ -160,7 +191,7 @@ def _is_unknown_process(raw: dict[str, Any]) -> bool:
     """Check if the process isn't in any known list (system, admin, LOLBin, attack tool)."""
     f = raw.get("file") or {}
     name = (f.get("fileName") or "").lower()
-    proc = (raw.get("process") or raw.get("_processName") or "").lower()
+    proc = _proc_str(raw)
     proc_base = proc.rsplit("\\", 1)[-1].rsplit("/", 1)[-1] if proc else ""
     check_name = name or proc_base
     if not check_name or len(check_name) < 3:
@@ -186,7 +217,7 @@ def _is_routine_admin_activity(raw: dict[str, Any]) -> bool:
     """
     f = raw.get("file") or {}
     name = (f.get("fileName") or "").lower()
-    proc = (raw.get("process") or raw.get("_processName") or "").lower()
+    proc = _proc_str(raw)
     proc_base = proc.rsplit("\\", 1)[-1].rsplit("/", 1)[-1] if proc else ""
     check_name = name or proc_base
     if not check_name:
@@ -237,7 +268,7 @@ def _is_routine_sysmon_event(raw: dict[str, Any]) -> bool:
     """
     f = raw.get("file") or {}
     name = (f.get("fileName") or "").lower()
-    proc = (raw.get("process") or raw.get("_processName") or "").lower()
+    proc = _proc_str(raw)
     proc_base = proc.rsplit("\\", 1)[-1].rsplit("/", 1)[-1] if proc else ""
     check_name = name or proc_base
     if not check_name:

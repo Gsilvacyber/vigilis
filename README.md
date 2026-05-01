@@ -89,23 +89,55 @@ If you're running this on a quiet network with no threat intel, expect most case
 
 ## Quick start
 
+**Requirements:** Python 3.11+ (for the no-Docker path) **or** Docker Desktop. Tested on macOS, Linux, and Windows 11.
+
 ### Run with Docker
+
 ```bash
-git clone <repo> vigilis
+git clone https://github.com/Gsilvacyber/vigilis.git
 cd vigilis
-cp .env.example .env
+cp .env.example .env          # Windows: copy .env.example .env
 # Optional: add OTX_API_KEY, ABUSEIPDB_API_KEY for richer threat intel
 docker compose up --build -d
 ```
 
 ### Run with Python (no Docker)
+
+**macOS / Linux (bash, zsh):**
 ```bash
-python -m venv .venv && source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 # SQLite mode — zero infra
 DATABASE_URL=sqlite:///local.db SKIP_INITIAL_FEEDS=true \
   uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+```
+
+**Windows (PowerShell):**
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+# If PowerShell blocks the script with "running scripts is disabled on this system",
+# run this once and re-try:
+#   Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+pip install -r requirements.txt
+
+# SQLite mode — zero infra
+$env:DATABASE_URL = "sqlite:///local.db"
+$env:SKIP_INITIAL_FEEDS = "true"
+uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+```
+
+**Windows (cmd.exe):**
+```cmd
+python -m venv .venv
+.venv\Scripts\activate.bat
+pip install -r requirements.txt
+
+set DATABASE_URL=sqlite:///local.db
+set SKIP_INITIAL_FEEDS=true
+uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 ```
 
 `SKIP_INITIAL_FEEDS=true` defers the IOC feed download to the background scheduler so the server is ready in <100 ms instead of waiting on 7 outbound HTTP calls. Useful for demos and CI.
@@ -120,6 +152,8 @@ curl -s "http://localhost:8000/api/v1/metrics/enrichment-quality" \
 # {"totalCases":0,"qualityScore":null}  on a fresh DB
 ```
 
+> **Windows PowerShell note:** PowerShell aliases `curl` to `Invoke-WebRequest`, which has different syntax. Use `curl.exe` (the real binary, shipped with Windows 10/11) for the commands in this README.
+
 ### See it in action
 
 Send two alerts whose titles and descriptions look identical to a SIEM. The difference is whether the alert contains anything the engine can verify.
@@ -131,25 +165,61 @@ curl -X POST http://localhost:8000/api/v1/cases \
   -H "X-API-Key: socai-demo-key-do-not-use-in-production" \
   -H "Content-Type: application/json" \
   -d @sample_data/keyword_only_alert.json
-# -> confidence.score = 22, label = "low"
-# -> explanation contains zero positive signals
+```
 
+Expected response shape (excerpt — pipe to `jq '{caseId, confidence}'` to see just these fields):
+
+```json
+{
+  "caseId": "258c1a6d-02ee-4974-af56-b4b68bc2a40a",
+  "confidence": {
+    "score": 22,
+    "label": "low",
+    "explanation": [
+      {
+        "signal": "_score_breakdown",
+        "weight": 0,
+        "label": "Score composition: 22pts base severity + 0pts verified + 0pts inferred + 0pts observed",
+        "tier": null
+      }
+    ]
+  }
+}
+```
+
+The only entry in `explanation` is the meta-signal `_score_breakdown` — the engine found zero positive-tier signals to grade. Free-text keyword matches don't count.
+
+```bash
 # Alert B — same text content, plus one outbound IP the engine can check
 curl -X POST http://localhost:8000/api/v1/cases \
   -H "X-API-Key: socai-demo-key-do-not-use-in-production" \
   -H "Content-Type: application/json" \
   -d @sample_data/verified_ioc_alert.json
-# -> confidence.score = 56, label = "medium"
-# -> explanation includes known_proxy_vpn (verified), tor_exit_node,
-#    _multiVectorAttack, network_activity. Re-send the same alert
-#    after a few seconds and watch _rapidEscalation fire on top.
 ```
 
-Pull each case back and look at `confidence.explanation`. Alert A has no positive-tier signals — the engine has nothing to grade. Alert B fires real signals, with `tier` annotations on each line.
+Expected response shape (excerpt — with default config, no paid threat-intel keys):
+
+```json
+{
+  "caseId": "1f63ad87-4bc1-47c8-b21b-fa82b3d50619",
+  "confidence": {
+    "score": 47,
+    "label": "medium",
+    "explanation": [
+      {"signal": "known_proxy_vpn",    "weight": 15, "tier": "verified"},
+      {"signal": "_multiVectorAttack", "weight": 12, "tier": "inferred"},
+      {"signal": "network_activity",   "weight":  1, "tier": "inferred"},
+      {"signal": "_score_breakdown",   "weight":  0, "tier": null}
+    ]
+  }
+}
+```
+
+`known_proxy_vpn` is the verified-tier signal that lets the case escape the keyword-only-cap floor. Add an `OTX_API_KEY` to `.env` and re-run — Alert B will pick up additional signals (the OTX provider drops in `tor_exit_node` and the score lands closer to 56).
 
 Same words, different scores, because evidence matters and vibes don't.
 
-The UI surfaces this directly at `http://localhost:8000/cases/<id>`.
+The UI surfaces this directly at `http://localhost:8000/cases/<caseId>` — copy the `caseId` field from either response and open it in a browser.
 
 ---
 
@@ -159,7 +229,7 @@ The two-alert demo above is hand-crafted. The fairer question is: *what happens 
 
 I ran it against 200 alerts from a public HuggingFace SIEM dataset (Chronicle UDM-formatted, mix of login, process, network, and cloud events from a synthetic but unfamiliar fleet). A 30-line adapter — [`test_data/public_datasets/map_udm_to_csv.py`](test_data/public_datasets/map_udm_to_csv.py) — flattens the nested UDM schema into the flat columns the upload endpoint expects. No per-record tuning, no signal weight changes, no IOC pre-loading.
 
-200 alerts in, 200 cases out. Score histogram:
+200 alerts in, 200 cases out. Score histogram from my run:
 
 ```
 00-20 |   0
@@ -174,13 +244,22 @@ I ran it against 200 alerts from a public HuggingFace SIEM dataset (Chronicle UD
 
 That's the cap doing exactly what the headline says: refusing to grade alerts as critical without verifiable evidence, even when the alert text *looks* dramatic. The cap is not a unit test fixture. It's a property of the engine on real data.
 
-To reproduce:
+To reproduce — three steps, three commands:
+
 ```bash
+# 1. Generate the flat CSV from the public UDM dataset
 python test_data/public_datasets/map_udm_to_csv.py
+
+# 2. Upload the 200 alerts
 curl -X POST "http://localhost:8000/api/v1/demo/upload?persist=true&grouping=true" \
   -H "X-API-Key: socai-demo-key-do-not-use-in-production" \
   -F "file=@test_data/public_datasets/hf_siem_mapped.csv"
+
+# 3. Print your own histogram (stdlib-only, no extra deps)
+python tools/score_histogram.py
 ```
+
+Step 3 produces the same histogram format as above, computed from whatever's currently in your engine. If you've also run the two-alert demo, those cases are in the same total. Tell the script to talk to a different host with `--base http://other-host:8000`.
 
 The dataset itself (`hf_siem_200_curated.json`, ~124KB) is in [`test_data/public_datasets/`](test_data/public_datasets/) and is the curated 200-row slice of a larger HuggingFace SIEM dataset. The CSV the mapper produces is gitignored — regenerate it with the script.
 

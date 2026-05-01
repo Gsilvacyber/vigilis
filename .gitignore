@@ -181,3 +181,8 @@ sysmon_export_state.txt
 calibration_*.json
 # Threat intel feed caches
 feed_cache/
+
+# ------------------------------------------------------------------------------
+# Local-only marketing/social drafts (not for the public repo)
+# ------------------------------------------------------------------------------
+social/
