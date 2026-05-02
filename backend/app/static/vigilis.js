@@ -463,22 +463,8 @@ async function loadSamples() {
  else toast('Failed to load samples', '')
 }
 
-/**
- * Clear only demo/sample cases.
- */
-async function clearSamples() {
- if (!confirm('Delete all DEMO fixture cases?\n\nThis removes only the sample data shipped with the app. Any cases you uploaded or created yourself will be preserved.')) return;
- const r = await fetch('/api/v1/demo/clear-samples', { method: 'POST', ...AH });
- if (r.ok) { const d = await r.json(); toast('Cleared ' + (d.deletedCases || 0) + ' sample case(s)', 'ok'); refreshDataStatus() }
- else toast('Clear failed', '')
-}
-
-/**
- * Delete ALL data (double-confirm).
- */
-async function clearEverything() {
- if (!confirm('DELETE ALL DATA?\n\nThis removes EVERY case in the database, including any data you uploaded. This cannot be undone.\n\nAre you absolutely sure?')) return;
- if (!confirm('Last chance. Click OK to permanently wipe all data.')) return;
+async function clearAllData() {
+ if (!confirm('This will permanently delete ALL cases, alerts, and ingested data. Continue?')) return;
  const r = await fetch('/api/v1/demo/reset', { method: 'POST', ...AH });
  if (r.ok) { toast('All data cleared', 'ok'); refreshDataStatus() }
  else toast('Reset failed', '')

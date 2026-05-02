@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from pydantic import BaseModel
 from sqlmodel import select
 
-from backend.app.core.auth import require_admin, _hash_key, _resolve_key_prefix
+from backend.app.core.auth import require_admin, _hash_key, _resolve_key_prefix, _verify_key
 from backend.app.core.audit import log_audit
 from backend.app.core.db import get_session
 from backend.app.db.models import (
@@ -85,9 +85,11 @@ def api_list_keys(
         # Capture values before audit commit detaches the rows
         result = [
             {
+                "id": row.id,
                 "key": row.key_prefix + "...",
                 "tenantId": row.tenant_id,
                 "name": row.name,
+                "role": row.role,
                 "createdAt": row.created_at.isoformat(),
                 "isActive": row.is_active,
             }
@@ -103,7 +105,50 @@ def api_list_keys(
     return result
 
 
-@router.get("/admin/audit-log")
+@router.delete("/api-keys/{key_id}")
+def api_revoke_key(
+    key_id: int,
+    auth_tenant: str = Depends(require_admin),
+    x_api_key: str | None = Header(None),
+) -> dict[str, Any]:
+    """Revoke an API key (soft delete via is_active=False).
+
+    Preserves the row so audit-log references remain valid. The key stops
+    authenticating immediately because require_tenant/require_admin filter
+    on is_active==True.
+    """
+    with get_session() as session:
+        row = session.get(ApiKey, key_id)
+        if row is None:
+            raise HTTPException(404, "key not found")
+        if x_api_key and _verify_key(x_api_key, row.key_hash):
+            raise HTTPException(400, "cannot revoke the key currently in use")
+        if not row.is_active:
+            raise HTTPException(400, "key is already inactive")
+        row.is_active = False
+        session.add(row)
+        result = {
+            "status": "revoked",
+            "id": row.id,
+            "prefix": row.key_prefix,
+        }
+        log_audit(
+            session,
+            tenant_id=auth_tenant,
+            actor=_resolve_key_prefix(x_api_key),
+            action="key.revoked",
+            resource_type="api_key",
+            resource_id=str(row.id),
+            details={
+                "target_tenant": row.tenant_id,
+                "prefix": row.key_prefix,
+                "name": row.name,
+            },
+        )
+    return result
+
+
+@router.get("/audit-log")
 def api_audit_log(
     limit: int = Query(50, ge=1, le=500),
     action: str | None = Query(None),
