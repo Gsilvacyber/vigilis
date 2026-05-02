@@ -430,26 +430,13 @@ async function setDisposition(caseId, status, onSuccess) {
  } else toast('Failed', '');
 }
 
-/**
- * Paginated refresh of the data-status counters (#dsTotal, #dsSamples, #dsReal).
- * Used by landing.html and upload.html.
- */
 async function refreshDataStatus() {
  try {
-  const all = [];
-  for (let offset = 0; offset < 5000; offset += 100) {
-   const r = await fetch('/api/v1/cases?limit=100&offset=' + offset, AH);
-   if (!r.ok) break;
-   const batch = await r.json();
-   all.push(...batch);
-   if (batch.length < 100) break;
-  }
-  let samples = 0;
-  all.forEach(c => { const srcs = c.sources || []; if (srcs.some(s => (s.sourceAlertId || '').endsWith(':demo'))) samples++ });
-  const real = all.length - samples;
-  document.getElementById('dsTotal').textContent = all.length;
-  document.getElementById('dsSamples').textContent = samples + ' sample';
-  document.getElementById('dsReal').textContent = real + ' real';
+  const r = await fetch('/api/v1/metrics/summary', AH);
+  if (!r.ok) return;
+  const s = await r.json();
+  const el = document.getElementById('dsTotal');
+  if (el) el.textContent = s.totalCases || 0;
  } catch (e) { console.error('refreshDataStatus', e) }
 }
 
