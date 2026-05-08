@@ -966,6 +966,36 @@ def process_upload(
             if resolved:
                 row["_resolved_user"] = resolved
 
+    # ── Phase 1.5: Batch pre-fetch external IP identities ─────────────────
+    # Pre-collect all unique external IPs across the upload and batch-query
+    # ip-api.com once. Per-alert enrichment then hits the ThreatIntelCache
+    # instead of making N sequential HTTP round-trips. Mirrors the pattern
+    # of the host→user pre-scan above.
+    try:
+        from backend.app.services.enrichment.ip_identity import (
+            batch_prefetch_identities,
+        )
+        from backend.app.services.enrichment.threat_intel import _extract_ips
+
+        _all_external_ips: list[str] = []
+        _seen_ips: set[str] = set()
+        for _row in remapped_rows:
+            try:
+                _alert_type, _raw = map_row_to_raw_alert(_row, alert_type_override)
+            except Exception:
+                continue  # skip rows that fail to map; main loop will surface the error
+            for _ip in _extract_ips(_raw):
+                if _ip not in _seen_ips:
+                    _seen_ips.add(_ip)
+                    _all_external_ips.append(_ip)
+        if _all_external_ips:
+            batch_prefetch_identities(_all_external_ips)
+    except Exception:
+        # Batch pre-fetch is an optimisation. Any failure (network, parse,
+        # import) just means the per-alert path falls through to the
+        # cache-first single lookup, which is still correct.
+        pass
+
     for i, row in enumerate(remapped_rows):
         # Validate with per-row columns for heterogeneous schemas
         row_cols = list(row.keys())

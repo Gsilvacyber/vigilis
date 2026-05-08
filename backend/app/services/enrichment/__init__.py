@@ -183,19 +183,18 @@ def _run_enrichment(
     _ip_identity_notes: list[str] = []
     try:
         import ipaddress as _ipa
-        import httpx as _httpx
+        from backend.app.services.enrichment.ip_identity import lookup_ip_identity
         for _ip_obj in raw_alert.get("ips", []) or []:
             if isinstance(_ip_obj, dict):
                 _addr = _ip_obj.get("ipAddress", "")
                 if _addr and _addr != "0.0.0.0":
                     try:
                         if not _ipa.ip_address(_addr).is_private:
-                            _ip_resp = _httpx.get(
-                                f"http://ip-api.com/json/{_addr}?fields=status,org,isp,as,reverse,hosting,proxy",
-                                timeout=5,
-                            )
-                            if _ip_resp.status_code == 200:
-                                _ip_data = _ip_resp.json()
+                            # Cache-first ip-api lookup. The upload pipeline
+                            # batch-prefetches these in `ingestion.py`, so the
+                            # common case here is a cache hit (no HTTP call).
+                            _ip_data = lookup_ip_identity(_addr)
+                            if _ip_data:
                                 _org = _ip_data.get("org", "")
                                 _isp = _ip_data.get("isp", "")
                                 _reverse = _ip_data.get("reverse", "")
@@ -235,7 +234,8 @@ def _run_enrichment(
                                     if "destination_personal_cloud" not in _existing_names:
                                         signals.append(Signal("destination_personal_cloud", 15, True,
                                             f"Destination is personal cloud: {_org}", "verified"))
-                    except (ValueError, _httpx.TimeoutException):
+                    except ValueError:
+                        # _ipa.ip_address rejected an unparseable address
                         pass
     except Exception:
         logger.debug("IP identity lookup failed (non-fatal)", exc_info=True)
